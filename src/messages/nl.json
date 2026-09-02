@@ -213,5 +213,54 @@
       "collapse": "Verberg details",
       "openFull": "Open volledige pagina"
     }
+  },
+  "add": {
+    "typeLabel": "Soort kennis",
+    "levelLabel": "Niveau",
+    "levelNone": "Geen niveau",
+    "tagsLabel": "Labels",
+    "tagsHint": "Scheiden met komma's",
+    "submit": "Opslaan in bibliotheek",
+    "required": "{field} is verplicht",
+    "field": {
+      "term": "Nederlandse term",
+      "meaning": "Betekenis",
+      "partOfSpeech": "Woordsoort",
+      "partOfSpeechHint": "bijv. Werkwoord, Zelfstandig naamwoord, Uitdrukking",
+      "example": "Voorbeeldzin",
+      "exampleTranslation": "Vertaling voorbeeld",
+      "article": "Lidwoord",
+      "articleNone": "Geen / niet van toepassing",
+      "plural": "Meervoud",
+      "pastTense": "Verleden tijd",
+      "perfect": "Voltooid deelwoord",
+      "usageNote": "Gebruiksnotitie",
+      "title": "Titel",
+      "summary": "Samenvatting",
+      "summaryHint": "Eén regel, zichtbaar op kaarten",
+      "explanation": "Uitleg",
+      "readingBody": "Nederlandse tekst",
+      "noteBody": "Notitie"
+    },
+    "reading": {
+      "wordCount": "{count, plural, one {# woord} other {# woorden}}"
+    },
+    "grammar": {
+      "examples": "Voorbeelden",
+      "addExample": "Voorbeeld toevoegen",
+      "removeExample": "Voorbeeld verwijderen",
+      "exampleNl": "Nederlands",
+      "exampleEn": "Vertaling"
+    },
+    "file": {
+      "title": "Bestand uploaden",
+      "body": "Bestanden uploaden komt samen met bestandsopslag. Voeg voorlopig woordenschat, grammatica, teksten of notities toe door te typen."
+    },
+    "saved": {
+      "title": "Vastgelegd — {title}",
+      "body": "Opslaan in de gedeelde bibliotheek vereist de backend, dus er is nog niets bewaard.",
+      "addAnother": "Nog een toevoegen",
+      "toLibrary": "Naar bibliotheek"
+    }
   }
 }

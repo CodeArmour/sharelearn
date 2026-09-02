@@ -213,5 +213,54 @@
       "collapse": "Hide details",
       "openFull": "Open full page"
     }
+  },
+  "add": {
+    "typeLabel": "Knowledge type",
+    "levelLabel": "Level",
+    "levelNone": "No level",
+    "tagsLabel": "Tags",
+    "tagsHint": "Separate with commas",
+    "submit": "Save to library",
+    "required": "{field} is required",
+    "field": {
+      "term": "Dutch term",
+      "meaning": "Meaning",
+      "partOfSpeech": "Word type",
+      "partOfSpeechHint": "e.g. Werkwoord, Zelfstandig naamwoord, Uitdrukking",
+      "example": "Example sentence",
+      "exampleTranslation": "Example translation",
+      "article": "Article",
+      "articleNone": "None / not applicable",
+      "plural": "Plural",
+      "pastTense": "Past tense",
+      "perfect": "Perfect",
+      "usageNote": "Usage note",
+      "title": "Title",
+      "summary": "Summary",
+      "summaryHint": "One line shown on cards",
+      "explanation": "Explanation",
+      "readingBody": "Dutch text",
+      "noteBody": "Note"
+    },
+    "reading": {
+      "wordCount": "{count, plural, one {# word} other {# words}}"
+    },
+    "grammar": {
+      "examples": "Examples",
+      "addExample": "Add example",
+      "removeExample": "Remove example",
+      "exampleNl": "Dutch",
+      "exampleEn": "Translation"
+    },
+    "file": {
+      "title": "File upload",
+      "body": "Uploading files arrives together with file storage. For now, add vocabulary, grammar, readings or notes by typing."
+    },
+    "saved": {
+      "title": "Captured — {title}",
+      "body": "Saving to the shared library needs the backend, so nothing was stored yet.",
+      "addAnother": "Add another",
+      "toLibrary": "Go to library"
+    }
   }
 }
