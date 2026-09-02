@@ -25,7 +25,8 @@ function hrefBuilder(query: LibraryQuery, view: LibraryViewMode) {
     if (merged.level) sp.set("level", merged.level);
     if (merged.by) sp.set("by", merged.by);
     if (merged.sort && merged.sort !== "newest") sp.set("sort", merged.sort);
-    if (merged.view === "table") sp.set("view", "table");
+    // The table view only applies to the vocabulary filter.
+    if (merged.view === "table" && merged.type === "vocabulary") sp.set("view", "table");
     if (patch.page && patch.page > 1) sp.set("page", String(patch.page));
     const s = sp.toString();
     return s ? `/library?${s}` : "/library";
@@ -47,6 +48,11 @@ export async function LibraryView({
 }) {
   const t = await getTranslations();
   const href = hrefBuilder(query, view);
+
+  // Cards/Table switching is only offered for the vocabulary filter.
+  const canUseTable = query.type === "vocabulary";
+  const effectiveView: LibraryViewMode = canUseTable && view === "table" ? "table" : "cards";
+
   const hasMore = result.items.length < result.total;
   const vocab = result.items.filter((i): i is VocabularyItem => i.type === "vocabulary");
 
@@ -62,46 +68,50 @@ export async function LibraryView({
 
         <FilterChips active={query.type} hrefFor={(type?: KnowledgeType) => href({ type })} />
 
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-body-sm text-fg-muted">
-            {t("library.results", {
-              count: view === "table" ? vocab.length : result.total,
-            })}
-          </p>
-          <LibraryViewToggle view={view} hrefFor={(v) => href({ view: v })} />
-        </div>
-
-        {view === "table" ? (
-          vocab.length > 0 ? (
-            <VocabularyTable items={vocab} />
-          ) : (
-            <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
-              {t("library.table.onlyVocab")}
+        <div key={`${effectiveView}:${query.type ?? "all"}`} className="flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-body-sm text-fg-muted">
+              {t("library.results", {
+                count: effectiveView === "table" ? vocab.length : result.total,
+              })}
             </p>
-          )
-        ) : result.items.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
-            {t("library.empty")}
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-4 md:gap-5">
-            {result.items.map((item) => (
-              <KnowledgeCard key={item.id} item={item} className="w-full sm:w-[21.25rem]" />
-            ))}
+            {canUseTable && (
+              <LibraryViewToggle view={effectiveView} hrefFor={(v) => href({ view: v })} />
+            )}
           </div>
-        )}
 
-        {view === "cards" && hasMore && (
-          <div className="pt-1">
-            <Link
-              href={href({ page: page + 1 })}
-              scroll={false}
-              className={buttonVariants({ variant: "secondary", size: "md" })}
-            >
-              {t("library.loadMore")}
-            </Link>
-          </div>
-        )}
+          {effectiveView === "table" ? (
+            vocab.length > 0 ? (
+              <VocabularyTable items={vocab} />
+            ) : (
+              <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
+                {t("library.empty")}
+              </p>
+            )
+          ) : result.items.length === 0 ? (
+            <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
+              {t("library.empty")}
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-4 md:gap-5">
+              {result.items.map((item) => (
+                <KnowledgeCard key={item.id} item={item} className="w-full sm:w-[21.25rem]" />
+              ))}
+            </div>
+          )}
+
+          {effectiveView === "cards" && hasMore && (
+            <div className="pt-1">
+              <Link
+                href={href({ page: page + 1 })}
+                scroll={false}
+                className={buttonVariants({ variant: "secondary", size: "md" })}
+              >
+                {t("library.loadMore")}
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </PageContainer>
   );
