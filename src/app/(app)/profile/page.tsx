@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { PlaceholderPage } from "@/components/shared/placeholder-page";
+import { titleMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = { title: "Profiel" };
+export const generateMetadata = titleMetadata((t) => t("pages.profile.title"));
 
-export default function ProfilePage() {
-  return (
-    <PlaceholderPage
-      title="Profiel"
-      description="Je persoonlijke instellingen, voortgang en kennis die je voor herhaling hebt gemarkeerd."
-    />
-  );
+export default async function ProfilePage() {
+  const t = await getTranslations("pages.profile");
+  return <PlaceholderPage title={t("title")} description={t("subtitle")} />;
 }

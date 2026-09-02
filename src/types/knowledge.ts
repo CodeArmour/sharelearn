@@ -107,14 +107,18 @@ export function knowledgeTitle(item: KnowledgeItem): string {
     case "file":
       return item.fileName;
     case "note":
-      return item.title ?? "Notitie";
+      return item.title ?? "";
     default:
       return item.title;
   }
 }
 
-/** One-line supporting text shown under the title on cards. */
-export function knowledgeSnippet(item: KnowledgeItem): string {
+/**
+ * One-line supporting text shown under the title on cards. Content fields
+ * (meaning, part of speech, summaries) stay in their source language; `opts`
+ * carries the few UI words that need translating.
+ */
+export function knowledgeSnippet(item: KnowledgeItem, opts: { words: string }): string {
   switch (item.type) {
     case "vocabulary": {
       const kind = item.partOfSpeech.toLowerCase();
@@ -123,9 +127,11 @@ export function knowledgeSnippet(item: KnowledgeItem): string {
     case "grammar":
       return item.summary;
     case "reading":
-      return [item.level, `${item.wordCount} woorden`, item.summary].filter(Boolean).join(" · ");
+      return [item.level, `${item.wordCount} ${opts.words}`, item.summary]
+        .filter(Boolean)
+        .join(" · ");
     case "file": {
-      const ext = item.fileName.split(".").pop()?.toUpperCase() ?? "BESTAND";
+      const ext = item.fileName.split(".").pop()?.toUpperCase() ?? "";
       return item.note ? `${ext} · ${item.note}` : ext;
     }
     case "note":

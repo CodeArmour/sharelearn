@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Dutch Shared Learning Platform",
+    "titleTemplate": "{page} · Nederlands",
+    "description": "A private workspace for a small group learning Dutch together — capture vocabulary, grammar, readings and files, then practise and prepare for exams as a group."
+  },
+  "common": {
+    "appName": "Nederlands",
+    "add": "Add",
+    "cancel": "Cancel",
+    "retry": "Try again",
+    "back": "Back",
+    "loadMore": "Load more",
+    "comingSoon": "This screen will be built in a later phase."
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content",
+    "mainNav": "Main navigation",
+    "accountNav": "Account navigation",
+    "brandHome": "Dutch Shared Learning Platform — go to Today"
+  },
+  "nav": {
+    "today": "Today",
+    "library": "Library",
+    "practice": "Practice",
+    "exam": "Exam",
+    "add": "Add",
+    "profile": "Profile",
+    "group": "Group",
+    "logout": "Log out"
+  },
+  "locale": {
+    "switcherLabel": "Language",
+    "nl": "NL",
+    "en": "EN",
+    "nlFull": "Dutch",
+    "enFull": "English"
+  },
+  "today": {
+    "title": "Today",
+    "subtitle": "{date} · what the group learned today",
+    "newCount": "{count} new",
+    "empty": "Nothing added today yet. Start above.",
+    "section": {
+      "vocabulary": "Today's vocabulary",
+      "grammar": "Today's grammar",
+      "textsAndFiles": "Texts & files"
+    },
+    "capture": {
+      "placeholder": "Type a word, paste text from your teacher, or add a photo…",
+      "placeholderShort": "Type, paste or photograph what you learned…",
+      "openLabel": "Add knowledge",
+      "photoLabel": "Add photo",
+      "fileLabel": "Add file",
+      "submit": "Add"
+    },
+    "quickPractice": {
+      "title": "Quick practice",
+      "body": "Practise the {count, plural, one {# item} other {# items}} the group added today — {questions, plural, one {# question} other {# questions}}, about {minutes, plural, one {# minute} other {# minutes}}.",
+      "bodyShort": "{questions, plural, one {# question} other {# questions}} · ~{minutes} min",
+      "cta": "Start practice"
+    }
+  },
+  "knowledge": {
+    "addedBy": "Added by {name}",
+    "type": {
+      "vocabulary": "Vocabulary",
+      "grammar": "Grammar",
+      "reading": "Reading",
+      "file": "File",
+      "note": "Note"
+    },
+    "words": "words"
+  },
+  "pages": {
+    "library": {
+      "subtitle": "{count} items · everything the group has learned so far.",
+      "note": "Library (cards and vocabulary-table view with study mode) comes after Today."
+    },
+    "practice": {
+      "title": "Practice",
+      "subtitle": "Structured practice with stored knowledge: questions, feedback and results."
+    },
+    "exam": {
+      "title": "Exam",
+      "subtitle": "Generate an exam, hand it in, and review your results and mistakes."
+    },
+    "add": {
+      "title": "Add knowledge",
+      "subtitle": "Capture vocabulary, grammar, readings or files — later with AI help to structure everything."
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Your personal settings, progress and vocabulary you've marked for review."
+    },
+    "group": {
+      "title": "Group",
+      "subtitle": "{count} members share this workspace.",
+      "note": "Group settings (members, invitations, roles) come later."
+    },
+    "knowledge": {
+      "metaFallback": "Knowledge",
+      "attribution": "Type: {type} · added by {name}",
+      "note": "Knowledge detail (with explanation, examples and 'practise this') comes after Library."
+    }
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page not found",
+    "body": "This page doesn't exist (any more).",
+    "cta": "Go to Today"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "Try again. If it keeps happening, reload the page.",
+    "retry": "Try again"
+  },
+  "login": {
+    "welcome": "Welcome back",
+    "subtitle": "Sign in to continue with the shared workspace.",
+    "continueDemo": "Continue (demo)",
+    "note": "Authentication will be added in a later phase."
+  },
+  "foundation": {
+    "title": "Foundation",
+    "description": "Development reference — tokens, typography and base components from Figma. Not shown in navigation."
+  }
+}

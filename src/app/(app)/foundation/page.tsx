@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
 import { ArrowRight, BookOpen, Check, Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { PageContainer, PageHeader, Section } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { titleMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = { title: "Foundation" };
+export const generateMetadata = titleMetadata((t) => t("foundation.title"));
 
 /**
  * Development-only reference page. Verifies that Figma tokens, the type scale and
@@ -64,13 +65,11 @@ function Swatch({ className, name }: { className: string; name: string }) {
   );
 }
 
-export default function FoundationPage() {
+export default async function FoundationPage() {
+  const t = await getTranslations("foundation");
   return (
     <PageContainer>
-      <PageHeader
-        title="Foundation"
-        description="Ontwikkelreferentie — tokens, typografie en basiscomponenten uit Figma. Niet zichtbaar in de navigatie."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <div className="space-y-12">
         <Section title="Kleur — oppervlakken">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import type { KnowledgeItem, KnowledgeType } from "@/types";
 import { knowledgeSnippet, knowledgeTitle } from "@/types";
@@ -24,7 +25,16 @@ const TITLE_CLASS: Record<KnowledgeType, string> = {
   note: "font-display text-h3 text-fg",
 };
 
-export function KnowledgeCard({ item, className }: { item: KnowledgeItem; className?: string }) {
+export async function KnowledgeCard({
+  item,
+  className,
+}: {
+  item: KnowledgeItem;
+  className?: string;
+}) {
+  const t = await getTranslations("knowledge");
+  const snippet = knowledgeSnippet(item, { words: t("words") });
+
   return (
     <Link
       href={`/knowledge/${item.id}`}
@@ -43,7 +53,7 @@ export function KnowledgeCard({ item, className }: { item: KnowledgeItem; classN
         {knowledgeTitle(item)}
       </h3>
 
-      <p className="line-clamp-2 text-body-sm text-fg-secondary">{knowledgeSnippet(item)}</p>
+      <p className="line-clamp-2 text-body-sm text-fg-secondary">{snippet}</p>
 
       <div className="h-px w-full bg-border" />
 

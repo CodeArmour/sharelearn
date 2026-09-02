@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Dutch Shared Learning Platform",
+    "titleTemplate": "{page} · Nederlands",
+    "description": "Een privéwerkruimte voor een kleine groep die samen Nederlands leert — woordenschat, grammatica, teksten en bestanden vastleggen, en samen oefenen en examens voorbereiden."
+  },
+  "common": {
+    "appName": "Nederlands",
+    "add": "Toevoegen",
+    "cancel": "Annuleren",
+    "retry": "Opnieuw proberen",
+    "back": "Terug",
+    "loadMore": "Meer laden",
+    "comingSoon": "Dit scherm wordt in een latere fase gebouwd."
+  },
+  "a11y": {
+    "skipToContent": "Naar hoofdinhoud",
+    "mainNav": "Hoofdnavigatie",
+    "accountNav": "Accountnavigatie",
+    "brandHome": "Dutch Shared Learning Platform — naar Vandaag"
+  },
+  "nav": {
+    "today": "Vandaag",
+    "library": "Bibliotheek",
+    "practice": "Oefenen",
+    "exam": "Examen",
+    "add": "Toevoegen",
+    "profile": "Profiel",
+    "group": "Groep",
+    "logout": "Uitloggen"
+  },
+  "locale": {
+    "switcherLabel": "Taal",
+    "nl": "NL",
+    "en": "EN",
+    "nlFull": "Nederlands",
+    "enFull": "Engels"
+  },
+  "today": {
+    "title": "Vandaag",
+    "subtitle": "{date} · wat de groep vandaag heeft geleerd",
+    "newCount": "{count} nieuw",
+    "empty": "Nog niets toegevoegd vandaag. Begin hierboven.",
+    "section": {
+      "vocabulary": "Woordenschat van vandaag",
+      "grammar": "Grammatica van vandaag",
+      "textsAndFiles": "Teksten & bestanden"
+    },
+    "capture": {
+      "placeholder": "Typ een woord, plak tekst van je docent, of voeg een foto toe…",
+      "placeholderShort": "Typ, plak of fotografeer wat je leerde…",
+      "openLabel": "Kennis toevoegen",
+      "photoLabel": "Foto toevoegen",
+      "fileLabel": "Bestand toevoegen",
+      "submit": "Toevoegen"
+    },
+    "quickPractice": {
+      "title": "Snelle oefening",
+      "body": "Oefen de {count, plural, one {# ding} other {# dingen}} die de groep vandaag heeft toegevoegd — {questions, plural, one {# vraag} other {# vragen}}, ongeveer {minutes, plural, one {# minuut} other {# minuten}}.",
+      "bodyShort": "{questions, plural, one {# vraag} other {# vragen}} · ~{minutes} min",
+      "cta": "Start oefening"
+    }
+  },
+  "knowledge": {
+    "addedBy": "Toegevoegd door {name}",
+    "type": {
+      "vocabulary": "Woordenschat",
+      "grammar": "Grammatica",
+      "reading": "Tekst",
+      "file": "Bestand",
+      "note": "Notitie"
+    },
+    "words": "woorden"
+  },
+  "pages": {
+    "library": {
+      "subtitle": "{count} items · alles wat de groep tot nu toe heeft geleerd.",
+      "note": "Bibliotheek (kaarten- en woordenschattabelweergave met studiemodus) volgt na Vandaag."
+    },
+    "practice": {
+      "title": "Oefenen",
+      "subtitle": "Gestructureerd oefenen met opgeslagen kennis: vragen, feedback en resultaten."
+    },
+    "exam": {
+      "title": "Examen",
+      "subtitle": "Genereer een examen, lever het in en bekijk je resultaten en fouten."
+    },
+    "add": {
+      "title": "Kennis toevoegen",
+      "subtitle": "Woordenschat, grammatica, teksten of bestanden vastleggen — later met AI-hulp om alles te structureren."
+    },
+    "profile": {
+      "title": "Profiel",
+      "subtitle": "Je persoonlijke instellingen, voortgang en kennis die je voor herhaling hebt gemarkeerd."
+    },
+    "group": {
+      "title": "Groep",
+      "subtitle": "{count} leden delen deze leeromgeving.",
+      "note": "Groepsinstellingen (leden, uitnodigingen, rollen) volgen later."
+    },
+    "knowledge": {
+      "metaFallback": "Kennis",
+      "attribution": "Type: {type} · toegevoegd door {name}",
+      "note": "Kennisdetail (met uitleg, voorbeelden en 'oefen dit') volgt na Bibliotheek."
+    }
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Pagina niet gevonden",
+    "body": "Deze pagina bestaat niet (meer).",
+    "cta": "Naar Vandaag"
+  },
+  "error": {
+    "title": "Er ging iets mis",
+    "body": "Probeer het opnieuw. Blijft het misgaan, ververs dan de pagina.",
+    "retry": "Opnieuw proberen"
+  },
+  "login": {
+    "welcome": "Welkom terug",
+    "subtitle": "Log in om verder te gaan met de gedeelde leeromgeving.",
+    "continueDemo": "Doorgaan (demo)",
+    "note": "Authenticatie wordt in een latere fase toegevoegd."
+  },
+  "foundation": {
+    "title": "Foundation",
+    "description": "Ontwikkelreferentie — tokens, typografie en basiscomponenten uit Figma. Niet zichtbaar in de navigatie."
+  }
+}

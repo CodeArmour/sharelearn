@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Camera, FileText, Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -13,7 +14,9 @@ const focusRing =
  * area, the photo/file shortcuts and the submit button are separate links so
  * each can later carry its own `source` intent; for now they all open /add.
  */
-export function CaptureBar() {
+export async function CaptureBar() {
+  const t = await getTranslations("today.capture");
+
   return (
     <div className="flex items-center gap-2.5 rounded-lg border border-border-default bg-surface py-3 pr-3 pl-3.5 sm:gap-3 sm:py-3.5 sm:pr-3.5 sm:pl-[18px]">
       <Link
@@ -22,17 +25,15 @@ export function CaptureBar() {
       >
         <Plus className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />
         <span className="truncate text-body-sm sm:text-body">
-          <span className="sm:hidden">Typ, plak of fotografeer wat je leerde…</span>
-          <span className="hidden sm:inline">
-            Typ een woord, plak tekst van je docent, of voeg een foto toe…
-          </span>
+          <span className="sm:hidden">{t("placeholderShort")}</span>
+          <span className="hidden sm:inline">{t("placeholder")}</span>
         </span>
-        <span className="sr-only">Kennis toevoegen</span>
+        <span className="sr-only">{t("openLabel")}</span>
       </Link>
 
       <Link
         href="/add"
-        aria-label="Foto toevoegen"
+        aria-label={t("photoLabel")}
         className={cn("shrink-0 p-1 text-fg-secondary hover:text-fg", focusRing)}
       >
         <Camera className="size-5" strokeWidth={1.75} aria-hidden />
@@ -40,7 +41,7 @@ export function CaptureBar() {
 
       <Link
         href="/add"
-        aria-label="Bestand toevoegen"
+        aria-label={t("fileLabel")}
         className={cn("hidden shrink-0 p-1 text-fg-secondary hover:text-fg sm:block", focusRing)}
       >
         <FileText className="size-5" strokeWidth={1.75} aria-hidden />
@@ -50,7 +51,7 @@ export function CaptureBar() {
         href="/add"
         className={cn(buttonVariants({ size: "sm" }), "hidden shrink-0 sm:inline-flex")}
       >
-        Toevoegen
+        {t("submit")}
       </Link>
     </div>
   );

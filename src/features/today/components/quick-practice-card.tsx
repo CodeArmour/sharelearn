@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Target } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -13,7 +14,7 @@ const focusRing =
  * Today. Compact tappable card on mobile; icon-well + copy + button on desktop.
  * Maps to the Figma `quick-practice` frames.
  */
-export function QuickPracticeCard({
+export async function QuickPracticeCard({
   itemCount,
   questionCount,
   minutes,
@@ -22,6 +23,8 @@ export function QuickPracticeCard({
   questionCount: number;
   minutes: number;
 }) {
+  const t = await getTranslations("today.quickPractice");
+
   return (
     <>
       <Link
@@ -30,9 +33,9 @@ export function QuickPracticeCard({
       >
         <Target className="size-5 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-body font-semibold text-fg">Snelle oefening</span>
+          <span className="text-body font-semibold text-fg">{t("title")}</span>
           <span className="text-caption text-fg-secondary">
-            {questionCount} vragen · ~{minutes} min
+            {t("bodyShort", { questions: questionCount, minutes })}
           </span>
         </span>
         <ChevronRight
@@ -47,14 +50,13 @@ export function QuickPracticeCard({
           <Target className="size-6" strokeWidth={1.75} aria-hidden />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="font-display text-h3 text-fg">Snelle oefening</span>
+          <span className="font-display text-h3 text-fg">{t("title")}</span>
           <p className="text-body text-fg-secondary">
-            Oefen de {itemCount} dingen die de groep vandaag heeft toegevoegd — {questionCount}{" "}
-            vragen, ongeveer {minutes} minuten.
+            {t("body", { count: itemCount, questions: questionCount, minutes })}
           </p>
         </div>
         <Link href="/practice" className={cn(buttonVariants({ size: "md" }), "shrink-0")}>
-          Start oefening
+          {t("cta")}
           <ArrowRight className="-mr-0.5 size-[18px]" strokeWidth={2} aria-hidden />
         </Link>
       </div>

@@ -1,21 +1,26 @@
+import { getTranslations } from "next-intl/server";
+
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/config/navigation";
 
 import { AddKnowledgeButton } from "./add-knowledge-button";
 import { BrandMark } from "./brand-mark";
+import { LocaleToggle } from "./locale-toggle";
 import { NavItem } from "./nav-item";
 
 /**
  * Desktop sidebar — fixed 264px rail, full viewport height, hidden below `lg`.
  * Maps to the Figma sidebar (brand → Toevoegen → primary nav → spacer →
- * secondary nav).
+ * language → secondary nav).
  */
-export function DesktopSidebar({ libraryCount }: { libraryCount: number }) {
+export async function DesktopSidebar({ libraryCount }: { libraryCount: number }) {
+  const t = await getTranslations();
+
   return (
     <aside className="sticky top-0 hidden h-svh w-[264px] shrink-0 flex-col gap-6 border-r border-border bg-surface p-4 lg:flex">
       <BrandMark />
       <AddKnowledgeButton />
 
-      <nav aria-label="Hoofdnavigatie">
+      <nav aria-label={t("a11y.mainNav")}>
         <ul className="flex flex-col gap-1">
           {PRIMARY_NAV.map((item) => {
             const Icon = item.icon;
@@ -24,7 +29,7 @@ export function DesktopSidebar({ libraryCount }: { libraryCount: number }) {
                 <NavItem
                   navKey={item.key}
                   href={item.href}
-                  label={item.label}
+                  label={t(`nav.${item.key}`)}
                   platform="desktop"
                   icon={<Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />}
                   badge={item.badgeKey === "libraryCount" ? libraryCount : undefined}
@@ -37,7 +42,12 @@ export function DesktopSidebar({ libraryCount }: { libraryCount: number }) {
 
       <div className="flex-1" />
 
-      <nav aria-label="Accountnavigatie">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="text-caption text-fg-muted">{t("locale.switcherLabel")}</span>
+        <LocaleToggle />
+      </div>
+
+      <nav aria-label={t("a11y.accountNav")}>
         <ul className="flex flex-col gap-1">
           {SECONDARY_NAV.map((item) => {
             const Icon = item.icon;
@@ -46,7 +56,7 @@ export function DesktopSidebar({ libraryCount }: { libraryCount: number }) {
                 <NavItem
                   navKey={item.key}
                   href={item.href}
-                  label={item.label}
+                  label={t(`nav.${item.key}`)}
                   platform="desktop"
                   icon={<Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />}
                 />

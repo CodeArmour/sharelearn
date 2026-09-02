@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { PlaceholderPage } from "@/components/shared/placeholder-page";
+import { titleMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = { title: "Toevoegen" };
+export const generateMetadata = titleMetadata((t) => t("nav.add"));
 
-export default function AddKnowledgePage() {
-  return (
-    <PlaceholderPage
-      title="Kennis toevoegen"
-      description="Woordenschat, grammatica, teksten of bestanden vastleggen — later met AI-hulp om alles te structureren."
-    />
-  );
+export default async function AddKnowledgePage() {
+  const t = await getTranslations("pages.add");
+  return <PlaceholderPage title={t("title")} description={t("subtitle")} />;
 }

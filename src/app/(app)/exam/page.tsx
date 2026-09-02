@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { PlaceholderPage } from "@/components/shared/placeholder-page";
+import { titleMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = { title: "Examen" };
+export const generateMetadata = titleMetadata((t) => t("pages.exam.title"));
 
-export default function ExamPage() {
-  return (
-    <PlaceholderPage
-      title="Examen"
-      description="Genereer een examen, lever het in en bekijk je resultaten en fouten."
-    />
-  );
+export default async function ExamPage() {
+  const t = await getTranslations("pages.exam");
+  return <PlaceholderPage title={t("title")} description={t("subtitle")} />;
 }
