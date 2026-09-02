@@ -208,7 +208,10 @@
       "hide": "Antwoord verbergen",
       "markReview": "Markeer voor herhaling",
       "marked": "Gemarkeerd voor herhaling",
-      "onlyVocab": "De tabelweergave toont alleen woordenschat."
+      "onlyVocab": "De tabelweergave toont alleen woordenschat.",
+      "expand": "Toon details",
+      "collapse": "Verberg details",
+      "openFull": "Open volledige pagina"
     }
   }
 }

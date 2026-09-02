@@ -208,7 +208,10 @@
       "hide": "Hide answer",
       "markReview": "Mark for review",
       "marked": "Marked for review",
-      "onlyVocab": "The table view shows vocabulary only."
+      "onlyVocab": "The table view shows vocabulary only.",
+      "expand": "Show details",
+      "collapse": "Hide details",
+      "openFull": "Open full page"
     }
   }
 }
