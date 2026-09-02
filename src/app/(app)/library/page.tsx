@@ -33,8 +33,9 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
     sort: (SORTS as string[]).includes(sort ?? "") ? (sort as LibrarySort) : undefined,
   };
   const page = Math.max(1, Number.parseInt(first(sp.page) ?? "1", 10) || 1);
+  const view = first(sp.view) === "table" ? "table" : "cards";
 
   const [result, facets] = await Promise.all([getLibraryItems(query, page), getLibraryFacets()]);
 
-  return <LibraryView query={query} page={page} result={result} facets={facets} />;
+  return <LibraryView query={query} view={view} page={page} result={result} facets={facets} />;
 }

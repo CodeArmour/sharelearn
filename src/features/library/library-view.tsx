@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import type { CEFRLevel, GroupMemberSummary, KnowledgeType } from "@/types";
+import type { CEFRLevel, GroupMemberSummary, KnowledgeType, VocabularyItem } from "@/types";
 import type { LibraryQuery, LibraryResult } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { KnowledgeCard } from "@/components/shared";
@@ -9,33 +9,46 @@ import { buttonVariants } from "@/components/ui/button";
 
 import { FilterChips } from "./filter-chips";
 import { LibraryControls } from "./library-controls";
+import { LibraryViewToggle } from "./library-view-toggle";
+import { VocabularyTable } from "./vocabulary-table";
 
-function toQueryString(query: LibraryQuery, patch: Partial<LibraryQuery>, page?: number) {
-  const merged = { ...query, ...patch };
-  const sp = new URLSearchParams();
-  if (merged.q) sp.set("q", merged.q);
-  if (merged.type) sp.set("type", merged.type);
-  if (merged.level) sp.set("level", merged.level);
-  if (merged.by) sp.set("by", merged.by);
-  if (merged.sort && merged.sort !== "newest") sp.set("sort", merged.sort);
-  if (page && page > 1) sp.set("page", String(page));
-  const s = sp.toString();
-  return s ? `/library?${s}` : "/library";
+export type LibraryViewMode = "cards" | "table";
+
+type HrefPatch = Partial<LibraryQuery & { view: LibraryViewMode; page: number }>;
+
+function hrefBuilder(query: LibraryQuery, view: LibraryViewMode) {
+  return (patch: HrefPatch) => {
+    const merged = { ...query, view, ...patch };
+    const sp = new URLSearchParams();
+    if (merged.q) sp.set("q", merged.q);
+    if (merged.type) sp.set("type", merged.type);
+    if (merged.level) sp.set("level", merged.level);
+    if (merged.by) sp.set("by", merged.by);
+    if (merged.sort && merged.sort !== "newest") sp.set("sort", merged.sort);
+    if (merged.view === "table") sp.set("view", "table");
+    if (patch.page && patch.page > 1) sp.set("page", String(patch.page));
+    const s = sp.toString();
+    return s ? `/library?${s}` : "/library";
+  };
 }
 
 export async function LibraryView({
   query,
+  view,
   page,
   result,
   facets,
 }: {
   query: LibraryQuery;
+  view: LibraryViewMode;
   page: number;
   result: LibraryResult;
   facets: { levels: CEFRLevel[]; members: GroupMemberSummary[] };
 }) {
   const t = await getTranslations();
+  const href = hrefBuilder(query, view);
   const hasMore = result.items.length < result.total;
+  const vocab = result.items.filter((i): i is VocabularyItem => i.type === "vocabulary");
 
   return (
     <PageContainer>
@@ -47,16 +60,26 @@ export async function LibraryView({
       <div className="flex flex-col gap-5">
         <LibraryControls levels={facets.levels} members={facets.members} />
 
-        <FilterChips
-          active={query.type}
-          hrefFor={(type?: KnowledgeType) => toQueryString(query, { type })}
-        />
+        <FilterChips active={query.type} hrefFor={(type?: KnowledgeType) => href({ type })} />
 
-        <p className="text-body-sm text-fg-muted">
-          {t("library.results", { count: result.total })}
-        </p>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-body-sm text-fg-muted">
+            {t("library.results", {
+              count: view === "table" ? vocab.length : result.total,
+            })}
+          </p>
+          <LibraryViewToggle view={view} hrefFor={(v) => href({ view: v })} />
+        </div>
 
-        {result.items.length === 0 ? (
+        {view === "table" ? (
+          vocab.length > 0 ? (
+            <VocabularyTable items={vocab} />
+          ) : (
+            <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
+              {t("library.table.onlyVocab")}
+            </p>
+          )
+        ) : result.items.length === 0 ? (
           <p className="rounded-card border border-dashed border-border-default bg-surface p-10 text-center text-body text-fg-muted">
             {t("library.empty")}
           </p>
@@ -68,10 +91,10 @@ export async function LibraryView({
           </div>
         )}
 
-        {hasMore && (
+        {view === "cards" && hasMore && (
           <div className="pt-1">
             <Link
-              href={toQueryString(query, {}, page + 1)}
+              href={href({ page: page + 1 })}
               scroll={false}
               className={buttonVariants({ variant: "secondary", size: "md" })}
             >

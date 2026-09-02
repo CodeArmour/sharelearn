@@ -150,6 +150,31 @@
       "newest": "Nieuwste eerst",
       "oldest": "Oudste eerst",
       "az": "A–Z"
+    },
+    "view": {
+      "cards": "Kaarten",
+      "table": "Tabel",
+      "label": "Weergave"
+    },
+    "study": {
+      "label": "Studiemodus",
+      "show": "Alles tonen",
+      "hideMeaning": "Betekenis verbergen",
+      "hideDutch": "Nederlands verbergen",
+      "reset": "Reset antwoorden"
+    },
+    "table": {
+      "nederlands": "Nederlands",
+      "betekenis": "Betekenis",
+      "woordsoort": "Woordsoort",
+      "niveau": "Niveau",
+      "voorbeeld": "Voorbeeld",
+      "review": "Review",
+      "reveal": "Antwoord tonen",
+      "hide": "Antwoord verbergen",
+      "markReview": "Markeer voor herhaling",
+      "marked": "Gemarkeerd voor herhaling",
+      "onlyVocab": "De tabelweergave toont alleen woordenschat."
     }
   }
 }

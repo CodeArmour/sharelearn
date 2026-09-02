@@ -150,6 +150,31 @@
       "newest": "Newest first",
       "oldest": "Oldest first",
       "az": "A–Z"
+    },
+    "view": {
+      "cards": "Cards",
+      "table": "Table",
+      "label": "View"
+    },
+    "study": {
+      "label": "Study mode",
+      "show": "Show all",
+      "hideMeaning": "Hide meaning",
+      "hideDutch": "Hide Dutch",
+      "reset": "Reset answers"
+    },
+    "table": {
+      "nederlands": "Dutch",
+      "betekenis": "Meaning",
+      "woordsoort": "Word type",
+      "niveau": "Level",
+      "voorbeeld": "Example",
+      "review": "Review",
+      "reveal": "Show answer",
+      "hide": "Hide answer",
+      "markReview": "Mark for review",
+      "marked": "Marked for review",
+      "onlyVocab": "The table view shows vocabulary only."
     }
   }
 }
