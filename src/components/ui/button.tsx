@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils/cn";
  */
 export const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 rounded-md whitespace-nowrap",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap",
     "font-sans text-button font-semibold",
     "transition-colors duration-150",
     "disabled:pointer-events-none disabled:opacity-50",
@@ -28,9 +28,9 @@ export const buttonVariants = cva(
         danger: "bg-error text-on-primary hover:bg-error-strong",
       },
       size: {
-        sm: "h-9 px-3 text-body-sm",
-        md: "h-11 px-4",
-        lg: "h-12 px-5",
+        sm: "h-9 rounded-sm px-3 text-body-sm",
+        md: "h-11 rounded-md px-4",
+        lg: "h-12 rounded-md px-5",
       },
       block: {
         true: "w-full",

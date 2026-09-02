@@ -8,6 +8,9 @@ const [sofie, omar, lena] = MOCK_MEMBERS;
  * Mock shared library. Content mirrors the approved Figma so screens render
  * realistically. Replace with `server/repositories/knowledge` calls later —
  * the return type is already the real `KnowledgeItem`.
+ *
+ * Seven items are dated "today" (2026-09-02) so the Today feed has content;
+ * two are older so the Library has history.
  */
 export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
   {
@@ -36,9 +39,9 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     level: "A2",
     tags: ["spreektaal"],
     source: "photo",
-    addedBy: omar,
-    createdAt: "2026-09-01T19:30:00.000Z",
-    updatedAt: "2026-09-01T19:30:00.000Z",
+    addedBy: sofie,
+    createdAt: "2026-09-02T08:12:00.000Z",
+    updatedAt: "2026-09-02T08:12:00.000Z",
     term: "gezellig",
     meaning: "cozy / pleasant",
     partOfSpeech: "Bijvoeglijk naamwoord",
@@ -56,9 +59,9 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     level: "A2",
     tags: ["uitdrukking", "frequentie"],
     source: "manual",
-    addedBy: lena,
-    createdAt: "2026-08-30T11:05:00.000Z",
-    updatedAt: "2026-08-30T11:05:00.000Z",
+    addedBy: sofie,
+    createdAt: "2026-09-02T08:14:00.000Z",
+    updatedAt: "2026-09-02T08:14:00.000Z",
     term: "af en toe",
     meaning: "from time to time",
     partOfSpeech: "Uitdrukking",
@@ -117,11 +120,10 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     tags: ["woordvolgorde"],
     source: "manual",
     addedBy: lena,
-    createdAt: "2026-09-01T10:00:00.000Z",
-    updatedAt: "2026-09-01T10:00:00.000Z",
+    createdAt: "2026-09-02T09:00:00.000Z",
+    updatedAt: "2026-09-02T09:00:00.000Z",
     title: "Inversie",
-    summary:
-      "Begint een zin met iets anders dan het onderwerp, dan komt het werkwoord vóór het onderwerp.",
+    summary: "Zin begint met iets anders dan het onderwerp → werkwoord vóór onderwerp.",
     explanation:
       "Normaal is de volgorde onderwerp – werkwoord. Zet je een ander zinsdeel vooraan (tijd, plaats, een bijzin), dan wisselen werkwoord en onderwerp van plaats: de persoonsvorm blijft op de tweede plaats.",
     examples: [
@@ -136,10 +138,10 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     tags: ["werkwoorden"],
     source: "manual",
     addedBy: sofie,
-    createdAt: "2026-08-29T16:20:00.000Z",
-    updatedAt: "2026-08-29T16:20:00.000Z",
+    createdAt: "2026-09-02T09:05:00.000Z",
+    updatedAt: "2026-09-02T09:05:00.000Z",
     title: "Scheidbare werkwoorden",
-    summary: 'Het voorvoegsel gaat naar het einde van de zin: "Ik bel je morgen op."',
+    summary: 'Voorvoegsel gaat naar het einde van de zin: "Ik bel je morgen op."',
     explanation:
       "Bij een scheidbaar werkwoord staat het voorvoegsel los achteraan in de hoofdzin. In een bijzin en bij het voltooid deelwoord komt het weer vast: opgebeld.",
     examples: [
@@ -172,13 +174,12 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     tags: ["reistekst", "dagelijks leven"],
     source: "manual",
     addedBy: sofie,
-    createdAt: "2026-08-25T18:00:00.000Z",
-    updatedAt: "2026-08-25T18:00:00.000Z",
+    createdAt: "2026-09-02T09:20:00.000Z",
+    updatedAt: "2026-09-02T09:20:00.000Z",
     title: "Een dagje Antwerpen",
     body: "We gingen af en toe naar Antwerpen voor een dagje uit. De trein vanuit Rotterdam duurde ongeveer een uur. We moesten wel rekening houden met de drukte op zaterdag. In de stad liepen we langs de Schelde en dronken we koffie op een gezellig terras. 's Middags spraken we af met een vriendin bij het Centraal Station, een van de mooiste stations van Europa.",
     wordCount: 180,
-    summary:
-      "Korte reistekst met alledaagse woordenschat en de uitdrukkingen 'af en toe' en 'rekening houden met'.",
+    summary: "reistekst met dagelijkse woordenschat",
     vocabularyIds: ["kn_afentoe", "kn_rekening", "kn_gezellig"],
   },
   {
@@ -188,13 +189,13 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     tags: ["lesmateriaal"],
     source: "file-upload",
     addedBy: lena,
-    createdAt: "2026-08-24T15:40:00.000Z",
-    updatedAt: "2026-08-24T15:40:00.000Z",
+    createdAt: "2026-09-02T09:30:00.000Z",
+    updatedAt: "2026-09-02T09:30:00.000Z",
     fileName: "Grammatica_les7.pdf",
     mimeType: "application/pdf",
     sizeBytes: 486_000,
     url: null,
-    note: "Woordenschat en grammatica uit les 7; nog te verwerken met AI.",
+    note: "lesmateriaal · woordenschat en grammatica geëxtraheerd",
     extractedCount: null,
   },
 ];

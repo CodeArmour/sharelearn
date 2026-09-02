@@ -112,3 +112,23 @@ export function knowledgeTitle(item: KnowledgeItem): string {
       return item.title;
   }
 }
+
+/** One-line supporting text shown under the title on cards. */
+export function knowledgeSnippet(item: KnowledgeItem): string {
+  switch (item.type) {
+    case "vocabulary": {
+      const kind = item.partOfSpeech.toLowerCase();
+      return item.level ? `${item.meaning} · ${kind}, ${item.level}` : `${item.meaning} · ${kind}`;
+    }
+    case "grammar":
+      return item.summary;
+    case "reading":
+      return [item.level, `${item.wordCount} woorden`, item.summary].filter(Boolean).join(" · ");
+    case "file": {
+      const ext = item.fileName.split(".").pop()?.toUpperCase() ?? "BESTAND";
+      return item.note ? `${ext} · ${item.note}` : ext;
+    }
+    case "note":
+      return item.body;
+  }
+}

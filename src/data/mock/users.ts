@@ -9,8 +9,8 @@ export const MOCK_MEMBERS: GroupMemberSummary[] = [
   {
     id: "usr_sofie",
     name: "Sofie",
-    initials: "SO",
-    accent: "reading",
+    initials: "SV",
+    accent: "grammar",
     avatarUrl: null,
     role: "owner",
     joinedAt: "2026-06-01T09:00:00.000Z",

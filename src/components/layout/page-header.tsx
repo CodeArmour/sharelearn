@@ -21,7 +21,11 @@ export function PageHeader({ title, description, actions, className }: PageHeade
     >
       <div className="space-y-1">
         <h1 className="font-display text-h1 text-fg lg:text-display">{title}</h1>
-        {description ? <p className="max-w-2xl text-body-lg text-fg-muted">{description}</p> : null}
+        {description ? (
+          <p className="max-w-2xl text-body-sm text-fg-muted lg:text-body-lg lg:text-fg-secondary">
+            {description}
+          </p>
+        ) : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </header>

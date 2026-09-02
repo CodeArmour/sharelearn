@@ -24,8 +24,8 @@ const badgeVariants = cva(
         file: "bg-knowledge-file-subtle text-knowledge-file-strong",
       },
       size: {
-        sm: "px-1.5 py-0.5 text-caption",
-        md: "px-2 py-1",
+        sm: "px-2 py-0.5 text-caption",
+        md: "px-2 py-1 text-label",
       },
     },
     defaultVariants: { tone: "neutral", size: "md" },
