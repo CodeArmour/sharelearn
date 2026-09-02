@@ -70,7 +70,43 @@
       "file": "File",
       "note": "Note"
     },
-    "words": "words"
+    "words": "words",
+    "source": {
+      "manual": "Manual",
+      "photo": "Photo",
+      "file-upload": "File",
+      "ai-assisted": "AI-assisted"
+    },
+    "detail": {
+      "back": "Back to library",
+      "practise": "Practise this",
+      "markReview": "Mark for review",
+      "marked": "Marked for review",
+      "meaning": "Meaning",
+      "partOfSpeech": "Word type",
+      "level": "Level",
+      "example": "Example",
+      "usageNote": "Usage note",
+      "forms": "Forms",
+      "article": "Article",
+      "plural": "Plural",
+      "pastTense": "Past tense",
+      "perfect": "Perfect",
+      "explanation": "Explanation",
+      "examples": "Examples",
+      "summary": "Summary",
+      "text": "Text",
+      "wordCount": "{count, plural, one {# word} other {# words}}",
+      "linkedVocabulary": "Vocabulary in this text",
+      "note": "Note",
+      "file": {
+        "download": "Download",
+        "unavailable": "Download becomes available once file storage is added.",
+        "size": "Size",
+        "type": "Type",
+        "extracted": "{count, plural, one {# item extracted} other {# items extracted}}"
+      }
+    }
   },
   "pages": {
     "library": {
@@ -99,9 +135,7 @@
       "note": "Group settings (members, invitations, roles) come later."
     },
     "knowledge": {
-      "metaFallback": "Knowledge",
-      "attribution": "Type: {type} · added by {name}",
-      "note": "Knowledge detail (with explanation, examples and 'practise this') comes after Library."
+      "metaFallback": "Knowledge"
     }
   },
   "notFound": {

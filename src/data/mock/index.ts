@@ -59,6 +59,13 @@ export async function getKnowledgeById(id: string): Promise<KnowledgeItem | null
   return MOCK_KNOWLEDGE.find((item) => item.id === id) ?? null;
 }
 
+/** Resolve several ids at once, preserving order and dropping unknown ids. */
+export async function getKnowledgeByIds(ids: string[]): Promise<KnowledgeItem[]> {
+  return ids
+    .map((id) => MOCK_KNOWLEDGE.find((item) => item.id === id))
+    .filter((item): item is KnowledgeItem => item != null);
+}
+
 /** Counts used for nav badges and the Today summary. */
 export async function getLibraryStats(): Promise<
   Record<KnowledgeType, number> & { total: number }

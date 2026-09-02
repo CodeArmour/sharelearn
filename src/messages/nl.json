@@ -70,7 +70,43 @@
       "file": "Bestand",
       "note": "Notitie"
     },
-    "words": "woorden"
+    "words": "woorden",
+    "source": {
+      "manual": "Handmatig",
+      "photo": "Foto",
+      "file-upload": "Bestand",
+      "ai-assisted": "Met AI"
+    },
+    "detail": {
+      "back": "Terug naar bibliotheek",
+      "practise": "Oefen dit",
+      "markReview": "Markeer voor herhaling",
+      "marked": "Gemarkeerd voor herhaling",
+      "meaning": "Betekenis",
+      "partOfSpeech": "Woordsoort",
+      "level": "Niveau",
+      "example": "Voorbeeld",
+      "usageNote": "Gebruiksnotitie",
+      "forms": "Vormen",
+      "article": "Lidwoord",
+      "plural": "Meervoud",
+      "pastTense": "Verleden tijd",
+      "perfect": "Voltooid deelwoord",
+      "explanation": "Uitleg",
+      "examples": "Voorbeelden",
+      "summary": "Samenvatting",
+      "text": "Tekst",
+      "wordCount": "{count, plural, one {# woord} other {# woorden}}",
+      "linkedVocabulary": "Woordenschat in deze tekst",
+      "note": "Notitie",
+      "file": {
+        "download": "Downloaden",
+        "unavailable": "Downloaden kan zodra bestandsopslag is toegevoegd.",
+        "size": "Grootte",
+        "type": "Type",
+        "extracted": "{count, plural, one {# item geëxtraheerd} other {# items geëxtraheerd}}"
+      }
+    }
   },
   "pages": {
     "library": {
@@ -99,9 +135,7 @@
       "note": "Groepsinstellingen (leden, uitnodigingen, rollen) volgen later."
     },
     "knowledge": {
-      "metaFallback": "Kennis",
-      "attribution": "Type: {type} · toegevoegd door {name}",
-      "note": "Kennisdetail (met uitleg, voorbeelden en 'oefen dit') volgt na Bibliotheek."
+      "metaFallback": "Kennis"
     }
   },
   "notFound": {

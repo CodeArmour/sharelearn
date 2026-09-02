@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { PlaceholderPage } from "@/components/shared/placeholder-page";
 import { getKnowledgeById } from "@/data/mock";
 import { knowledgeTitle } from "@/types";
+import { KnowledgeDetailView } from "@/features/knowledge";
 
 export async function generateMetadata({
   params,
@@ -16,14 +16,8 @@ export async function generateMetadata({
 
 export default async function KnowledgeDetailPage({ params }: PageProps<"/knowledge/[id]">) {
   const { id } = await params;
-  const [item, t] = await Promise.all([getKnowledgeById(id), getTranslations("pages.knowledge")]);
+  const item = await getKnowledgeById(id);
   if (!item) notFound();
 
-  return (
-    <PlaceholderPage
-      title={knowledgeTitle(item)}
-      description={t("attribution", { type: item.type, name: item.addedBy.name })}
-      note={t("note")}
-    />
-  );
+  return <KnowledgeDetailView item={item} />;
 }

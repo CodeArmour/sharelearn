@@ -198,4 +198,16 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
     note: "lesmateriaal · woordenschat en grammatica geëxtraheerd",
     extractedCount: null,
   },
+  {
+    id: "kn_tips_uitspraak",
+    type: "note",
+    level: "A2",
+    tags: ["uitspraak", "docent"],
+    source: "manual",
+    addedBy: omar,
+    createdAt: "2026-09-02T09:40:00.000Z",
+    updatedAt: "2026-09-02T09:40:00.000Z",
+    title: "Uitspraaktips van de docent",
+    body: "De 'g' en 'ch' klinken hetzelfde (stemloos), behalve in leenwoorden zoals 'garage'. De 'ui' is een aparte klank — niet 'oe' en niet 'au'. Oefen korte zinnen hardop en let op de klemtoon: die ligt meestal op de eerste lettergreep, maar niet bij woorden met 'be-', 'ge-', 'ver-' of 'ont-'.",
+  },
 ];
