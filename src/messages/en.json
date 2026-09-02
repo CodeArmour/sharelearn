@@ -124,5 +124,32 @@
   "foundation": {
     "title": "Foundation",
     "description": "Development reference — tokens, typography and base components from Figma. Not shown in navigation."
+  },
+  "library": {
+    "searchPlaceholder": "Search the library…",
+    "results": "{count, plural, one {# result} other {# results}}",
+    "loadMore": "Load more",
+    "empty": "Nothing found. Adjust your search or filters.",
+    "filter": {
+      "all": "All",
+      "vocabulary": "Vocabulary",
+      "grammar": "Grammar",
+      "reading": "Texts",
+      "file": "Files"
+    },
+    "level": {
+      "label": "Level",
+      "all": "All levels"
+    },
+    "by": {
+      "label": "Added by",
+      "all": "Everyone"
+    },
+    "sort": {
+      "label": "Sort",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "az": "A–Z"
+    }
   }
 }

@@ -124,5 +124,32 @@
   "foundation": {
     "title": "Foundation",
     "description": "Ontwikkelreferentie — tokens, typografie en basiscomponenten uit Figma. Niet zichtbaar in de navigatie."
+  },
+  "library": {
+    "searchPlaceholder": "Zoek in de bibliotheek…",
+    "results": "{count, plural, one {# resultaat} other {# resultaten}}",
+    "loadMore": "Meer laden",
+    "empty": "Niets gevonden. Pas je zoekopdracht of filters aan.",
+    "filter": {
+      "all": "Alles",
+      "vocabulary": "Woordenschat",
+      "grammar": "Grammatica",
+      "reading": "Teksten",
+      "file": "Bestanden"
+    },
+    "level": {
+      "label": "Niveau",
+      "all": "Alle niveaus"
+    },
+    "by": {
+      "label": "Toegevoegd door",
+      "all": "Iedereen"
+    },
+    "sort": {
+      "label": "Sorteer",
+      "newest": "Nieuwste eerst",
+      "oldest": "Oudste eerst",
+      "az": "A–Z"
+    }
   }
 }

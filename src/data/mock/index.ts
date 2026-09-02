@@ -1,4 +1,5 @@
 import type {
+  CEFRLevel,
   GrammarItem,
   GroupMemberSummary,
   KnowledgeItem,
@@ -7,6 +8,7 @@ import type {
   UserSummary,
   VocabularyItem,
 } from "@/types";
+import { knowledgeTitle } from "@/types";
 import { isSameDay } from "@/lib/utils/date";
 
 import { MOCK_KNOWLEDGE } from "./knowledge";
@@ -64,6 +66,69 @@ export async function getLibraryStats(): Promise<
   const base = { vocabulary: 0, grammar: 0, reading: 0, file: 0, note: 0 };
   for (const item of MOCK_KNOWLEDGE) base[item.type] += 1;
   return { ...base, total: MOCK_KNOWLEDGE.length };
+}
+
+// ---------------------------------------------------------------------------
+// Library
+
+export type LibrarySort = "newest" | "oldest" | "az";
+
+export interface LibraryQuery {
+  q?: string;
+  /** One of the KNOWLEDGE_TYPES, or undefined for "all". */
+  type?: KnowledgeType;
+  level?: CEFRLevel;
+  /** Group member id. */
+  by?: string;
+  sort?: LibrarySort;
+}
+
+export interface LibraryResult {
+  items: KnowledgeItem[];
+  /** Matches before pagination. */
+  total: number;
+  /** Total in the library, ignoring filters. */
+  libraryTotal: number;
+}
+
+const PAGE_SIZE = 12;
+
+export async function getLibraryItems(query: LibraryQuery = {}, page = 1): Promise<LibraryResult> {
+  let items = [...MOCK_KNOWLEDGE];
+
+  if (query.type) items = items.filter((i) => i.type === query.type);
+  if (query.level) items = items.filter((i) => i.level === query.level);
+  if (query.by) items = items.filter((i) => i.addedBy.id === query.by);
+  if (query.q) {
+    const q = query.q.toLowerCase();
+    items = items.filter((i) => JSON.stringify(i).toLowerCase().includes(q));
+  }
+
+  items.sort((a, b) => {
+    if (query.sort === "oldest") return a.createdAt.localeCompare(b.createdAt);
+    if (query.sort === "az") {
+      return knowledgeTitle(a).localeCompare(knowledgeTitle(b), "nl", { sensitivity: "base" });
+    }
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+
+  const total = items.length;
+  return {
+    items: items.slice(0, page * PAGE_SIZE),
+    total,
+    libraryTotal: MOCK_KNOWLEDGE.length,
+  };
+}
+
+/** Facets for the Library filter dropdowns. */
+export async function getLibraryFacets(): Promise<{
+  levels: CEFRLevel[];
+  members: GroupMemberSummary[];
+}> {
+  const levels = [
+    ...new Set(MOCK_KNOWLEDGE.map((i) => i.level).filter((l): l is CEFRLevel => l != null)),
+  ].sort();
+  return { levels, members: MOCK_MEMBERS };
 }
 
 export interface TodayFeed {
