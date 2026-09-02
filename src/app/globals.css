@@ -1,26 +1,330 @@
 @import "tailwindcss";
 
+/* =============================================================================
+   Dutch Shared Learning Platform — Design Tokens
+   Source of truth: Figma "Dutch Shared Learning Platform — Production UI"
+   (file oiu3PVpsJc25iv5HHvJT8J). Values are exported from the Figma variable
+   collections — do not hand-tune; re-export from Figma if the design changes.
+
+   Two tiers:
+     :root   -> primitive color ramps (never reference these directly in UI)
+     @theme  -> semantic tokens, exposed as Tailwind v4 utilities AND emitted
+                as CSS custom properties (var(--color-surface), var(--radius-card)…)
+
+   Utility examples: bg-surface, bg-surface-sunken, text-fg, text-fg-muted,
+   border-border, border-border-strong, rounded-card, shadow-card,
+   text-knowledge-vocabulary, bg-knowledge-grammar-subtle, font-display, text-h1.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* --- PRIMITIVES (raw ramps) ------------------------------------------------ */
+  --white: #ffffff;
+  --ink: #17140f;
+
+  --sand-50: #faf8f5;
+  --sand-100: #f2eee9;
+  --sand-200: #e6e0d8;
+  --sand-300: #d3cbbf;
+  --sand-400: #a69c8d;
+  --sand-500: #7c7264;
+  --sand-600: #5e5548;
+  --sand-700: #453e34;
+  --sand-800: #2e2922;
+  --sand-900: #1c1813;
+
+  --blue-50: #eef3ff;
+  --blue-100: #dce7ff;
+  --blue-200: #b9ceff;
+  --blue-300: #8fadfb;
+  --blue-400: #5f86f5;
+  --blue-500: #3b6ff6;
+  --blue-600: #2d57d6;
+  --blue-700: #2444ab;
+  --blue-800: #1e3782;
+  --blue-900: #182b63;
+
+  --orange-50: #fff4e9;
+  --orange-100: #ffe6cc;
+  --orange-200: #fecb93;
+  --orange-300: #f7a94f;
+  --orange-400: #ed8b1e;
+  --orange-500: #d9770d;
+  --orange-600: #b45f08;
+  --orange-700: #8a4909;
+  --orange-800: #6a390b;
+  --orange-900: #4e2b0b;
+
+  --violet-50: #f3eefe;
+  --violet-100: #e7dcfd;
+  --violet-200: #cfbafb;
+  --violet-300: #b492f5;
+  --violet-400: #9a6fee;
+  --violet-500: #7b4ce0;
+  --violet-600: #6538c4;
+  --violet-700: #4f2c9b;
+  --violet-800: #3d2378;
+  --violet-900: #2e1b5a;
+
+  --teal-50: #e4f5f1;
+  --teal-100: #c6ebe2;
+  --teal-200: #8fd8c9;
+  --teal-300: #55c1ad;
+  --teal-400: #22a692;
+  --teal-500: #0e9384;
+  --teal-600: #0b7568;
+  --teal-700: #0b5a50;
+  --teal-800: #0b453e;
+  --teal-900: #093330;
+
+  --slate-50: #f1f3f6;
+  --slate-100: #e3e7ec;
+  --slate-200: #c6cdd8;
+  --slate-300: #a3adbd;
+  --slate-400: #7c889b;
+  --slate-500: #5b6980;
+  --slate-600: #48576b;
+  --slate-700: #394656;
+  --slate-800: #2b3542;
+  --slate-900: #1e262f;
+
+  --green-50: #e6f6ec;
+  --green-100: #c7ebd3;
+  --green-200: #92d9ac;
+  --green-300: #58c384;
+  --green-400: #26a961;
+  --green-500: #17924a;
+  --green-600: #10763b;
+  --green-700: #0e5c30;
+  --green-800: #0c4726;
+  --green-900: #08351c;
+
+  --amber-50: #fef6e7;
+  --amber-100: #fcebc4;
+  --amber-200: #f7d486;
+  --amber-300: #eebb47;
+  --amber-400: #dfa017;
+  --amber-500: #c6870a;
+  --amber-600: #9e6b08;
+  --amber-700: #7c5308;
+  --amber-800: #5f4009;
+  --amber-900: #452f08;
+
+  --red-50: #fdecea;
+  --red-100: #fbd5d1;
+  --red-200: #f4aaa2;
+  --red-300: #ec7c71;
+  --red-400: #e15546;
+  --red-500: #ce3b2c;
+  --red-600: #ac3023;
+  --red-700: #87271d;
+  --red-800: #661f18;
+  --red-900: #4b1813;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =============================================================================
+   SEMANTIC LAYER — the only tokens UI code should reference
+   ========================================================================== */
+@theme {
+  /* Fonts (the --font-*-src vars are injected by next/font in the root layout) */
+  --font-sans:
+    var(--font-inter-src), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    var(--font-poppins-src), var(--font-inter-src), ui-sans-serif, system-ui, sans-serif;
+  --font-reading: var(--font-lora-src), Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Page backgrounds */
+  --color-background: var(--sand-50);
+  --color-background-subtle: var(--sand-100);
+  --color-background-inverse: var(--sand-900);
+
+  /* Component surfaces */
+  --color-surface: var(--white);
+  --color-surface-subtle: var(--sand-50);
+  --color-surface-elevated: var(--white);
+  --color-surface-sunken: var(--sand-100);
+  --color-surface-interactive: var(--sand-50);
+  --color-surface-interactive-hover: var(--sand-100);
+  --color-surface-selected: var(--blue-50);
+
+  /* Foreground / text */
+  --color-fg: var(--sand-900);
+  --color-fg-secondary: var(--sand-700);
+  --color-fg-muted: var(--sand-600);
+  --color-fg-inverse: var(--white);
+  --color-fg-on-action: var(--white);
+  --color-link: var(--blue-600);
+
+  /* Borders (border-border is the default hairline) */
+  --color-border: var(--sand-200);
+  --color-border-default: var(--sand-300);
+  --color-border-strong: var(--sand-400);
+  --color-border-focus: var(--blue-500);
+
+  /* Actions */
+  --color-primary: var(--blue-500);
+  --color-primary-hover: var(--blue-600);
+  --color-primary-active: var(--blue-700);
+  --color-primary-subtle: var(--blue-50);
+  --color-on-primary: var(--white);
+  --color-secondary: var(--sand-100);
+  --color-secondary-hover: var(--sand-200);
+  --color-secondary-active: var(--sand-300);
+
+  /* Feedback */
+  --color-success: var(--green-500);
+  --color-success-subtle: var(--green-50);
+  --color-success-strong: var(--green-700);
+  --color-warning: var(--amber-500);
+  --color-warning-subtle: var(--amber-50);
+  --color-warning-strong: var(--amber-700);
+  --color-error: var(--red-500);
+  --color-error-subtle: var(--red-50);
+  --color-error-strong: var(--red-700);
+  --color-info: var(--blue-500);
+  --color-info-subtle: var(--blue-50);
+  --color-info-strong: var(--blue-700);
+
+  /* Knowledge types — the product's core categorical color system */
+  --color-knowledge-vocabulary: var(--orange-500);
+  --color-knowledge-vocabulary-subtle: var(--orange-50);
+  --color-knowledge-vocabulary-strong: var(--orange-700);
+  --color-knowledge-grammar: var(--violet-500);
+  --color-knowledge-grammar-subtle: var(--violet-50);
+  --color-knowledge-grammar-strong: var(--violet-700);
+  --color-knowledge-reading: var(--teal-500);
+  --color-knowledge-reading-subtle: var(--teal-50);
+  --color-knowledge-reading-strong: var(--teal-700);
+  --color-knowledge-file: var(--slate-500);
+  --color-knowledge-file-subtle: var(--slate-50);
+  --color-knowledge-file-strong: var(--slate-700);
+
+  /* AI surfaces (reserved for later AI features) */
+  --color-ai: var(--slate-600);
+  --color-ai-subtle: var(--slate-50);
+  --color-ai-border: var(--slate-200);
+  --color-ai-accent: var(--violet-400);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-card: 18px;
+  --radius-modal: 24px;
+  --radius-pill: 9999px;
+
+  /* Elevation (warm-tinted; from Figma effect styles) */
+  --shadow-card: 0 1px 2px rgba(28, 24, 19, 0.06), 0 4px 10px -2px rgba(28, 24, 19, 0.08);
+  --shadow-elevated: 0 2px 6px rgba(28, 24, 19, 0.06), 0 12px 28px -4px rgba(28, 24, 19, 0.12);
+  --shadow-modal: 0 4px 12px rgba(28, 24, 19, 0.08), 0 24px 56px -8px rgba(28, 24, 19, 0.18);
+
+  /* Type scale — pair with a font-* utility:
+       headings/titles -> font-display   body/UI -> font-sans   long-form -> font-reading
+     Each key sets font-size + line-height (+ tracking + weight where the Figma
+     style specifies them). */
+  --text-display: 2.5rem;
+  --text-display--line-height: 3rem;
+  --text-display--letter-spacing: -0.5px;
+  --text-display--font-weight: 600;
+
+  --text-h1: 1.875rem;
+  --text-h1--line-height: 2.375rem;
+  --text-h1--letter-spacing: -0.3px;
+  --text-h1--font-weight: 600;
+
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 2rem;
+  --text-h2--letter-spacing: -0.2px;
+  --text-h2--font-weight: 600;
+
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.75rem;
+  --text-h3--font-weight: 600;
+
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.5rem;
+  --text-title--font-weight: 500;
+
+  --text-term: 1.75rem;
+  --text-term--line-height: 2.125rem;
+  --text-term--letter-spacing: -0.2px;
+  --text-term--font-weight: 600;
+
+  --text-quiz: 1.25rem;
+  --text-quiz--line-height: 1.875rem;
+  --text-quiz--font-weight: 500;
+
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.75rem;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5rem;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.25rem;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.2px;
+  --text-label--font-weight: 500;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--letter-spacing: 0.1px;
+
+  --text-button: 0.9375rem;
+  --text-button--line-height: 1.25rem;
+  --text-button--letter-spacing: 0.1px;
+  --text-button--font-weight: 600;
+
+  --text-reading: 1.125rem;
+  --text-reading--line-height: 2rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* =============================================================================
+   Base layer
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.5rem;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible keyboard focus everywhere; suppressed for pointer interactions. */
+  :focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--blue-100);
+    color: var(--color-fg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
