@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -28,22 +28,33 @@ export function LibraryControls({
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const [, startTransition] = useTransition();
 
-  const [q, setQ] = useState(params.get("q") ?? "");
+  const currentQ = params.get("q") ?? "";
+  const [q, setQ] = useState(currentQ);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mounted = useRef(false);
 
   function apply(patch: Record<string, string | null>) {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(params.toString());
     for (const [k, v] of Object.entries(patch)) {
       if (v) next.set(k, v);
       else next.delete(k);
     }
     next.delete("page");
     const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    const href = qs ? `${pathname}?${qs}` : pathname;
+    const here = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    if (href === here) return;
+    startTransition(() => router.replace(href, { scroll: false }));
   }
 
+  // Debounced search — user typing only, never on mount or on URL sync.
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (debounce.current) clearTimeout(debounce.current);
     debounce.current = setTimeout(() => apply({ q: q.trim() || null }), 300);
     return () => {
