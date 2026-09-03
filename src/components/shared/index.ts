@@ -1,4 +1,5 @@
 export { KnowledgeCard } from "./knowledge-card";
+export { MODE_ACCENT } from "./mode-accent";
 export { KnowledgeTypeBadge } from "./knowledge-type-badge";
 export { MetaRow } from "./meta-row";
 export { OptionButton, type OptionState } from "./option-button";
