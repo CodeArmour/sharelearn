@@ -216,6 +216,20 @@
   },
   "add": {
     "typeLabel": "Knowledge type",
+    "ai": {
+      "captureLabel": "Paste text to structure with AI",
+      "capturePlaceholder": "Paste a word list, a sentence from your teacher, a paragraph…",
+      "submit": "Structure with AI",
+      "disclaimer": "AI proposes a structure — you review and confirm before anything is saved. Simulated for now.",
+      "processing": "Analysing your input…",
+      "reviewTitle": "AI suggestion — review & confirm",
+      "confirm": "Confirm & save",
+      "startOver": "Start over",
+      "failedTitle": "AI couldn't structure that",
+      "failedBody": "Capture is never blocked — add it by hand instead.",
+      "fillManually": "Fill in manually",
+      "divider": "or add manually"
+    },
     "levelLabel": "Level",
     "levelNone": "No level",
     "tagsLabel": "Tags",

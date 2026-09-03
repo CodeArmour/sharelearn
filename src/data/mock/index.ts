@@ -1,4 +1,5 @@
 import type {
+  AiSuggestion,
   CEFRLevel,
   GrammarItem,
   GroupMemberSummary,
@@ -64,6 +65,70 @@ export async function getKnowledgeByIds(ids: string[]): Promise<KnowledgeItem[]>
   return ids
     .map((id) => MOCK_KNOWLEDGE.find((item) => item.id === id))
     .filter((item): item is KnowledgeItem => item != null);
+}
+
+/**
+ * Stand-in for the AI structuring step (`ai/services/KnowledgeProcessor`).
+ * A deterministic heuristic over the pasted text — no provider call, no
+ * randomness. Returns `null` when there's nothing to work with, so the UI can
+ * fall back to manual entry. Replace with the real service later; the return
+ * shape (`AiSuggestion`) does not change.
+ */
+export async function getAiSuggestion(rawText: string): Promise<AiSuggestion | null> {
+  const text = rawText.trim();
+  // Nothing to structure: too short, or no actual words (punctuation / symbols only).
+  if (text.length < 2 || !/\p{L}/u.test(text)) return null;
+
+  const firstLine = text.split(/\r?\n/)[0].trim();
+  const words = text.split(/\s+/).filter(Boolean);
+
+  // "term — meaning" / "term - meaning" / "term = meaning" / "term: meaning"
+  const pair = firstLine.match(/^(.{1,60}?)\s*[—–\-=:]\s*(.+)$/);
+  if (pair && !/[.!?]/.test(pair[1])) {
+    return {
+      type: "vocabulary",
+      fields: { term: pair[1].trim(), meaning: pair[2].trim(), partOfSpeech: "" },
+      notice: "Check the word type and level — I left those blank.",
+    };
+  }
+
+  // Longer prose → a reading
+  if (words.length > 25 || /[.!?].+[.!?]/.test(text)) {
+    const stem = words.slice(0, 6).join(" ").replace(/[.,;:]$/, "");
+    return {
+      type: "reading",
+      fields: {
+        title: words.length > 6 ? `${stem}…` : stem,
+        readingBody: text,
+        summary: "",
+      },
+      notice: "Give it a proper title and summary before saving.",
+    };
+  }
+
+  // Grammar-ish keywords
+  if (
+    /\b(regel|woordvolgorde|vervoeg\w*|naamval|lidwoord|inversie|conjug\w*|word order|tense)\b/i.test(
+      text,
+    )
+  ) {
+    return {
+      type: "grammar",
+      fields: { title: firstLine.slice(0, 60), summary: "", explanation: text },
+      notice: "Add a one-line summary and examples.",
+    };
+  }
+
+  // Short bare phrase → vocabulary, term only
+  if (words.length <= 5) {
+    return {
+      type: "vocabulary",
+      fields: { term: text, meaning: "", partOfSpeech: "" },
+      notice: "Add the meaning and word type.",
+    };
+  }
+
+  return { type: "note", fields: { title: "", noteBody: text } };
 }
 
 /** Counts used for nav badges and the Today summary. */

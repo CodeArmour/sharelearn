@@ -1,3 +1,4 @@
+export * from "./ai";
 export * from "./cefr";
 export * from "./knowledge";
 export * from "./personal";

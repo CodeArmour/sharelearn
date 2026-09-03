@@ -1,17 +1,18 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { CEFR_LEVELS } from "@/types";
+import { getAiSuggestion } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
-import { Button, Field, Input, Select } from "@/components/ui";
+import { Button } from "@/components/ui";
 
-import { GrammarFields } from "./grammar-fields";
-import { NoteFields } from "./note-fields";
-import { ReadingFields } from "./reading-fields";
+import { AiCaptureBox } from "./ai-capture-box";
+import { AiFailedPanel } from "./ai-failed-panel";
+import { AiReviewBanner } from "./ai-review-banner";
+import { KnowledgeForm } from "./knowledge-form";
 import { SuccessPanel } from "./success-panel";
-import { TypePicker } from "./type-picker";
 import {
   type AuthableType,
   type Errors,
@@ -21,7 +22,8 @@ import {
   REQUIRED,
   type Values,
 } from "./types";
-import { VocabularyFields } from "./vocabulary-fields";
+
+type Mode = "manual" | "processing" | "review" | "failed";
 
 function deriveTitle(type: AuthableType, values: Values): string {
   if (type === "vocabulary") return values.term?.trim() ?? "";
@@ -30,14 +32,18 @@ function deriveTitle(type: AuthableType, values: Values): string {
 }
 
 /**
- * Manual capture form. A person picks a knowledge type and fills the fields;
- * the AI suggestion / confirm flow (the Figma "AI voorstel" panel) is the
- * separate "AI Review" roadmap item. No persistence yet — a valid submit shows
- * a confirmation that says so.
+ * Capture knowledge, two ways. The manual path is a plain form. The AI path
+ * hands pasted text to a (simulated) structuring step, then drops the reviewer
+ * into the same form pre-filled — they always confirm before it "saves".
+ * Nothing persists yet; a valid submit shows a confirmation that says so.
  */
 export function AddKnowledgeView() {
   const t = useTranslations("add");
   const tPage = useTranslations("pages.add");
+
+  const [mode, setMode] = useState<Mode>("manual");
+  const [rawText, setRawText] = useState("");
+  const [notice, setNotice] = useState<string | undefined>();
 
   const [type, setType] = useState<PickerType>("vocabulary");
   const [values, setValues] = useState<Values>({});
@@ -60,6 +66,39 @@ export function AddKnowledgeView() {
   const changeType = (next: PickerType) => {
     setType(next);
     resetFields();
+  };
+
+  const runAi = () => {
+    setMode("processing");
+    window.setTimeout(async () => {
+      const suggestion = await getAiSuggestion(rawText);
+      if (!suggestion) {
+        setMode("failed");
+        return;
+      }
+      setType(suggestion.type as PickerType);
+      setValues(suggestion.fields);
+      setExamples(
+        (suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })),
+      );
+      setErrors({});
+      setNotice(suggestion.notice);
+      setMode("review");
+    }, 900);
+  };
+
+  const fillManuallyFromFailure = () => {
+    setType("note");
+    setValues({ noteBody: rawText, title: "" });
+    setExamples([]);
+    setErrors({});
+    setMode("manual");
+  };
+
+  const backToManual = () => {
+    resetFields();
+    setNotice(undefined);
+    setMode("manual");
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -86,89 +125,72 @@ export function AddKnowledgeView() {
     setSavedTitle(deriveTitle(type, values));
   };
 
+  const afterSuccess = () => {
+    resetFields();
+    setRawText("");
+    setNotice(undefined);
+    setSavedTitle(null);
+    setMode("manual");
+  };
+
+  const form = (submitLabel: string, secondaryAction?: React.ReactNode) => (
+    <KnowledgeForm
+      type={type}
+      onTypeChange={changeType}
+      values={values}
+      errors={errors}
+      set={set}
+      examples={examples}
+      setExamples={setExamples}
+      formRef={formRef}
+      onSubmit={handleSubmit}
+      submitLabel={submitLabel}
+      secondaryAction={secondaryAction}
+    />
+  );
+
   return (
     <PageContainer>
       <div className="mx-auto w-full max-w-[42rem]">
         <PageHeader title={tPage("title")} description={tPage("subtitle")} />
 
         {savedTitle !== null ? (
-          <SuccessPanel
-            title={savedTitle}
-            onAddAnother={() => {
-              resetFields();
-              setSavedTitle(null);
+          <SuccessPanel title={savedTitle} onAddAnother={afterSuccess} />
+        ) : mode === "processing" ? (
+          <div className="flex items-center gap-3 rounded-card border border-ai-border bg-ai-subtle p-6">
+            <Loader2 className="size-5 shrink-0 animate-spin text-ai" strokeWidth={2} aria-hidden />
+            <span className="text-body text-fg-secondary">{t("ai.processing")}</span>
+          </div>
+        ) : mode === "failed" ? (
+          <AiFailedPanel
+            onFillManually={fillManuallyFromFailure}
+            onCancel={() => {
+              setRawText("");
+              backToManual();
             }}
           />
+        ) : mode === "review" ? (
+          <div className="flex flex-col gap-6">
+            <AiReviewBanner notice={notice} />
+            {form(
+              t("ai.confirm"),
+              <Button type="button" variant="ghost" size="md" onClick={backToManual}>
+                {t("ai.startOver")}
+              </Button>,
+            )}
+          </div>
         ) : (
           <div className="flex flex-col gap-6">
-            <TypePicker value={type} onChange={changeType} />
-
-            {type === "file" ? (
-              <FilePlaceholder />
-            ) : (
-              <form ref={formRef} onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-                {type === "vocabulary" && (
-                  <VocabularyFields values={values} errors={errors} set={set} />
-                )}
-                {type === "grammar" && (
-                  <GrammarFields
-                    values={values}
-                    errors={errors}
-                    set={set}
-                    examples={examples}
-                    setExamples={setExamples}
-                  />
-                )}
-                {type === "reading" && <ReadingFields values={values} errors={errors} set={set} />}
-                {type === "note" && <NoteFields values={values} errors={errors} set={set} />}
-
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label={t("levelLabel")} htmlFor="add-level">
-                    <Select
-                      id="add-level"
-                      name="level"
-                      value={values.level ?? ""}
-                      onChange={(e) => set("level", e.target.value)}
-                    >
-                      <option value="">{t("levelNone")}</option>
-                      {CEFR_LEVELS.map((l) => (
-                        <option key={l} value={l}>
-                          {l}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label={t("tagsLabel")} htmlFor="add-tags" hint={t("tagsHint")}>
-                    <Input
-                      id="add-tags"
-                      name="tags"
-                      value={values.tags ?? ""}
-                      onChange={(e) => set("tags", e.target.value)}
-                      aria-describedby="add-tags-hint"
-                    />
-                  </Field>
-                </div>
-
-                <div className="pt-1">
-                  <Button type="submit" size="md">
-                    {t("submit")}
-                  </Button>
-                </div>
-              </form>
-            )}
+            <AiCaptureBox value={rawText} onChange={setRawText} onSubmit={runAi} />
+            <div className="flex items-center gap-3 text-caption text-fg-muted">
+              <span className="h-px flex-1 bg-border" />
+              {t("ai.divider")}
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            {form(t("submit"))}
           </div>
         )}
       </div>
     </PageContainer>
-  );
-}
-
-function FilePlaceholder() {
-  const t = useTranslations("add.file");
-  return (
-    <div className="rounded-card border border-dashed border-border-default bg-surface p-8 text-center">
-      <p className="font-display text-title text-fg">{t("title")}</p>
-      <p className="mx-auto mt-1.5 max-w-sm text-body-sm text-fg-muted">{t("body")}</p>
-    </div>
   );
 }

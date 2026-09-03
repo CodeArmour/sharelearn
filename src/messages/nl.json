@@ -216,6 +216,20 @@
   },
   "add": {
     "typeLabel": "Soort kennis",
+    "ai": {
+      "captureLabel": "Plak tekst om met AI te structureren",
+      "capturePlaceholder": "Plak een woordenlijst, een zin van je docent, een alinea…",
+      "submit": "Structureren met AI",
+      "disclaimer": "AI stelt een structuur voor — jij controleert en bevestigt voordat er iets wordt opgeslagen. Nu nog gesimuleerd.",
+      "processing": "Je invoer analyseren…",
+      "reviewTitle": "AI-voorstel — controleer & bevestig",
+      "confirm": "Bevestigen & opslaan",
+      "startOver": "Opnieuw beginnen",
+      "failedTitle": "AI kon dit niet structureren",
+      "failedBody": "Vastleggen wordt nooit geblokkeerd — voeg het handmatig toe.",
+      "fillManually": "Handmatig invullen",
+      "divider": "of handmatig toevoegen"
+    },
     "levelLabel": "Niveau",
     "levelNone": "Geen niveau",
     "tagsLabel": "Labels",
