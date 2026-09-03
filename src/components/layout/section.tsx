@@ -15,8 +15,8 @@ export function Section({ title, description, actions, children, className }: Se
   return (
     <section className={cn("space-y-4", className)}>
       {(title || actions) && (
-        <div className="flex items-end justify-between gap-4">
-          <div className="space-y-0.5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="min-w-0 space-y-0.5">
             {title ? <h2 className="font-display text-h3 text-fg">{title}</h2> : null}
             {description ? <p className="text-body-sm text-fg-muted">{description}</p> : null}
           </div>
