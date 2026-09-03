@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Target } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { getPracticeQuestions } from "@/data/mock";
 import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { useReviewMarks } from "@/lib/review-marks";
 import { PageContainer, PageHeader } from "@/components/layout";
-import { SetupForm } from "@/components/shared";
+import { SetupForm, SetupModeNote } from "@/components/shared";
 
 import { PracticeResults } from "./practice-results";
 import { PracticeSession } from "./practice-session";
@@ -62,8 +63,19 @@ export function PracticeView({
     <PageContainer>
       {phase.name === "setup" ? (
         <>
-          <PageHeader title={tPage("title")} description={tPage("subtitle")} />
-          <div className="mx-auto w-full max-w-[42rem]">
+          <PageHeader
+            title={tPage("title")}
+            icon={
+              <Target
+                className="size-7 text-info-strong lg:size-8"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            }
+            description={tPage("subtitle")}
+          />
+          <div className="mx-auto flex w-full max-w-[42rem] flex-col gap-6">
+            <SetupModeNote mode="practice" />
             <SetupForm
               setup={setup}
               levels={levels}

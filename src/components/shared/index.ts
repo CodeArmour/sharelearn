@@ -5,3 +5,4 @@ export { OptionButton, type OptionState } from "./option-button";
 export { PlaceholderPage } from "./placeholder-page";
 export { QuestionReviewList } from "./question-review-list";
 export { SetupForm } from "./setup-form";
+export { SetupModeNote } from "./setup-mode-note";

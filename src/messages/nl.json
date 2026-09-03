@@ -309,7 +309,15 @@
       "count": "{count, plural, =0 {Geen vragen} one {# vraag} other {# vragen}} beschikbaar",
       "notEnough": "Niet genoeg materiaal voor deze combinatie — kies een breder bereik.",
       "filterMatching": "met “{q}”",
-      "start": "Start oefening"
+      "start": "Start oefening",
+      "about": {
+        "title": "Oefenmodus",
+        "points": [
+          "Directe feedback na elke vraag",
+          "Opnieuw doen zo vaak als je wilt",
+          "Telt niet mee — puur om te leren"
+        ]
+      }
     },
     "session": {
       "progress": "{current} van {total}",
@@ -344,7 +352,17 @@
     "viewKnowledge": "Bekijk de kennis"
   },
   "exam": {
-    "setup": { "start": "Start examen" },
+    "setup": {
+      "start": "Start examen",
+      "about": {
+        "title": "Examenmodus",
+        "points": [
+          "Alle vragen op één pagina, geen tussentijdse feedback",
+          "Je fouten zie je pas nadat je hebt ingeleverd",
+          "Toont een score wanneer je klaar bent"
+        ]
+      }
+    },
     "session": {
       "answered": "{answered} van {total} beantwoord",
       "unanswered": "{count, plural, one {# niet beantwoord} other {# niet beantwoord}}",

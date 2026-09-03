@@ -27,6 +27,11 @@ export const buttonVariants = cva(
         ghost: "text-fg-secondary hover:bg-surface-interactive-hover",
         danger: "bg-error text-on-primary hover:bg-error-strong",
       },
+      /** Recolours a filled button — overrides `variant` bg (declared after it). */
+      tone: {
+        default: "",
+        warning: "bg-warning text-on-primary hover:bg-warning-strong",
+      },
       size: {
         sm: "h-9 rounded-sm px-3 text-body-sm",
         md: "h-11 rounded-md px-4",
@@ -39,6 +44,7 @@ export const buttonVariants = cva(
     },
     defaultVariants: {
       variant: "primary",
+      tone: "default",
       size: "md",
       block: false,
     },
@@ -54,6 +60,7 @@ export interface ButtonProps
 export function Button({
   className,
   variant,
+  tone,
   size,
   block,
   iconLeft,
@@ -65,7 +72,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(buttonVariants({ variant, size, block }), className)}
+      className={cn(buttonVariants({ variant, tone, size, block }), className)}
       {...props}
     >
       {iconLeft ? <span className="-ml-0.5 inline-flex shrink-0">{iconLeft}</span> : null}

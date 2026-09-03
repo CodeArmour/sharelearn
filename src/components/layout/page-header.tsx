@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils/cn";
 
 interface PageHeaderProps {
   title: string;
+  /** Optional mark shown before the title — the caller sets its size and colour. */
+  icon?: ReactNode;
   description?: ReactNode;
   /** Right-aligned actions on desktop; wraps under the title on mobile. */
   actions?: ReactNode;
@@ -11,7 +13,7 @@ interface PageHeaderProps {
 }
 
 /** Standard page title block. Maps to the Figma `page-header`. */
-export function PageHeader({ title, description, actions, className }: PageHeaderProps) {
+export function PageHeader({ title, icon, description, actions, className }: PageHeaderProps) {
   return (
     <header
       className={cn(
@@ -20,7 +22,14 @@ export function PageHeader({ title, description, actions, className }: PageHeade
       )}
     >
       <div className="space-y-1">
-        <h1 className="font-display text-h1 text-fg lg:text-display">{title}</h1>
+        {icon ? (
+          <div className="flex items-center gap-2.5">
+            <span className="shrink-0">{icon}</span>
+            <h1 className="font-display text-h1 text-fg lg:text-display">{title}</h1>
+          </div>
+        ) : (
+          <h1 className="font-display text-h1 text-fg lg:text-display">{title}</h1>
+        )}
         {description ? (
           <p className="max-w-2xl text-body-sm text-fg-muted lg:text-body-lg lg:text-fg-secondary">
             {description}

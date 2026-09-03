@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ClipboardList } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { getExamQuestions } from "@/data/mock";
 import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { useReviewMarks } from "@/lib/review-marks";
 import { PageContainer, PageHeader } from "@/components/layout";
-import { SetupForm } from "@/components/shared";
+import { SetupForm, SetupModeNote } from "@/components/shared";
 
 import { ExamResults } from "./exam-results";
 import { ExamSession } from "./exam-session";
@@ -59,13 +60,25 @@ export function ExamView({
     <PageContainer>
       {phase.name === "setup" ? (
         <>
-          <PageHeader title={tPage("title")} description={tPage("subtitle")} />
-          <div className="mx-auto w-full max-w-[42rem]">
+          <PageHeader
+            title={tPage("title")}
+            icon={
+              <ClipboardList
+                className="size-7 text-warning-strong lg:size-8"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            }
+            description={tPage("subtitle")}
+          />
+          <div className="mx-auto flex w-full max-w-[42rem] flex-col gap-6">
+            <SetupModeNote mode="exam" />
             <SetupForm
               setup={setup}
               levels={levels}
               count={preview.length}
               startLabel={tExamSetup("start")}
+              accent="warning"
               filterSummary={filterSummary}
               onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
               onStart={() => {

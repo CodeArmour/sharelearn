@@ -28,6 +28,7 @@ export function SetupForm({
   levels,
   count,
   startLabel,
+  accent,
   filterSummary,
   onChange,
   onStart,
@@ -36,6 +37,8 @@ export function SetupForm({
   levels: string[];
   count: number;
   startLabel: string;
+  /** Recolours the Start button — Exam passes `"warning"`; Practice keeps primary. */
+  accent?: "warning";
   /** One-line description of a carried Library filter; enables the "custom" scope. */
   filterSummary?: string;
   onChange: (patch: Partial<PracticeSetup>) => void;
@@ -141,7 +144,7 @@ export function SetupForm({
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
-        <Button type="button" size="md" onClick={onStart} disabled={count === 0}>
+        <Button type="button" size="md" tone={accent} onClick={onStart} disabled={count === 0}>
           {startLabel}
         </Button>
         <p className="text-body-sm text-fg-muted">
