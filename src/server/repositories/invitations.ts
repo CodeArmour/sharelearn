@@ -26,6 +26,11 @@ export async function getByToken(token: string): Promise<Invitation | null> {
   return row ?? null;
 }
 
+export async function getById(id: string): Promise<Invitation | null> {
+  const [row] = await db.select().from(invitations).where(eq(invitations.id, id)).limit(1);
+  return row ?? null;
+}
+
 export async function getPendingByEmail(email: string): Promise<Invitation[]> {
   return db
     .select()

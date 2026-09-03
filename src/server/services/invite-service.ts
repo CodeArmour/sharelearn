@@ -15,9 +15,10 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/server/errors";
-import { getGroupById, getMembership } from "@/server/repositories/groups";
+import { getMembership } from "@/server/repositories/groups";
 import {
   createInvitation,
+  getById,
   getByToken,
   getPendingByEmail,
   markAccepted,
@@ -126,13 +127,11 @@ export async function revokeInvitation(input: { invitationId: string }): Promise
   const user = await getCurrentUser();
   if (!user) throw new ForbiddenError("Not signed in");
 
-  const groupId = await readActiveGroupId();
-  if (!groupId) throw new NotFoundError("No active group");
-  if ((await getRole(user.id, groupId)) !== "owner") {
+  const invite = await getById(input.invitationId);
+  if (!invite) throw new NotFoundError("Invitation not found");
+
+  if ((await getRole(user.id, invite.groupId)) !== "owner") {
     throw new ForbiddenError("Only an owner can revoke invites");
   }
-  // The invite must belong to the active group.
-  const group = await getGroupById(groupId);
-  if (!group) throw new NotFoundError("Group not found");
   await markRevoked(input.invitationId);
 }

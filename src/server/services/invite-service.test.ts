@@ -13,7 +13,6 @@ vi.mock("@/server/active-group", () => ({
 }));
 vi.mock("@/server/repositories/groups", () => ({
   getMembership: vi.fn(),
-  getGroupById: vi.fn(),
 }));
 vi.mock("@/server/repositories/memberships", () => ({
   getRole: vi.fn(),
@@ -21,6 +20,7 @@ vi.mock("@/server/repositories/memberships", () => ({
 }));
 vi.mock("@/server/repositories/invitations", () => ({
   getByToken: vi.fn(),
+  getById: vi.fn(),
   getPendingByEmail: vi.fn(),
   createInvitation: vi.fn(),
   markAccepted: vi.fn(),
@@ -35,16 +35,24 @@ vi.mock("@/server/db/client", () => ({
 import { writeActiveGroupId, readActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
-import { ConflictError, ForbiddenError, InviteError, ValidationError } from "@/server/errors";
-import { getGroupById, getMembership } from "@/server/repositories/groups";
+import {
+  ConflictError,
+  ForbiddenError,
+  InviteError,
+  NotFoundError,
+  ValidationError,
+} from "@/server/errors";
+import { getMembership } from "@/server/repositories/groups";
 import {
   createInvitation,
+  getById,
   getByToken,
   getPendingByEmail,
   markAccepted,
   markRevoked,
 } from "@/server/repositories/invitations";
 import { createMembership, getRole } from "@/server/repositories/memberships";
+import { upsertProfile } from "@/server/repositories/profiles";
 
 import { acceptInvitation, inviteMember, revokeInvitation } from "./invite-service";
 
@@ -191,21 +199,46 @@ describe("acceptInvitation", () => {
     expect(res).toEqual({ groupId: GROUP });
     expect(createMembership).toHaveBeenCalled();
     expect(markAccepted).toHaveBeenCalled();
+    expect(upsertProfile).toHaveBeenCalled();
     expect(writeActiveGroupId).toHaveBeenCalledWith(GROUP);
+  });
+
+  it("compares the email case-insensitively on the happy path", async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: {
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: { id: INVITEE, email: "INVITEE@X.com" } } }),
+      },
+    } as never);
+    vi.mocked(getByToken).mockResolvedValue({
+      ...pendingInvite(),
+      email: "invitee@x.com",
+    } as never);
+    vi.mocked(getMembership).mockResolvedValue(null);
+    const res = await acceptInvitation({ token: "t" });
+    expect(res).toEqual({ groupId: GROUP });
+    expect(createMembership).toHaveBeenCalled();
   });
 });
 
 describe("revokeInvitation", () => {
+  const invite = (groupId: string) => ({
+    id: "i1",
+    groupId,
+    email: "invitee@x.com",
+    token: "t",
+    role: "member" as const,
+    invitedBy: OWNER,
+    status: "pending" as const,
+    expiresAt: new Date(Date.now() + 1e6),
+    acceptedAt: null,
+    createdAt: new Date(),
+  });
+
   beforeEach(() => {
-    vi.mocked(readActiveGroupId).mockResolvedValue(GROUP);
+    vi.mocked(getById).mockResolvedValue(invite(GROUP));
     vi.mocked(getRole).mockResolvedValue("owner");
-    vi.mocked(getGroupById).mockResolvedValue({
-      id: GROUP,
-      name: "G",
-      slug: "g",
-      createdBy: OWNER,
-      createdAt: new Date(),
-    } as never);
   });
 
   it("rejects a non-owner", async () => {
@@ -217,5 +250,20 @@ describe("revokeInvitation", () => {
   it("revokes for an owner", async () => {
     await revokeInvitation({ invitationId: "i1" });
     expect(markRevoked).toHaveBeenCalledWith("i1");
+  });
+
+  it("rejects when the invitation does not exist", async () => {
+    vi.mocked(getById).mockResolvedValue(null);
+    await expect(revokeInvitation({ invitationId: "i1" })).rejects.toBeInstanceOf(NotFoundError);
+    expect(markRevoked).not.toHaveBeenCalled();
+  });
+
+  it("rejects an owner of a different group", async () => {
+    vi.mocked(getById).mockResolvedValue(invite("other-group"));
+    vi.mocked(getRole).mockImplementation(async (_userId, groupId) =>
+      groupId === GROUP ? "owner" : null,
+    );
+    await expect(revokeInvitation({ invitationId: "i1" })).rejects.toBeInstanceOf(ForbiddenError);
+    expect(markRevoked).not.toHaveBeenCalled();
   });
 });
