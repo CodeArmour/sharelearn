@@ -276,5 +276,47 @@
       "addAnother": "Nog een toevoegen",
       "toLibrary": "Naar bibliotheek"
     }
+  },
+  "practice": {
+    "setup": {
+      "modeLabel": "Modus",
+      "scopeLabel": "Bereik",
+      "lengthLabel": "Lengte",
+      "levelLabel": "Niveau",
+      "mode": { "vocabulary": "Woordenschat", "grammar": "Grammatica", "mixed": "Gemengd" },
+      "scope": { "all": "Hele bibliotheek", "today": "Vandaag toegevoegd", "level": "Op niveau" },
+      "length": { "ten": "10", "twenty": "20", "all": "Alles" },
+      "count": "{count, plural, =0 {Geen vragen} one {# vraag} other {# vragen}} beschikbaar",
+      "notEnough": "Niet genoeg materiaal voor deze combinatie — kies een breder bereik.",
+      "start": "Start oefening"
+    },
+    "session": {
+      "progress": "{current} van {total}",
+      "next": "Volgende",
+      "finish": "Bekijk resultaten"
+    },
+    "instruction": {
+      "meaningOf": "Wat betekent dit?",
+      "sayInDutch": "Hoe zeg je dit in het Nederlands?",
+      "whichRule": "Van welke regel is dit een voorbeeld?"
+    },
+    "feedback": {
+      "correct": "Correct",
+      "incorrect": "Niet correct",
+      "correctAnswer": "Juiste antwoord",
+      "viewKnowledge": "Bekijk de kennis"
+    },
+    "results": {
+      "title": "Oefening voltooid",
+      "score": "{correct} van {total} goed",
+      "percent": "{percent}%",
+      "reviewTitle": "Overzicht",
+      "yourAnswer": "Jouw antwoord",
+      "correctAnswer": "Juiste antwoord",
+      "noAnswer": "Geen antwoord",
+      "notSaved": "Resultaten worden nog niet bewaard.",
+      "again": "Nog een keer oefenen",
+      "toToday": "Terug naar Vandaag"
+    }
   }
 }

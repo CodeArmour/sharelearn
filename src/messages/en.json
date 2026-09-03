@@ -276,5 +276,47 @@
       "addAnother": "Add another",
       "toLibrary": "Go to library"
     }
+  },
+  "practice": {
+    "setup": {
+      "modeLabel": "Mode",
+      "scopeLabel": "Scope",
+      "lengthLabel": "Length",
+      "levelLabel": "Level",
+      "mode": { "vocabulary": "Vocabulary", "grammar": "Grammar", "mixed": "Mixed" },
+      "scope": { "all": "Whole library", "today": "Added today", "level": "By level" },
+      "length": { "ten": "10", "twenty": "20", "all": "All" },
+      "count": "{count, plural, =0 {No questions} one {# question} other {# questions}} available",
+      "notEnough": "Not enough material for that combination — try a wider scope.",
+      "start": "Start practice"
+    },
+    "session": {
+      "progress": "{current} of {total}",
+      "next": "Next",
+      "finish": "See results"
+    },
+    "instruction": {
+      "meaningOf": "What does this mean?",
+      "sayInDutch": "How do you say this in Dutch?",
+      "whichRule": "Which rule is this an example of?"
+    },
+    "feedback": {
+      "correct": "Correct",
+      "incorrect": "Not quite",
+      "correctAnswer": "Correct answer",
+      "viewKnowledge": "View the knowledge"
+    },
+    "results": {
+      "title": "Practice complete",
+      "score": "{correct} of {total} correct",
+      "percent": "{percent}%",
+      "reviewTitle": "Review",
+      "yourAnswer": "Your answer",
+      "correctAnswer": "Correct answer",
+      "noAnswer": "No answer",
+      "notSaved": "Results aren't saved yet.",
+      "again": "Practice again",
+      "toToday": "Back to Today"
+    }
   }
 }

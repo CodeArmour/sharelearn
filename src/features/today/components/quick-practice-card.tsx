@@ -28,7 +28,7 @@ export async function QuickPracticeCard({
   return (
     <>
       <Link
-        href="/practice"
+        href="/practice?scope=today"
         className={cn(container, focusRing, "flex items-center gap-3 p-4 lg:hidden")}
       >
         <Target className="size-5 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />
@@ -55,7 +55,7 @@ export async function QuickPracticeCard({
             {t("body", { count: itemCount, questions: questionCount, minutes })}
           </p>
         </div>
-        <Link href="/practice" className={cn(buttonVariants({ size: "md" }), "shrink-0")}>
+        <Link href="/practice?scope=today" className={cn(buttonVariants({ size: "md" }), "shrink-0")}>
           {t("cta")}
           <ArrowRight className="-mr-0.5 size-[18px]" strokeWidth={2} aria-hidden />
         </Link>

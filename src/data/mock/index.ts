@@ -5,6 +5,8 @@ import type {
   GroupMemberSummary,
   KnowledgeItem,
   KnowledgeType,
+  PracticeQuestion,
+  PracticeSetup,
   ReadingItem,
   UserSummary,
   VocabularyItem,
@@ -241,4 +243,104 @@ export async function getTodayFeed(): Promise<TodayFeed> {
       minutes: 4,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Practice
+
+/** Stable string hash — for deterministic option order and question shuffling. */
+function hashString(value: string): number {
+  let h = 0;
+  for (let i = 0; i < value.length; i += 1) h = (h * 31 + value.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function buildOptions(correct: string, pool: string[], seed: string) {
+  const distractors = [...new Set(pool)]
+    .filter((v) => v && v !== correct)
+    .sort((a, b) => a.localeCompare(b, "nl"))
+    .slice(0, 3);
+  const all = [correct, ...distractors];
+  const rot = hashString(seed) % all.length;
+  const options = [...all.slice(rot), ...all.slice(0, rot)];
+  return { options, correctIndex: options.indexOf(correct) };
+}
+
+/**
+ * Generate a multiple-choice practice run from the shared library. Pure and
+ * deterministic (no provider call, no randomness) — safe to run client-side.
+ * Replace with `ai/services/PracticeGenerator` later; the return shape holds.
+ */
+export async function getPracticeQuestions(setup: PracticeSetup): Promise<PracticeQuestion[]> {
+  const inScope = MOCK_KNOWLEDGE.filter((item) => {
+    if (setup.scope === "today") return isSameDay(item.createdAt, MOCK_TODAY);
+    if (setup.scope === "level") return item.level === setup.level;
+    return true;
+  });
+
+  const vocabPool = MOCK_KNOWLEDGE.filter((i): i is VocabularyItem => i.type === "vocabulary");
+  const grammarPool = MOCK_KNOWLEDGE.filter((i): i is GrammarItem => i.type === "grammar");
+  const allMeanings = vocabPool.map((v) => v.meaning);
+  const allTerms = vocabPool.map((v) => v.term);
+  const allTitles = grammarPool.map((g) => g.title);
+
+  const wantVocab = setup.mode === "vocabulary" || setup.mode === "mixed";
+  const wantGrammar = setup.mode === "grammar" || setup.mode === "mixed";
+  const questions: PracticeQuestion[] = [];
+
+  if (wantVocab) {
+    inScope
+      .filter((i): i is VocabularyItem => i.type === "vocabulary")
+      .forEach((v, idx) => {
+        if (idx % 2 === 1) {
+          const { options, correctIndex } = buildOptions(v.term, allTerms, `t:${v.id}`);
+          if (options.length >= 2) {
+            questions.push({
+              id: `q_${v.id}_t`,
+              knowledgeId: v.id,
+              knowledgeType: "vocabulary",
+              instructionKey: "sayInDutch",
+              prompt: v.meaning,
+              options,
+              correctIndex,
+            });
+          }
+        } else {
+          const { options, correctIndex } = buildOptions(v.meaning, allMeanings, `m:${v.id}`);
+          if (options.length >= 2) {
+            questions.push({
+              id: `q_${v.id}_m`,
+              knowledgeId: v.id,
+              knowledgeType: "vocabulary",
+              instructionKey: "meaningOf",
+              prompt: v.term,
+              options,
+              correctIndex,
+            });
+          }
+        }
+      });
+  }
+
+  if (wantGrammar) {
+    inScope
+      .filter((i): i is GrammarItem => i.type === "grammar")
+      .forEach((g) => {
+        const { options, correctIndex } = buildOptions(g.title, allTitles, `g:${g.id}`);
+        if (options.length >= 2) {
+          questions.push({
+            id: `q_${g.id}`,
+            knowledgeId: g.id,
+            knowledgeType: "grammar",
+            instructionKey: "whichRule",
+            prompt: g.examples[0]?.nl ?? g.summary,
+            options,
+            correctIndex,
+          });
+        }
+      });
+  }
+
+  questions.sort((a, b) => hashString(a.id) - hashString(b.id));
+  return setup.length > 0 ? questions.slice(0, setup.length) : questions;
 }
