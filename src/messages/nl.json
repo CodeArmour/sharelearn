@@ -366,5 +366,16 @@
       "practise": "Oefen deze",
       "remove": "Verwijderen uit herhaling"
     }
+  },
+  "group": {
+    "you": "jij",
+    "joined": "Lid geworden op {date}",
+    "invite": {
+      "title": "Lid uitnodigen",
+      "placeholder": "naam@voorbeeld.nl",
+      "send": "Uitnodiging sturen",
+      "note": "Uitnodigingen komen met de backend."
+    },
+    "manageNote": "Rollen wijzigen en leden verwijderen vereist de backend en eigenaarsrechten."
   }
 }

@@ -366,5 +366,16 @@
       "practise": "Practise these",
       "remove": "Remove from review"
     }
+  },
+  "group": {
+    "you": "you",
+    "joined": "Joined {date}",
+    "invite": {
+      "title": "Invite a member",
+      "placeholder": "name@example.com",
+      "send": "Send invite",
+      "note": "Invitations arrive with the backend."
+    },
+    "manageNote": "Changing roles and removing members needs the backend and owner permissions."
   }
 }
