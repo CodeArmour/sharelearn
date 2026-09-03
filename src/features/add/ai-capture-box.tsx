@@ -1,4 +1,4 @@
-import { type ChangeEvent, useRef } from "react";
+import { type ChangeEvent, useEffect, useRef } from "react";
 import { Camera, FileText, ImageIcon, Paperclip, Sparkles, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -13,17 +13,29 @@ export function AiCaptureBox({
   onChange,
   attachment,
   onAttachmentChange,
+  autoOpen,
   onSubmit,
 }: {
   value: string;
   onChange: (value: string) => void;
   attachment: AiAttachment | null;
   onAttachmentChange: (attachment: AiAttachment | null) => void;
+  /** Arrive from Today's camera / file shortcut — open that picker on mount. */
+  autoOpen?: "photo" | "file";
   onSubmit: () => void;
 }) {
   const t = useTranslations("add.ai");
+  const boxRef = useRef<HTMLDivElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!autoOpen) return;
+    boxRef.current?.scrollIntoView({ block: "center" });
+    // Works after a client-side nav from Today (user activation still valid); if
+    // a browser blocks it the Foto / Bestand buttons are right here in view.
+    (autoOpen === "photo" ? photoInputRef : fileInputRef).current?.click();
+  }, [autoOpen]);
 
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,7 +48,10 @@ export function AiCaptureBox({
   const canSubmit = value.trim().length > 0 || attachment !== null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-ai-border bg-ai-subtle p-4 sm:p-5">
+    <div
+      ref={boxRef}
+      className="flex flex-col gap-3 rounded-card border border-ai-border bg-ai-subtle p-4 sm:p-5"
+    >
       <Field label={t("captureLabel")} htmlFor="ai-capture">
         <Textarea
           id="ai-capture"

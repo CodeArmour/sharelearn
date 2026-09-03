@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -41,6 +42,9 @@ function deriveTitle(type: AuthableType, values: Values): string {
 export function AddKnowledgeView() {
   const t = useTranslations("add");
   const tPage = useTranslations("pages.add");
+
+  const attachParam = useSearchParams().get("attach");
+  const autoOpen = attachParam === "photo" || attachParam === "file" ? attachParam : undefined;
 
   const [mode, setMode] = useState<Mode>("manual");
   const [rawText, setRawText] = useState("");
@@ -190,6 +194,7 @@ export function AddKnowledgeView() {
               onChange={setRawText}
               attachment={attachment}
               onAttachmentChange={setAttachment}
+              autoOpen={autoOpen}
               onSubmit={runAi}
             />
             <div className="flex items-center gap-3 text-caption text-fg-muted">

@@ -32,7 +32,7 @@ export async function CaptureBar() {
       </Link>
 
       <Link
-        href="/add"
+        href={{ pathname: "/add", query: { attach: "photo" } }}
         aria-label={t("photoLabel")}
         className={cn("shrink-0 p-1 text-fg-secondary hover:text-fg", focusRing)}
       >
@@ -40,7 +40,7 @@ export async function CaptureBar() {
       </Link>
 
       <Link
-        href="/add"
+        href={{ pathname: "/add", query: { attach: "file" } }}
         aria-label={t("fileLabel")}
         className={cn("hidden shrink-0 p-1 text-fg-secondary hover:text-fg sm:block", focusRing)}
       >
