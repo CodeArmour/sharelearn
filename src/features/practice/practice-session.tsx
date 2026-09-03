@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { PracticeQuestion } from "@/types";
+import { useFocusOnChange } from "@/lib/use-focus-on-change";
 import { Button } from "@/components/ui";
 
 import { OptionButton, type OptionState } from "@/components/shared/option-button";
@@ -21,6 +22,9 @@ export function PracticeSession({
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+
+  const promptRef = useRef<HTMLParagraphElement>(null);
+  useFocusOnChange(promptRef, index);
 
   const q = questions[index];
   const answered = selected !== null;
@@ -61,7 +65,9 @@ export function PracticeSession({
 
       <div className="flex flex-col gap-2">
         <span className="text-label text-fg-muted">{instruction}</span>
-        <p className="font-display text-term text-fg">{q.prompt}</p>
+        <p ref={promptRef} tabIndex={-1} className="font-display text-term text-fg outline-none">
+          {q.prompt}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2.5">
