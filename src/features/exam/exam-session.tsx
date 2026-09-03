@@ -28,7 +28,7 @@ export function ExamSession({
     setAnswers((prev) => prev.map((a, i) => (i === qIndex ? optIndex : a)));
 
   return (
-    <div className="mx-auto flex max-w-[42rem] flex-col gap-8 pb-24">
+    <div className="mx-auto flex max-w-[42rem] flex-col gap-8">
       {questions.map((q, qi) => (
         <div key={q.id} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
