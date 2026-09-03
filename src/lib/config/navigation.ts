@@ -24,6 +24,7 @@ export type AppHref =
   | "/add"
   | "/profile"
   | "/settings/group"
+  | "/login"
   | "/foundation";
 
 export type NavKey = "today" | "library" | "practice" | "exam" | "profile" | "group" | "logout";
@@ -45,11 +46,12 @@ export const PRIMARY_NAV: NavItem[] = [
   { key: "exam", href: "/exam", icon: ClipboardList },
 ];
 
-/** Secondary destinations — bottom of the desktop sidebar / the mobile menu. */
+/** Secondary destinations — bottom of the desktop sidebar / the mobile top bar. */
 export const SECONDARY_NAV: NavItem[] = [
   { key: "profile", href: "/profile", icon: User },
   { key: "group", href: "/settings/group", icon: Users },
-  { key: "logout", href: "/foundation", icon: LogOut },
+  // No auth backend yet — "log out" just returns to the (demo) sign-in screen.
+  { key: "logout", href: "/login", icon: LogOut },
 ];
 
 /** The "+ Add knowledge" action (its own affordance, not a nav item). */
