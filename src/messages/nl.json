@@ -349,5 +349,22 @@
       "again": "Nieuw examen",
       "toToday": "Terug naar Vandaag"
     }
+  },
+  "profile": {
+    "memberSince": "Lid sinds {date}",
+    "role": { "owner": "Eigenaar", "member": "Lid" },
+    "preferences": { "title": "Voorkeuren", "language": "Taal" },
+    "progress": {
+      "title": "Voortgang",
+      "placeholder": "Je oefen- en examengeschiedenis verschijnt hier zodra die wordt bewaard.",
+      "marked": "Gemarkeerd voor herhaling",
+      "libraryItems": "Bibliotheekitems"
+    },
+    "review": {
+      "title": "Gemarkeerd voor herhaling",
+      "empty": "Nog niets gemarkeerd. Gebruik de bladwijzer op de pagina van een woord of in de woordenschattabel om items hier toe te voegen.",
+      "practise": "Oefen deze",
+      "remove": "Verwijderen uit herhaling"
+    }
   }
 }
