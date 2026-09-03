@@ -49,12 +49,12 @@ export function VocabularyTable({ items }: { items: VocabularyItem[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
         <span className="text-body-sm font-medium text-fg-secondary">{t("study.label")}</span>
         <div
           role="group"
           aria-label={t("study.label")}
-          className="inline-flex gap-0.5 rounded-md bg-surface-sunken p-0.5"
+          className="flex w-full flex-col gap-0.5 rounded-md bg-surface-sunken p-0.5 sm:inline-flex sm:w-auto sm:flex-row"
         >
           {modes.map(({ key, label }) => (
             <button
@@ -63,7 +63,7 @@ export function VocabularyTable({ items }: { items: VocabularyItem[] }) {
               aria-pressed={mode === key}
               onClick={() => changeMode(key)}
               className={cn(
-                "rounded-sm px-3 py-1 text-body-sm font-medium transition-colors",
+                "rounded-sm px-3 py-1.5 text-left text-body-sm font-medium transition-colors sm:py-1 sm:text-center",
                 "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-focus",
                 mode === key ? "bg-surface text-fg shadow-card" : "text-fg-muted hover:text-fg",
               )}

@@ -5,9 +5,9 @@ import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 
 /**
- * Cards / Table view switcher. Desktop only — below `lg` the Library always
- * shows cards. State lives in the URL (`?view=`). Maps to the Figma
- * `LibraryViewToggle`.
+ * Cards / Table view switcher. State lives in the URL (`?view=`). Maps to the
+ * Figma `LibraryViewToggle`. Shown on every width so a narrow viewport that
+ * landed on `?view=table` (e.g. a shared link) can switch back to cards.
  */
 export async function LibraryViewToggle({
   view,
@@ -26,7 +26,7 @@ export async function LibraryViewToggle({
     <div
       role="group"
       aria-label={t("label")}
-      className="hidden gap-0.5 rounded-md bg-surface-sunken p-0.5 lg:inline-flex"
+      className="inline-flex gap-0.5 rounded-md bg-surface-sunken p-0.5"
     >
       {items.map(({ key, label, Icon }) => {
         const active = key === view;
