@@ -4,7 +4,7 @@ import { type FormEvent, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { getAiSuggestion } from "@/data/mock";
+import { getAiSuggestion, getAiSuggestionFromAttachment } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
 
@@ -14,6 +14,7 @@ import { AiReviewBanner } from "./ai-review-banner";
 import { KnowledgeForm } from "./knowledge-form";
 import { SuccessPanel } from "./success-panel";
 import {
+  type AiAttachment,
   type AuthableType,
   type Errors,
   type Example,
@@ -43,7 +44,8 @@ export function AddKnowledgeView() {
 
   const [mode, setMode] = useState<Mode>("manual");
   const [rawText, setRawText] = useState("");
-  const [notice, setNotice] = useState<string | undefined>();
+  const [attachment, setAttachment] = useState<AiAttachment | null>(null);
+  const [noticeKey, setNoticeKey] = useState<string | undefined>();
 
   const [type, setType] = useState<PickerType>("vocabulary");
   const [values, setValues] = useState<Values>({});
@@ -71,18 +73,18 @@ export function AddKnowledgeView() {
   const runAi = () => {
     setMode("processing");
     window.setTimeout(async () => {
-      const suggestion = await getAiSuggestion(rawText);
+      const suggestion = attachment
+        ? await getAiSuggestionFromAttachment(attachment)
+        : await getAiSuggestion(rawText);
       if (!suggestion) {
         setMode("failed");
         return;
       }
       setType(suggestion.type as PickerType);
       setValues(suggestion.fields);
-      setExamples(
-        (suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })),
-      );
+      setExamples((suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })));
       setErrors({});
-      setNotice(suggestion.notice);
+      setNoticeKey(suggestion.noticeKey);
       setMode("review");
     }, 900);
   };
@@ -97,7 +99,7 @@ export function AddKnowledgeView() {
 
   const backToManual = () => {
     resetFields();
-    setNotice(undefined);
+    setNoticeKey(undefined);
     setMode("manual");
   };
 
@@ -128,7 +130,8 @@ export function AddKnowledgeView() {
   const afterSuccess = () => {
     resetFields();
     setRawText("");
-    setNotice(undefined);
+    setAttachment(null);
+    setNoticeKey(undefined);
     setSavedTitle(null);
     setMode("manual");
   };
@@ -166,12 +169,13 @@ export function AddKnowledgeView() {
             onFillManually={fillManuallyFromFailure}
             onCancel={() => {
               setRawText("");
+              setAttachment(null);
               backToManual();
             }}
           />
         ) : mode === "review" ? (
           <div className="flex flex-col gap-6">
-            <AiReviewBanner notice={notice} />
+            <AiReviewBanner noticeKey={noticeKey} />
             {form(
               t("ai.confirm"),
               <Button type="button" variant="ghost" size="md" onClick={backToManual}>
@@ -181,7 +185,13 @@ export function AddKnowledgeView() {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            <AiCaptureBox value={rawText} onChange={setRawText} onSubmit={runAi} />
+            <AiCaptureBox
+              value={rawText}
+              onChange={setRawText}
+              attachment={attachment}
+              onAttachmentChange={setAttachment}
+              onSubmit={runAi}
+            />
             <div className="flex items-center gap-3 text-caption text-fg-muted">
               <span className="h-px flex-1 bg-border" />
               {t("ai.divider")}

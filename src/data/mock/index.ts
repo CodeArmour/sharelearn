@@ -1,4 +1,5 @@
 import type {
+  AiAttachmentKind,
   AiSuggestion,
   CEFRLevel,
   GrammarItem,
@@ -90,13 +91,16 @@ export async function getAiSuggestion(rawText: string): Promise<AiSuggestion | n
     return {
       type: "vocabulary",
       fields: { term: pair[1].trim(), meaning: pair[2].trim(), partOfSpeech: "" },
-      notice: "Check the word type and level — I left those blank.",
+      noticeKey: "checkTypeAndLevel",
     };
   }
 
   // Longer prose → a reading
   if (words.length > 25 || /[.!?].+[.!?]/.test(text)) {
-    const stem = words.slice(0, 6).join(" ").replace(/[.,;:]$/, "");
+    const stem = words
+      .slice(0, 6)
+      .join(" ")
+      .replace(/[.,;:]$/, "");
     return {
       type: "reading",
       fields: {
@@ -104,7 +108,7 @@ export async function getAiSuggestion(rawText: string): Promise<AiSuggestion | n
         readingBody: text,
         summary: "",
       },
-      notice: "Give it a proper title and summary before saving.",
+      noticeKey: "titleAndSummary",
     };
   }
 
@@ -117,7 +121,7 @@ export async function getAiSuggestion(rawText: string): Promise<AiSuggestion | n
     return {
       type: "grammar",
       fields: { title: firstLine.slice(0, 60), summary: "", explanation: text },
-      notice: "Add a one-line summary and examples.",
+      noticeKey: "summaryAndExamples",
     };
   }
 
@@ -126,11 +130,47 @@ export async function getAiSuggestion(rawText: string): Promise<AiSuggestion | n
     return {
       type: "vocabulary",
       fields: { term: text, meaning: "", partOfSpeech: "" },
-      notice: "Add the meaning and word type.",
+      noticeKey: "meaningAndType",
     };
   }
 
   return { type: "note", fields: { title: "", noteBody: text } };
+}
+
+/**
+ * Stand-in for the AI structuring step when the input is a picked file rather
+ * than pasted text. The file's *contents* are never read here — the `kind` and
+ * `name` alone seed a deterministic pre-fill, and the reviewer completes it.
+ * Replace with the real service later; the return shape (`AiSuggestion`) holds.
+ */
+export async function getAiSuggestionFromAttachment(attachment: {
+  name: string;
+  kind: AiAttachmentKind;
+}): Promise<AiSuggestion> {
+  const base = attachment.name
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+
+  if (attachment.kind === "image") {
+    return {
+      type: "vocabulary",
+      fields: { term: base, meaning: "", partOfSpeech: "" },
+      noticeKey: "fromPhoto",
+    };
+  }
+  if (attachment.kind === "pdf") {
+    return {
+      type: "reading",
+      fields: { title: base, readingBody: "", summary: "" },
+      noticeKey: "fromPdf",
+    };
+  }
+  return {
+    type: "note",
+    fields: { title: base, noteBody: "" },
+    noticeKey: "fromDocument",
+  };
 }
 
 /** Counts used for nav badges and the Today summary. */

@@ -2,8 +2,11 @@ import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /** Header for the AI review step — the reviewer edits freely below this. */
-export function AiReviewBanner({ notice }: { notice?: string }) {
+export function AiReviewBanner({ noticeKey }: { noticeKey?: string }) {
   const t = useTranslations("add.ai");
+  // noticeKey is a controlled set of `add.ai.notice.*` keys; cast past the
+  // literal-key type the same way the rest of this feature does.
+  const notice = noticeKey ? t(`notice.${noticeKey}` as Parameters<typeof t>[0]) : null;
 
   return (
     <div className="flex flex-col gap-1.5 rounded-lg border border-ai-border bg-ai-subtle p-4">

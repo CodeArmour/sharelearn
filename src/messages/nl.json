@@ -221,6 +221,9 @@
     "ai": {
       "captureLabel": "Plak tekst om met AI te structureren",
       "capturePlaceholder": "Plak een woordenlijst, een zin van je docent, een alinea…",
+      "attachPhoto": "Foto",
+      "attachFile": "Bestand",
+      "removeAttachment": "Bijlage verwijderen",
       "submit": "Structureren met AI",
       "disclaimer": "AI stelt een structuur voor — jij controleert en bevestigt voordat er iets wordt opgeslagen. Nu nog gesimuleerd.",
       "processing": "Je invoer analyseren…",
@@ -230,7 +233,16 @@
       "failedTitle": "AI kon dit niet structureren",
       "failedBody": "Vastleggen wordt nooit geblokkeerd — voeg het handmatig toe.",
       "fillManually": "Handmatig invullen",
-      "divider": "of handmatig toevoegen"
+      "divider": "of handmatig toevoegen",
+      "notice": {
+        "checkTypeAndLevel": "Controleer het woordtype en het niveau — die heb ik leeg gelaten.",
+        "titleAndSummary": "Geef het een duidelijke titel en samenvatting voordat je opslaat.",
+        "summaryAndExamples": "Voeg een korte samenvatting en voorbeelden toe.",
+        "meaningAndType": "Voeg de betekenis en het woordtype toe.",
+        "fromPhoto": "Dit heb ik van je foto gelezen — controleer elk veld voordat je opslaat.",
+        "fromPdf": "Controleer de titel en voeg daarna de tekst en een samenvatting toe.",
+        "fromDocument": "Controleer de titel en plak of typ daarna de inhoud."
+      }
     },
     "levelLabel": "Niveau",
     "levelNone": "Geen niveau",

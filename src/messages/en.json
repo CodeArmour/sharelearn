@@ -221,6 +221,9 @@
     "ai": {
       "captureLabel": "Paste text to structure with AI",
       "capturePlaceholder": "Paste a word list, a sentence from your teacher, a paragraph…",
+      "attachPhoto": "Photo",
+      "attachFile": "File",
+      "removeAttachment": "Remove attachment",
       "submit": "Structure with AI",
       "disclaimer": "AI proposes a structure — you review and confirm before anything is saved. Simulated for now.",
       "processing": "Analysing your input…",
@@ -230,7 +233,16 @@
       "failedTitle": "AI couldn't structure that",
       "failedBody": "Capture is never blocked — add it by hand instead.",
       "fillManually": "Fill in manually",
-      "divider": "or add manually"
+      "divider": "or add manually",
+      "notice": {
+        "checkTypeAndLevel": "Check the word type and level — I left those blank.",
+        "titleAndSummary": "Give it a proper title and summary before saving.",
+        "summaryAndExamples": "Add a one-line summary and examples.",
+        "meaningAndType": "Add the meaning and word type.",
+        "fromPhoto": "I read this from your photo — check every field before saving.",
+        "fromPdf": "Check the title, then add the text and a summary.",
+        "fromDocument": "Check the title, then paste or type the content."
+      }
     },
     "levelLabel": "Level",
     "levelNone": "No level",
