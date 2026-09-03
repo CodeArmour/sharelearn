@@ -310,12 +310,34 @@
       "title": "Oefening voltooid",
       "score": "{correct} van {total} goed",
       "percent": "{percent}%",
-      "reviewTitle": "Overzicht",
-      "yourAnswer": "Jouw antwoord",
-      "correctAnswer": "Juiste antwoord",
-      "noAnswer": "Geen antwoord",
       "notSaved": "Resultaten worden nog niet bewaard.",
       "again": "Nog een keer oefenen",
+      "toToday": "Terug naar Vandaag"
+    }
+  },
+  "review": {
+    "title": "Overzicht",
+    "yourAnswer": "Jouw antwoord",
+    "correctAnswer": "Juiste antwoord",
+    "noAnswer": "Geen antwoord",
+    "viewKnowledge": "Bekijk de kennis"
+  },
+  "exam": {
+    "setup": { "start": "Start examen" },
+    "session": {
+      "answered": "{answered} van {total} beantwoord",
+      "unanswered": "{count, plural, one {# niet beantwoord} other {# niet beantwoord}}",
+      "handIn": "Inleveren",
+      "questionNumber": "Vraag {number}"
+    },
+    "results": {
+      "title": "Examenresultaten",
+      "percent": "{percent}%",
+      "score": "{correct} van {total} goed",
+      "passed": "Geslaagd",
+      "notPassed": "Niet geslaagd",
+      "notSaved": "Resultaten worden nog niet bewaard.",
+      "again": "Nieuw examen",
       "toToday": "Terug naar Vandaag"
     }
   }

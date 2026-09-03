@@ -310,12 +310,34 @@
       "title": "Practice complete",
       "score": "{correct} of {total} correct",
       "percent": "{percent}%",
-      "reviewTitle": "Review",
-      "yourAnswer": "Your answer",
-      "correctAnswer": "Correct answer",
-      "noAnswer": "No answer",
       "notSaved": "Results aren't saved yet.",
       "again": "Practice again",
+      "toToday": "Back to Today"
+    }
+  },
+  "review": {
+    "title": "Review",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "noAnswer": "No answer",
+    "viewKnowledge": "View the knowledge"
+  },
+  "exam": {
+    "setup": { "start": "Start exam" },
+    "session": {
+      "answered": "{answered} of {total} answered",
+      "unanswered": "{count, plural, one {# unanswered} other {# unanswered}}",
+      "handIn": "Hand in",
+      "questionNumber": "Question {number}"
+    },
+    "results": {
+      "title": "Exam results",
+      "percent": "{percent}%",
+      "score": "{correct} of {total} correct",
+      "passed": "Passed",
+      "notPassed": "Not passed",
+      "notSaved": "Results aren't saved yet.",
+      "again": "New exam",
       "toToday": "Back to Today"
     }
   }

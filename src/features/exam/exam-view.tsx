@@ -3,44 +3,31 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { getPracticeQuestions } from "@/data/mock";
-import type { PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
+import { getExamQuestions } from "@/data/mock";
+import type { PracticeQuestion, PracticeSetup } from "@/types";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { SetupForm } from "@/components/shared";
 
-import { PracticeResults } from "./practice-results";
-import { PracticeSession } from "./practice-session";
+import { ExamResults } from "./exam-results";
+import { ExamSession } from "./exam-session";
 
 type Phase =
   | { name: "setup" }
   | { name: "session"; questions: PracticeQuestion[] }
   | { name: "results"; questions: PracticeQuestion[]; answers: (number | null)[] };
 
-/**
- * Practice as a three-phase client machine: setup → session → results → setup.
- * A run is entirely in-memory (refresh restarts); nothing is persisted yet.
- */
-export function PracticeView({
-  initialScope,
-  levels,
-}: {
-  initialScope: PracticeScope;
-  levels: string[];
-}) {
-  const tPage = useTranslations("pages.practice");
-  const tSetup = useTranslations("practice.setup");
+/** Exam as a three-phase client machine: setup → paper → results. In-memory only. */
+export function ExamView({ levels }: { levels: string[] }) {
+  const tPage = useTranslations("pages.exam");
+  const tExamSetup = useTranslations("exam.setup");
 
-  const [setup, setSetup] = useState<PracticeSetup>({
-    mode: "mixed",
-    scope: initialScope,
-    length: 10,
-  });
+  const [setup, setSetup] = useState<PracticeSetup>({ mode: "mixed", scope: "all", length: 20 });
   const [preview, setPreview] = useState<PracticeQuestion[]>([]);
   const [phase, setPhase] = useState<Phase>({ name: "setup" });
 
   useEffect(() => {
     let alive = true;
-    getPracticeQuestions(setup).then((qs) => {
+    getExamQuestions(setup).then((qs) => {
       if (alive) setPreview(qs);
     });
     return () => {
@@ -58,7 +45,7 @@ export function PracticeView({
               setup={setup}
               levels={levels}
               count={preview.length}
-              startLabel={tSetup("start")}
+              startLabel={tExamSetup("start")}
               onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
               onStart={() => {
                 if (preview.length > 0) setPhase({ name: "session", questions: preview });
@@ -69,16 +56,14 @@ export function PracticeView({
       ) : null}
 
       {phase.name === "session" ? (
-        <PracticeSession
+        <ExamSession
           questions={phase.questions}
-          onComplete={(answers) =>
-            setPhase({ name: "results", questions: phase.questions, answers })
-          }
+          onSubmit={(answers) => setPhase({ name: "results", questions: phase.questions, answers })}
         />
       ) : null}
 
       {phase.name === "results" ? (
-        <PracticeResults
+        <ExamResults
           questions={phase.questions}
           answers={phase.answers}
           onAgain={() => setPhase({ name: "setup" })}

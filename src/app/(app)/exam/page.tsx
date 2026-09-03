@@ -1,11 +1,10 @@
-import { getTranslations } from "next-intl/server";
-
-import { PlaceholderPage } from "@/components/shared/placeholder-page";
+import { getLibraryFacets } from "@/data/mock";
 import { titleMetadata } from "@/lib/page-metadata";
+import { ExamView } from "@/features/exam";
 
-export const generateMetadata = titleMetadata((t) => t("pages.exam.title"));
+export const generateMetadata = titleMetadata((t) => t("nav.exam"));
 
 export default async function ExamPage() {
-  const t = await getTranslations("pages.exam");
-  return <PlaceholderPage title={t("title")} description={t("subtitle")} />;
+  const facets = await getLibraryFacets();
+  return <ExamView levels={facets.levels} />;
 }

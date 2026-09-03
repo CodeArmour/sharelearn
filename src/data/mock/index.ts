@@ -344,3 +344,8 @@ export async function getPracticeQuestions(setup: PracticeSetup): Promise<Practi
   questions.sort((a, b) => hashString(a.id) - hashString(b.id));
   return setup.length > 0 ? questions.slice(0, setup.length) : questions;
 }
+
+/** Exams draw from the same generated multiple-choice pool as practice. */
+export async function getExamQuestions(setup: PracticeSetup): Promise<PracticeQuestion[]> {
+  return getPracticeQuestions(setup);
+}

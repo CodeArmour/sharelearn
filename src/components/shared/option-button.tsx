@@ -2,9 +2,9 @@ import { Check, X } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 
-export type OptionState = "idle" | "correct" | "wrong" | "muted";
+export type OptionState = "idle" | "selected" | "correct" | "wrong" | "muted";
 
-/** One answer choice in a practice question. */
+/** One answer choice in a practice or exam question. */
 export function OptionButton({
   label,
   state,
@@ -26,6 +26,7 @@ export function OptionButton({
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
         state === "idle" &&
           "border-border-default bg-surface hover:border-border-strong hover:bg-surface-interactive",
+        state === "selected" && "border-primary bg-primary-subtle font-medium text-fg",
         state === "correct" && "border-success bg-success-subtle font-medium text-success-strong",
         state === "wrong" && "border-error bg-error-subtle font-medium text-error-strong",
         state === "muted" && "border-border bg-surface text-fg-muted",

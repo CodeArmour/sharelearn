@@ -18,16 +18,23 @@ const segment = (active: boolean) =>
     active ? "bg-surface text-fg shadow-card" : "text-fg-muted hover:text-fg",
   );
 
-export function PracticeSetupForm({
+/**
+ * Shared Setup form for Practice and Exam: pick mode, scope (+ level) and
+ * length; shows a live question count and disables Start when nothing matches.
+ * Labels come from `practice.setup.*`; the caller supplies the Start label.
+ */
+export function SetupForm({
   setup,
   levels,
   count,
+  startLabel,
   onChange,
   onStart,
 }: {
   setup: PracticeSetup;
   levels: string[];
   count: number;
+  startLabel: string;
   onChange: (patch: Partial<PracticeSetup>) => void;
   onStart: () => void;
 }) {
@@ -68,9 +75,9 @@ export function PracticeSetupForm({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label={t("scopeLabel")} htmlFor="practice-scope">
+        <Field label={t("scopeLabel")} htmlFor="setup-scope">
           <Select
-            id="practice-scope"
+            id="setup-scope"
             value={setup.scope}
             onChange={(e) => {
               const scope = e.target.value as PracticeScope;
@@ -84,9 +91,9 @@ export function PracticeSetupForm({
         </Field>
 
         {setup.scope === "level" ? (
-          <Field label={t("levelLabel")} htmlFor="practice-level">
+          <Field label={t("levelLabel")} htmlFor="setup-level">
             <Select
-              id="practice-level"
+              id="setup-level"
               value={setup.level ?? levels[0]}
               onChange={(e) => onChange({ level: e.target.value })}
             >
@@ -123,7 +130,7 @@ export function PracticeSetupForm({
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <Button type="button" size="md" onClick={onStart} disabled={count === 0}>
-          {t("start")}
+          {startLabel}
         </Button>
         <p className="text-body-sm text-fg-muted">
           {count === 0 ? t("notEnough") : t("count", { count })}

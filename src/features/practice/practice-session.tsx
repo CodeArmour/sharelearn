@@ -5,8 +5,9 @@ import { useTranslations } from "next-intl";
 import type { PracticeQuestion } from "@/types";
 import { Button } from "@/components/ui";
 
+import { OptionButton, type OptionState } from "@/components/shared/option-button";
+
 import { FeedbackPanel } from "./feedback-panel";
-import { OptionButton, type OptionState } from "./option-button";
 
 /** Runs one practice session and hands the answers back when finished. */
 export function PracticeSession({
