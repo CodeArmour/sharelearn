@@ -1,3 +1,5 @@
+import type { InviteErrorCode } from "@/types";
+
 export class AppError extends Error {
   readonly code: string;
   readonly status: number;
@@ -27,6 +29,14 @@ export class NotFoundError extends AppError {
 export class ConflictError extends AppError {
   constructor(message = "Conflict") {
     super("conflict", 409, message);
+  }
+}
+
+export class InviteError extends AppError {
+  readonly inviteCode: InviteErrorCode;
+  constructor(inviteCode: InviteErrorCode, message = inviteCode) {
+    super("invite", 409, message);
+    this.inviteCode = inviteCode;
   }
 }
 
