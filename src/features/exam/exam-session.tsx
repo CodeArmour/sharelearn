@@ -41,19 +41,14 @@ export function ExamSession({
             {q.options.map((opt, oi) => {
               const state: OptionState = answers[qi] === oi ? "selected" : "idle";
               return (
-                <OptionButton
-                  key={opt}
-                  label={opt}
-                  state={state}
-                  onClick={() => pick(qi, oi)}
-                />
+                <OptionButton key={opt} label={opt} state={state} onClick={() => pick(qi, oi)} />
               );
             })}
           </div>
         </div>
       ))}
 
-      <div className="-mx-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border bg-background/95 px-5 py-3 backdrop-blur lg:sticky lg:bottom-0 lg:-mx-12 lg:px-12">
+      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border bg-background/95 px-5 py-3 backdrop-blur lg:bottom-0 lg:-mx-12 lg:px-12">
         <Button type="button" size="md" onClick={() => onSubmit(answers)}>
           {t("handIn")}
         </Button>
