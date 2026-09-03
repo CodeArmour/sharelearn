@@ -8,7 +8,17 @@ import type { PracticeMode } from "./personal";
  */
 
 /** Which slice of the library to draw questions from. */
-export type PracticeScope = "all" | "today" | "level";
+export type PracticeScope = "all" | "today" | "level" | "custom";
+
+/** A saved Library filter carried into a practice/exam run (`scope: "custom"`). */
+export interface PracticeFilter {
+  /** Free-text search, matched the same way the Library matches it. */
+  q?: string;
+  type?: KnowledgeType;
+  level?: string;
+  /** Group member id. */
+  by?: string;
+}
 
 /** Message key under `practice.instruction.*` for a question's one-line prompt. */
 export type PracticeInstructionKey = "meaningOf" | "sayInDutch" | "whichRule";
@@ -32,6 +42,8 @@ export interface PracticeSetup {
   scope: PracticeScope;
   /** Required when `scope === "level"`. */
   level?: string;
+  /** Present when `scope === "custom"` (from a Library filter). */
+  filter?: PracticeFilter;
   /** Max questions; `0` means "all available". */
   length: number;
 }

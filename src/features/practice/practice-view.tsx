@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { getPracticeQuestions } from "@/data/mock";
-import type { PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
+import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { SetupForm } from "@/components/shared";
 
@@ -22,9 +22,13 @@ type Phase =
  */
 export function PracticeView({
   initialScope,
+  initialFilter,
+  filterSummary,
   levels,
 }: {
   initialScope: PracticeScope;
+  initialFilter?: PracticeFilter;
+  filterSummary?: string;
   levels: string[];
 }) {
   const tPage = useTranslations("pages.practice");
@@ -33,6 +37,7 @@ export function PracticeView({
   const [setup, setSetup] = useState<PracticeSetup>({
     mode: "mixed",
     scope: initialScope,
+    filter: initialFilter,
     length: 10,
   });
   const [preview, setPreview] = useState<PracticeQuestion[]>([]);
@@ -59,6 +64,7 @@ export function PracticeView({
               levels={levels}
               count={preview.length}
               startLabel={tSetup("start")}
+              filterSummary={filterSummary}
               onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
               onStart={() => {
                 if (preview.length > 0) setPhase({ name: "session", questions: preview });

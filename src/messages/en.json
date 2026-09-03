@@ -164,6 +164,8 @@
     "results": "{count, plural, one {# result} other {# results}}",
     "loadMore": "Load more",
     "empty": "Nothing found. Adjust your search or filters.",
+    "practiseThese": "Practise these",
+    "examThese": "Exam these",
     "filter": {
       "all": "All",
       "vocabulary": "Vocabulary",
@@ -284,10 +286,16 @@
       "lengthLabel": "Length",
       "levelLabel": "Level",
       "mode": { "vocabulary": "Vocabulary", "grammar": "Grammar", "mixed": "Mixed" },
-      "scope": { "all": "Whole library", "today": "Added today", "level": "By level" },
+      "scope": {
+        "all": "Whole library",
+        "today": "Added today",
+        "level": "By level",
+        "custom": "Library selection"
+      },
       "length": { "ten": "10", "twenty": "20", "all": "All" },
       "count": "{count, plural, =0 {No questions} one {# question} other {# questions}} available",
       "notEnough": "Not enough material for that combination — try a wider scope.",
+      "filterMatching": "matching “{q}”",
       "start": "Start practice"
     },
     "session": {

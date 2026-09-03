@@ -164,6 +164,8 @@
     "results": "{count, plural, one {# resultaat} other {# resultaten}}",
     "loadMore": "Meer laden",
     "empty": "Niets gevonden. Pas je zoekopdracht of filters aan.",
+    "practiseThese": "Oefen deze",
+    "examThese": "Examen over deze",
     "filter": {
       "all": "Alles",
       "vocabulary": "Woordenschat",
@@ -284,10 +286,16 @@
       "lengthLabel": "Lengte",
       "levelLabel": "Niveau",
       "mode": { "vocabulary": "Woordenschat", "grammar": "Grammatica", "mixed": "Gemengd" },
-      "scope": { "all": "Hele bibliotheek", "today": "Vandaag toegevoegd", "level": "Op niveau" },
+      "scope": {
+        "all": "Hele bibliotheek",
+        "today": "Vandaag toegevoegd",
+        "level": "Op niveau",
+        "custom": "Bibliotheekselectie"
+      },
       "length": { "ten": "10", "twenty": "20", "all": "Alles" },
       "count": "{count, plural, =0 {Geen vragen} one {# vraag} other {# vragen}} beschikbaar",
       "notEnough": "Niet genoeg materiaal voor deze combinatie — kies een breder bereik.",
+      "filterMatching": "met “{q}”",
       "start": "Start oefening"
     },
     "session": {

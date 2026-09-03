@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, Target } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import type { CEFRLevel, GroupMemberSummary, KnowledgeType, VocabularyItem } from "@/types";
@@ -15,6 +16,17 @@ import { VocabularyTable } from "./vocabulary-table";
 export type LibraryViewMode = "cards" | "table";
 
 type HrefPatch = Partial<LibraryQuery & { view: LibraryViewMode; page: number }>;
+
+/** Carry the active Library filter to /practice or /exam as a "custom" scope. */
+function drillHref(base: string, query: LibraryQuery): string {
+  const sp = new URLSearchParams();
+  if (query.q) sp.set("q", query.q);
+  if (query.type) sp.set("type", query.type);
+  if (query.level) sp.set("level", query.level);
+  if (query.by) sp.set("by", query.by);
+  const s = sp.toString();
+  return s ? `${base}?${s}` : base;
+}
 
 function hrefBuilder(query: LibraryQuery, view: LibraryViewMode) {
   return (patch: HrefPatch) => {
@@ -55,6 +67,7 @@ export async function LibraryView({
 
   const hasMore = result.items.length < result.total;
   const vocab = result.items.filter((i): i is VocabularyItem => i.type === "vocabulary");
+  const hasActiveFilter = Boolean(query.q || query.type || query.level || query.by);
 
   return (
     <PageContainer>
@@ -69,12 +82,32 @@ export async function LibraryView({
         <FilterChips active={query.type} hrefFor={(type?: KnowledgeType) => href({ type })} />
 
         <div key={`${effectiveView}:${query.type ?? "all"}`} className="flex flex-col gap-5">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-body-sm text-fg-muted">
-              {t("library.results", {
-                count: effectiveView === "table" ? vocab.length : result.total,
-              })}
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-body-sm text-fg-muted">
+                {t("library.results", {
+                  count: effectiveView === "table" ? vocab.length : result.total,
+                })}
+              </p>
+              {hasActiveFilter && result.total > 0 && (
+                <div className="flex gap-2">
+                  <Link
+                    href={drillHref("/practice", query)}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    <Target className="-ml-0.5 size-4" strokeWidth={1.75} aria-hidden />
+                    {t("library.practiseThese")}
+                  </Link>
+                  <Link
+                    href={drillHref("/exam", query)}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    <ClipboardList className="-ml-0.5 size-4" strokeWidth={1.75} aria-hidden />
+                    {t("library.examThese")}
+                  </Link>
+                </div>
+              )}
+            </div>
             {canUseTable && (
               <LibraryViewToggle view={effectiveView} hrefFor={(v) => href({ view: v })} />
             )}

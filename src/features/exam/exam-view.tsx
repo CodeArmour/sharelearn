@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { getExamQuestions } from "@/data/mock";
-import type { PracticeQuestion, PracticeSetup } from "@/types";
+import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { SetupForm } from "@/components/shared";
 
@@ -17,11 +17,26 @@ type Phase =
   | { name: "results"; questions: PracticeQuestion[]; answers: (number | null)[] };
 
 /** Exam as a three-phase client machine: setup → paper → results. In-memory only. */
-export function ExamView({ levels }: { levels: string[] }) {
+export function ExamView({
+  initialScope = "all",
+  initialFilter,
+  filterSummary,
+  levels,
+}: {
+  initialScope?: PracticeScope;
+  initialFilter?: PracticeFilter;
+  filterSummary?: string;
+  levels: string[];
+}) {
   const tPage = useTranslations("pages.exam");
   const tExamSetup = useTranslations("exam.setup");
 
-  const [setup, setSetup] = useState<PracticeSetup>({ mode: "mixed", scope: "all", length: 20 });
+  const [setup, setSetup] = useState<PracticeSetup>({
+    mode: "mixed",
+    scope: initialScope,
+    filter: initialFilter,
+    length: 20,
+  });
   const [preview, setPreview] = useState<PracticeQuestion[]>([]);
   const [phase, setPhase] = useState<Phase>({ name: "setup" });
 
@@ -46,6 +61,7 @@ export function ExamView({ levels }: { levels: string[] }) {
               levels={levels}
               count={preview.length}
               startLabel={tExamSetup("start")}
+              filterSummary={filterSummary}
               onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
               onStart={() => {
                 if (preview.length > 0) setPhase({ name: "session", questions: preview });

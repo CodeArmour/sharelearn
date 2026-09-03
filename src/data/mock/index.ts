@@ -275,6 +275,14 @@ export async function getPracticeQuestions(setup: PracticeSetup): Promise<Practi
   const inScope = MOCK_KNOWLEDGE.filter((item) => {
     if (setup.scope === "today") return isSameDay(item.createdAt, MOCK_TODAY);
     if (setup.scope === "level") return item.level === setup.level;
+    if (setup.scope === "custom") {
+      const f = setup.filter ?? {};
+      if (f.type && item.type !== f.type) return false;
+      if (f.level && item.level !== f.level) return false;
+      if (f.by && item.addedBy.id !== f.by) return false;
+      if (f.q && !JSON.stringify(item).toLowerCase().includes(f.q.toLowerCase())) return false;
+      return true;
+    }
     return true;
   });
 

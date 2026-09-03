@@ -28,6 +28,7 @@ export function SetupForm({
   levels,
   count,
   startLabel,
+  filterSummary,
   onChange,
   onStart,
 }: {
@@ -35,10 +36,13 @@ export function SetupForm({
   levels: string[];
   count: number;
   startLabel: string;
+  /** One-line description of a carried Library filter; enables the "custom" scope. */
+  filterSummary?: string;
   onChange: (patch: Partial<PracticeSetup>) => void;
   onStart: () => void;
 }) {
   const t = useTranslations("practice.setup");
+  const isCustom = setup.scope === "custom";
 
   const modeLabel = {
     vocabulary: t("mode.vocabulary"),
@@ -53,26 +57,28 @@ export function SetupForm({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <span className="text-label font-medium text-fg-secondary">{t("modeLabel")}</span>
-        <div
-          role="group"
-          aria-label={t("modeLabel")}
-          className="flex flex-wrap gap-0.5 self-start rounded-md bg-surface-sunken p-0.5"
-        >
-          {MODES.map((m) => (
-            <button
-              key={m}
-              type="button"
-              aria-pressed={setup.mode === m}
-              onClick={() => onChange({ mode: m })}
-              className={segment(setup.mode === m)}
-            >
-              {modeLabel[m]}
-            </button>
-          ))}
+      {isCustom ? null : (
+        <div className="flex flex-col gap-2">
+          <span className="text-label font-medium text-fg-secondary">{t("modeLabel")}</span>
+          <div
+            role="group"
+            aria-label={t("modeLabel")}
+            className="flex flex-wrap gap-0.5 self-start rounded-md bg-surface-sunken p-0.5"
+          >
+            {MODES.map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={setup.mode === m}
+                onClick={() => onChange({ mode: m })}
+                className={segment(setup.mode === m)}
+              >
+                {modeLabel[m]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label={t("scopeLabel")} htmlFor="setup-scope">
@@ -84,6 +90,7 @@ export function SetupForm({
               onChange(scope === "level" ? { scope, level: setup.level ?? levels[0] } : { scope });
             }}
           >
+            {filterSummary ? <option value="custom">{t("scope.custom")}</option> : null}
             <option value="all">{t("scope.all")}</option>
             <option value="today">{t("scope.today")}</option>
             {levels.length > 0 ? <option value="level">{t("scope.level")}</option> : null}
@@ -106,6 +113,10 @@ export function SetupForm({
           </Field>
         ) : null}
       </div>
+
+      {isCustom && filterSummary ? (
+        <p className="-mt-3 text-body-sm text-fg-muted">{filterSummary}</p>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-label font-medium text-fg-secondary">{t("lengthLabel")}</span>
