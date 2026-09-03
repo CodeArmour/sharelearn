@@ -13,7 +13,8 @@ interface NavItemProps {
   label: string;
   /** Pre-rendered icon element (kept out of the config so it stays serializable). */
   icon: ReactNode;
-  platform: "desktop" | "mobile";
+  /** `compact` = icon-only link for the mobile top bar; `label` becomes its aria-label. */
+  platform: "desktop" | "mobile" | "compact";
   /** Resolved count badge (desktop only). */
   badge?: number;
 }
@@ -26,6 +27,23 @@ interface NavItemProps {
 export function NavItem({ navKey, href, label, icon, platform, badge }: NavItemProps) {
   const pathname = usePathname();
   const isActive = activeNavKey(pathname) === navKey;
+
+  if (platform === "compact") {
+    return (
+      <Link
+        href={href}
+        aria-label={label}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "inline-flex size-9 items-center justify-center rounded-md transition-colors",
+          "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-focus",
+          isActive ? "text-link" : "text-fg-muted hover:text-fg",
+        )}
+      >
+        {icon}
+      </Link>
+    );
+  }
 
   if (platform === "mobile") {
     return (

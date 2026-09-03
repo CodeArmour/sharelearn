@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { DesktopSidebar } from "@/components/navigation/desktop-sidebar";
 import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
+import { MobileTopBar } from "@/components/navigation/mobile-top-bar";
 
 /**
  * AppShell — the persistent chrome around every authenticated screen.
@@ -31,6 +32,7 @@ export async function AppShell({
       <DesktopSidebar libraryCount={libraryCount} />
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <MobileTopBar />
         <main id="main" className="flex-1 pb-24 lg:pb-0">
           {children}
         </main>
