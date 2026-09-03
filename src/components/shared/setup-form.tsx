@@ -93,6 +93,7 @@ export function SetupForm({
             {filterSummary ? <option value="custom">{t("scope.custom")}</option> : null}
             <option value="all">{t("scope.all")}</option>
             <option value="today">{t("scope.today")}</option>
+            <option value="review">{t("scope.review")}</option>
             {levels.length > 0 ? <option value="level">{t("scope.level")}</option> : null}
           </Select>
         </Field>

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { getExamQuestions } from "@/data/mock";
 import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
+import { useReviewMarks } from "@/lib/review-marks";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { SetupForm } from "@/components/shared";
 
@@ -39,16 +40,20 @@ export function ExamView({
   });
   const [preview, setPreview] = useState<PracticeQuestion[]>([]);
   const [phase, setPhase] = useState<Phase>({ name: "setup" });
+  const [reviewMarks] = useReviewMarks();
+
+  const resolved: PracticeSetup = { ...setup, reviewIds: Array.from(reviewMarks) };
 
   useEffect(() => {
     let alive = true;
-    getExamQuestions(setup).then((qs) => {
+    getExamQuestions(resolved).then((qs) => {
       if (alive) setPreview(qs);
     });
     return () => {
       alive = false;
     };
-  }, [setup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setup, reviewMarks]);
 
   return (
     <PageContainer>

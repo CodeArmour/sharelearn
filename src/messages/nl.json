@@ -290,7 +290,8 @@
         "all": "Hele bibliotheek",
         "today": "Vandaag toegevoegd",
         "level": "Op niveau",
-        "custom": "Bibliotheekselectie"
+        "custom": "Bibliotheekselectie",
+        "review": "Gemarkeerd voor herhaling"
       },
       "length": { "ten": "10", "twenty": "20", "all": "Alles" },
       "count": "{count, plural, =0 {Geen vragen} one {# vraag} other {# vragen}} beschikbaar",

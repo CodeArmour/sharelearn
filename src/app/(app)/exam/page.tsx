@@ -1,6 +1,7 @@
 import { getLibraryFacets } from "@/data/mock";
 import { titleMetadata } from "@/lib/page-metadata";
 import { buildFilterSummary, parsePracticeFilter } from "@/lib/practice-scope";
+import type { PracticeScope } from "@/types";
 import { ExamView } from "@/features/exam";
 
 export const generateMetadata = titleMetadata((t) => t("nav.exam"));
@@ -22,5 +23,7 @@ export default async function ExamPage({ searchParams }: PageProps<"/exam">) {
     );
   }
 
-  return <ExamView levels={facets.levels} />;
+  const scopeParam = Array.isArray(sp.scope) ? sp.scope[0] : sp.scope;
+  const initialScope: PracticeScope = scopeParam === "review" ? "review" : "all";
+  return <ExamView initialScope={initialScope} levels={facets.levels} />;
 }

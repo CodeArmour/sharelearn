@@ -24,6 +24,7 @@ export default async function PracticePage({ searchParams }: PageProps<"/practic
   }
 
   const scopeParam = Array.isArray(sp.scope) ? sp.scope[0] : sp.scope;
-  const initialScope: PracticeScope = scopeParam === "today" ? "today" : "all";
+  const initialScope: PracticeScope =
+    scopeParam === "today" ? "today" : scopeParam === "review" ? "review" : "all";
   return <PracticeView initialScope={initialScope} levels={facets.levels} />;
 }

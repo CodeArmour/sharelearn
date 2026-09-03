@@ -103,7 +103,7 @@ export async function KnowledgeDetailView({ item }: { item: KnowledgeItem }) {
           ) : null}
         </header>
 
-        <KnowledgeActions practiseable={practiseable} />
+        <KnowledgeActions knowledgeId={item.id} practiseable={practiseable} />
 
         <div className="h-px w-full bg-border" />
 

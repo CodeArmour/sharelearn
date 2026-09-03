@@ -275,6 +275,7 @@ export async function getPracticeQuestions(setup: PracticeSetup): Promise<Practi
   const inScope = MOCK_KNOWLEDGE.filter((item) => {
     if (setup.scope === "today") return isSameDay(item.createdAt, MOCK_TODAY);
     if (setup.scope === "level") return item.level === setup.level;
+    if (setup.scope === "review") return (setup.reviewIds ?? []).includes(item.id);
     if (setup.scope === "custom") {
       const f = setup.filter ?? {};
       if (f.type && item.type !== f.type) return false;

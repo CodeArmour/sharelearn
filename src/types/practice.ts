@@ -8,7 +8,7 @@ import type { PracticeMode } from "./personal";
  */
 
 /** Which slice of the library to draw questions from. */
-export type PracticeScope = "all" | "today" | "level" | "custom";
+export type PracticeScope = "all" | "today" | "level" | "custom" | "review";
 
 /** A saved Library filter carried into a practice/exam run (`scope: "custom"`). */
 export interface PracticeFilter {
@@ -44,6 +44,8 @@ export interface PracticeSetup {
   level?: string;
   /** Present when `scope === "custom"` (from a Library filter). */
   filter?: PracticeFilter;
+  /** Knowledge ids marked for review; used when `scope === "review"`. */
+  reviewIds?: string[];
   /** Max questions; `0` means "all available". */
   length: number;
 }

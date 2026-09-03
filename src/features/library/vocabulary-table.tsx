@@ -6,6 +6,7 @@ import { ArrowRight, Bookmark, ChevronRight, Eye, EyeOff, RotateCcw } from "luci
 import { useTranslations } from "next-intl";
 
 import type { VocabularyItem } from "@/types";
+import { useReviewMarks } from "@/lib/review-marks";
 import { cn } from "@/lib/utils/cn";
 
 type StudyMode = "show" | "hideMeaning" | "hideDutch";
@@ -26,8 +27,8 @@ export function VocabularyTable({ items }: { items: VocabularyItem[] }) {
   const td = useTranslations("knowledge.detail");
   const [mode, setMode] = useState<StudyMode>("show");
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
-  const [marked, setMarked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [marked, toggleMark] = useReviewMarks();
 
   const toggle = (set: Set<string>, id: string) => {
     const next = new Set(set);
@@ -165,7 +166,7 @@ export function VocabularyTable({ items }: { items: VocabularyItem[] }) {
                         type="button"
                         aria-pressed={marked.has(item.id)}
                         aria-label={marked.has(item.id) ? t("table.marked") : t("table.markReview")}
-                        onClick={() => setMarked((s) => toggle(s, item.id))}
+                        onClick={() => toggleMark(item.id)}
                         className={cn(
                           "inline-flex size-8 items-center justify-center rounded-sm transition-colors",
                           "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-focus",
