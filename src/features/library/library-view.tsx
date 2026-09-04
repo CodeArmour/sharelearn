@@ -3,7 +3,7 @@ import { ClipboardList, Target } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import type { CEFRLevel, GroupMemberSummary, KnowledgeType, VocabularyItem } from "@/types";
-import type { LibraryQuery, LibraryResult } from "@/data/mock";
+import type { LibraryQuery, LibraryResult } from "@/server/services/knowledge-service";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { KnowledgeCard } from "@/components/shared";
 import { buttonVariants } from "@/components/ui/button";

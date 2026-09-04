@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { KnowledgeItem, KnowledgeType } from "@/types";
 import { knowledgeSnippet, knowledgeTitle } from "@/types";
-import { getKnowledgeByIds } from "@/data/mock";
+import { resolveKnowledgeByIdsAction } from "@/server/actions/knowledge";
 import { useReviewMarks } from "@/lib/review-marks";
 import { Section } from "@/components/layout";
 import { buttonVariants } from "@/components/ui";
@@ -31,9 +31,18 @@ export function ReviewListSection() {
 
   useEffect(() => {
     let alive = true;
-    getKnowledgeByIds(Array.from(marks)).then((resolved) => {
-      if (alive) setItems(resolved);
-    });
+    resolveKnowledgeByIdsAction(Array.from(marks))
+      .then((result) => {
+        if (!alive) return;
+        if (result.ok) {
+          setItems(result.data);
+        } else {
+          console.error("resolveKnowledgeByIdsAction failed:", result.code, result.message);
+        }
+      })
+      .catch((error: unknown) => {
+        if (alive) console.error("resolveKnowledgeByIdsAction threw:", error);
+      });
     return () => {
       alive = false;
     };

@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import { InviteError, ForbiddenError } from "@/server/errors";
 
-import { emailSchema, groupIdSchema, toActionError } from "./schemas";
+import {
+  createKnowledgeItemSchema,
+  emailSchema,
+  groupIdSchema,
+  knowledgeIdsSchema,
+  practiceSetupSchema,
+  toActionError,
+} from "./schemas";
 
 describe("action schemas", () => {
   it("accepts a valid email, trims + lowercases", () => {
@@ -30,5 +37,79 @@ describe("toActionError", () => {
   });
   it("falls back to unknown", () => {
     expect(toActionError(new Error("boom"))).toMatchObject({ code: "unknown" });
+  });
+});
+
+describe("createKnowledgeItemSchema", () => {
+  it("accepts a minimal vocabulary item", () => {
+    const parsed = createKnowledgeItemSchema.safeParse({
+      type: "vocabulary",
+      level: "B1",
+      tags: ["uitdrukking"],
+      source: "manual",
+      term: "gezellig",
+      meaning: "cozy",
+      partOfSpeech: "Bijvoeglijk naamwoord",
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects vocabulary missing meaning", () => {
+    const parsed = createKnowledgeItemSchema.safeParse({
+      type: "vocabulary",
+      level: null,
+      tags: [],
+      source: "manual",
+      term: "gezellig",
+      partOfSpeech: "Bijvoeglijk naamwoord",
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it("accepts a note with no title", () => {
+    const parsed = createKnowledgeItemSchema.safeParse({
+      type: "note",
+      level: null,
+      tags: [],
+      source: "manual",
+      title: null,
+      body: "Onthoud dit.",
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects an unknown type", () => {
+    expect(
+      createKnowledgeItemSchema.safeParse({ type: "file", level: null, tags: [], source: "manual" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("practiceSetupSchema", () => {
+  it("accepts a mixed/all setup", () => {
+    expect(
+      practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: 10 }).success,
+    ).toBe(true);
+  });
+  it("rejects a negative length", () => {
+    expect(
+      practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: -1 }).success,
+    ).toBe(false);
+  });
+});
+
+describe("knowledgeIdsSchema", () => {
+  it("filters out non-uuid ids instead of rejecting the whole array", () => {
+    const parsed = knowledgeIdsSchema.safeParse(["not-a-uuid", "kn_gezellig"]);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data).toEqual([]);
+  });
+
+  it("keeps valid uuids and drops the rest", () => {
+    const uuid = "11111111-1111-1111-1111-111111111111";
+    const parsed = knowledgeIdsSchema.safeParse([uuid, "not-a-uuid"]);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data).toEqual([uuid]);
   });
 });

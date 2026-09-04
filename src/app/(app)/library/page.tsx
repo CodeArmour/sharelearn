@@ -3,7 +3,7 @@ import {
   getLibraryItems,
   type LibraryQuery,
   type LibrarySort,
-} from "@/data/mock";
+} from "@/server/services/knowledge-service";
 import { titleMetadata } from "@/lib/page-metadata";
 import { isCEFRLevel, KNOWLEDGE_TYPES, type KnowledgeType } from "@/types";
 import { LibraryView } from "@/features/library";

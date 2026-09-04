@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { getPracticeQuestions } from "@/data/mock";
+import { generatePracticeQuestionsAction } from "@/server/actions/practice";
 import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { useReviewMarks } from "@/lib/review-marks";
 import { useFocusOnChange } from "@/lib/use-focus-on-change";
@@ -54,9 +54,18 @@ export function PracticeView({
 
   useEffect(() => {
     let alive = true;
-    getPracticeQuestions(resolved).then((qs) => {
-      if (alive) setPreview(qs);
-    });
+    generatePracticeQuestionsAction(resolved)
+      .then((result) => {
+        if (!alive) return;
+        if (result.ok) {
+          setPreview(result.data);
+        } else {
+          console.error("generatePracticeQuestionsAction failed:", result.code, result.message);
+        }
+      })
+      .catch((error: unknown) => {
+        if (alive) console.error("generatePracticeQuestionsAction threw:", error);
+      });
     return () => {
       alive = false;
     };

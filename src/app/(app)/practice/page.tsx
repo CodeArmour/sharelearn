@@ -1,4 +1,4 @@
-import { getLibraryFacets } from "@/data/mock";
+import { getLibraryFacets } from "@/server/services/knowledge-service";
 import { titleMetadata } from "@/lib/page-metadata";
 import { buildFilterSummary, parsePracticeFilter } from "@/lib/practice-scope";
 import type { PracticeScope } from "@/types";

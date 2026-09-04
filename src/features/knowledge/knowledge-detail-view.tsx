@@ -11,7 +11,7 @@ import { getTranslations } from "next-intl/server";
 
 import type { KnowledgeItem, KnowledgeSource, KnowledgeType } from "@/types";
 import { knowledgeTitle } from "@/types";
-import { getKnowledgeByIds } from "@/data/mock";
+import { getKnowledgeByIds } from "@/server/services/knowledge-service";
 import { PageContainer } from "@/components/layout";
 import { KnowledgeTypeBadge, MetaRow } from "@/components/shared";
 import { Badge } from "@/components/ui";

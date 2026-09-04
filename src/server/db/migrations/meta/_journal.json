@@ -15,6 +15,20 @@
       "when": 1788475835270,
       "tag": "0001_extensions_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788535861875,
+      "tag": "0002_melted_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788535877101,
+      "tag": "0003_knowledge_rls",
+      "breakpoints": true
     }
   ]
 }
