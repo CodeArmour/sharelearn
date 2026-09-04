@@ -271,6 +271,9 @@
     "tagsHint": "Scheiden met komma's",
     "submit": "Opslaan in bibliotheek",
     "required": "{field} is verplicht",
+    "errors": {
+      "generic": "Er ging iets mis bij het opslaan. Probeer het opnieuw."
+    },
     "field": {
       "term": "Nederlandse term",
       "meaning": "Betekenis",

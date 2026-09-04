@@ -271,6 +271,9 @@
     "tagsHint": "Separate with commas",
     "submit": "Save to library",
     "required": "{field} is required",
+    "errors": {
+      "generic": "Something went wrong saving that. Try again."
+    },
     "field": {
       "term": "Dutch term",
       "meaning": "Meaning",

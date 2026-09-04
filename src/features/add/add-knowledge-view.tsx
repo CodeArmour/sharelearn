@@ -8,6 +8,10 @@ import { useTranslations } from "next-intl";
 import { getAiSuggestion, getAiSuggestionFromAttachment } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
+import { createKnowledgeItemAction } from "@/server/actions/knowledge";
+import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
+import type { KnowledgeSource } from "@/types";
+import { knowledgeTitle } from "@/types";
 
 import { AiCaptureBox } from "./ai-capture-box";
 import { AiFailedPanel } from "./ai-failed-panel";
@@ -27,10 +31,73 @@ import {
 
 type Mode = "manual" | "processing" | "review" | "failed";
 
-function deriveTitle(type: AuthableType, values: Values): string {
-  if (type === "vocabulary") return values.term?.trim() ?? "";
-  if (type === "note") return (values.title?.trim() || values.noteBody?.trim().slice(0, 50)) ?? "";
-  return values.title?.trim() ?? "";
+function parseTags(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+function toNullable(raw: string | undefined): string | null {
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function buildCreateInput(
+  type: AuthableType,
+  values: Values,
+  examples: Example[],
+  source: KnowledgeSource,
+): CreateKnowledgeItemInput {
+  const shared = {
+    level: (values.level || null) as CreateKnowledgeItemInput["level"],
+    tags: parseTags(values.tags),
+    source,
+  };
+
+  switch (type) {
+    case "vocabulary":
+      return {
+        ...shared,
+        type: "vocabulary",
+        term: values.term!.trim(),
+        meaning: values.meaning!.trim(),
+        partOfSpeech: values.partOfSpeech!.trim(),
+        example: toNullable(values.example),
+        exampleTranslation: toNullable(values.exampleTranslation),
+        article: values.article === "de" || values.article === "het" ? values.article : null,
+        plural: toNullable(values.plural),
+        pastTense: toNullable(values.pastTense),
+        perfect: toNullable(values.perfect),
+        usageNote: toNullable(values.usageNote),
+      };
+    case "grammar":
+      return {
+        ...shared,
+        type: "grammar",
+        title: values.title!.trim(),
+        summary: values.summary!.trim(),
+        explanation: values.explanation!.trim(),
+        examples: examples
+          .filter((e) => e.nl.trim().length > 0)
+          .map((e) => ({ nl: e.nl.trim(), en: toNullable(e.en) })),
+      };
+    case "reading":
+      return {
+        ...shared,
+        type: "reading",
+        title: values.title!.trim(),
+        body: values.readingBody!.trim(),
+        summary: toNullable(values.summary),
+      };
+    case "note":
+      return {
+        ...shared,
+        type: "note",
+        title: toNullable(values.title),
+        body: values.noteBody!.trim(),
+      };
+  }
 }
 
 /**
@@ -56,6 +123,8 @@ export function AddKnowledgeView() {
   const [examples, setExamples] = useState<Example[]>([]);
   const [errors, setErrors] = useState<Errors>({});
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const set = (name: string, value: string) => {
@@ -107,7 +176,7 @@ export function AddKnowledgeView() {
     setMode("manual");
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (type === "file") return;
 
@@ -128,7 +197,19 @@ export function AddKnowledgeView() {
       return;
     }
 
-    setSavedTitle(deriveTitle(type, values));
+    const source: KnowledgeSource =
+      mode !== "review" ? "manual" : attachment ? (attachment.kind === "image" ? "photo" : "file-upload") : "ai-assisted";
+    const input = buildCreateInput(type, values, examples, source);
+
+    setSaving(true);
+    setSaveError(null);
+    const result = await createKnowledgeItemAction(input);
+    setSaving(false);
+    if (!result.ok) {
+      setSaveError(t("errors.generic"));
+      return;
+    }
+    setSavedTitle(knowledgeTitle(result.data));
   };
 
   const afterSuccess = () => {
@@ -161,6 +242,12 @@ export function AddKnowledgeView() {
       <div className="mx-auto w-full max-w-[42rem]">
         <PageHeader title={tPage("title")} description={tPage("subtitle")} />
 
+        {saveError ? (
+          <p role="alert" className="mb-4 text-body-sm text-danger">
+            {saveError}
+          </p>
+        ) : null}
+
         {savedTitle !== null ? (
           <SuccessPanel title={savedTitle} onAddAnother={afterSuccess} />
         ) : mode === "processing" ? (
@@ -181,7 +268,7 @@ export function AddKnowledgeView() {
           <div className="flex flex-col gap-6">
             <AiReviewBanner noticeKey={noticeKey} />
             {form(
-              t("ai.confirm"),
+              saving ? t("ai.processing") : t("ai.confirm"),
               <Button type="button" variant="ghost" size="md" onClick={backToManual}>
                 {t("ai.startOver")}
               </Button>,
@@ -202,7 +289,7 @@ export function AddKnowledgeView() {
               {t("ai.divider")}
               <span className="h-px flex-1 bg-border" />
             </div>
-            {form(t("submit"))}
+            {form(saving ? t("ai.processing") : t("submit"))}
           </div>
         )}
       </div>
