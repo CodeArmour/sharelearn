@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
-import { cleanup, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const inviteMemberAction = vi.fn();
 const revokeInvitationAction = vi.fn();
@@ -22,8 +22,6 @@ function setup(pending: PendingInvite[] = []) {
     </NextIntlClientProvider>,
   );
 }
-
-afterEach(cleanup);
 
 describe("InvitePanel", () => {
   it("shows the empty state", () => {

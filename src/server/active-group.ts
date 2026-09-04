@@ -16,8 +16,18 @@ export async function readActiveGroupId(): Promise<string | null> {
   return (await cookies()).get(ACTIVE_GROUP_COOKIE)?.value ?? null;
 }
 export async function writeActiveGroupId(id: string): Promise<void> {
-  (await cookies()).set(ACTIVE_GROUP_COOKIE, id, OPTS);
+  try {
+    (await cookies()).set(ACTIVE_GROUP_COOKIE, id, OPTS);
+  } catch {
+    // Called during a Server Component render (e.g. the (app) layout or the
+    // invite page) — cookie writes aren't allowed there. The value is
+    // re-resolved per request, so a no-op here is safe.
+  }
 }
 export async function clearActiveGroupId(): Promise<void> {
-  (await cookies()).delete(ACTIVE_GROUP_COOKIE);
+  try {
+    (await cookies()).delete(ACTIVE_GROUP_COOKIE);
+  } catch {
+    // Same as writeActiveGroupId — no-op during SC render.
+  }
 }
