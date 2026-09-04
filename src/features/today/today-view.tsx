@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import type { KnowledgeItem } from "@/types";
-import type { TodayFeed } from "@/data/mock";
+import type { TodayFeed } from "@/server/services/knowledge-service";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { KnowledgeCard } from "@/components/shared";
 
