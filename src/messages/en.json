@@ -1,4 +1,19 @@
 {
+  "auth": {
+    "invite": {
+      "acceptingTitle": "Processing your invitation…",
+      "successBody": "You're in. One moment…",
+      "error": {
+        "expired": "This invitation has expired. Ask for a new one.",
+        "revoked": "This invitation was revoked.",
+        "emailMismatch": "This invitation is for a different email. Sign in with that address.",
+        "alreadyMember": "You're already a member of this group.",
+        "notFound": "This invitation link isn't valid."
+      },
+      "toLogin": "Go to sign in",
+      "toGroups": "Go to my groups"
+    }
+  },
   "meta": {
     "title": "Dutch Shared Learning Platform",
     "titleTemplate": "{page} · Nederlands",
@@ -406,13 +421,33 @@
   "group": {
     "you": "you",
     "joined": "Joined {date}",
-    "invite": {
-      "title": "Invite a member",
-      "placeholder": "name@example.com",
-      "send": "Send invite",
-      "note": "Invitations arrive with the backend."
-    },
-    "manageNote": "Changing roles and removing members needs the backend and owner permissions."
+    "manageNote": "Changing roles and removing members comes later.",
+    "settings": {
+      "invite": {
+        "sectionTitle": "Invite a member",
+        "emailLabel": "Email address",
+        "emailPlaceholder": "name@example.com",
+        "submit": "Send invitation",
+        "sent": "Invitation sent to {email}.",
+        "pendingTitle": "Pending invitations",
+        "pendingEmpty": "No pending invitations.",
+        "revoke": "Revoke",
+        "invitedBy": "Invited by {name}",
+        "expires": "Expires {date}"
+      },
+      "members": {
+        "sectionTitle": "Members",
+        "roleOwner": "Owner",
+        "roleMember": "Member"
+      },
+      "errors": {
+        "notOwner": "Only an owner can invite members.",
+        "alreadyMember": "That person is already a member.",
+        "alreadyInvited": "That email already has a pending invitation.",
+        "invalidEmail": "Enter a valid email address.",
+        "generic": "Something went wrong. Try again."
+      }
+    }
   },
   "groups": {
     "picker": {

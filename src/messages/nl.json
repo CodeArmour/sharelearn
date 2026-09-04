@@ -1,4 +1,19 @@
 {
+  "auth": {
+    "invite": {
+      "acceptingTitle": "Uitnodiging verwerken…",
+      "successBody": "Je bent nu lid. Een moment…",
+      "error": {
+        "expired": "Deze uitnodiging is verlopen. Vraag om een nieuwe.",
+        "revoked": "Deze uitnodiging is ingetrokken.",
+        "emailMismatch": "Deze uitnodiging is voor een ander e-mailadres. Log in met dat adres.",
+        "alreadyMember": "Je bent al lid van deze groep.",
+        "notFound": "Deze uitnodigingslink is ongeldig."
+      },
+      "toLogin": "Naar inloggen",
+      "toGroups": "Naar mijn groepen"
+    }
+  },
   "meta": {
     "title": "Dutch Shared Learning Platform",
     "titleTemplate": "{page} · Nederlands",
@@ -406,13 +421,33 @@
   "group": {
     "you": "jij",
     "joined": "Lid geworden op {date}",
-    "invite": {
-      "title": "Lid uitnodigen",
-      "placeholder": "naam@voorbeeld.nl",
-      "send": "Uitnodiging sturen",
-      "note": "Uitnodigingen komen met de backend."
-    },
-    "manageNote": "Rollen wijzigen en leden verwijderen vereist de backend en eigenaarsrechten."
+    "manageNote": "Rollen wijzigen en leden verwijderen komt later.",
+    "settings": {
+      "invite": {
+        "sectionTitle": "Lid uitnodigen",
+        "emailLabel": "E-mailadres",
+        "emailPlaceholder": "naam@voorbeeld.nl",
+        "submit": "Uitnodiging sturen",
+        "sent": "Uitnodiging gestuurd naar {email}.",
+        "pendingTitle": "Openstaande uitnodigingen",
+        "pendingEmpty": "Geen openstaande uitnodigingen.",
+        "revoke": "Intrekken",
+        "invitedBy": "Uitgenodigd door {name}",
+        "expires": "Verloopt op {date}"
+      },
+      "members": {
+        "sectionTitle": "Leden",
+        "roleOwner": "Eigenaar",
+        "roleMember": "Lid"
+      },
+      "errors": {
+        "notOwner": "Alleen een eigenaar kan leden uitnodigen.",
+        "alreadyMember": "Die persoon is al lid.",
+        "alreadyInvited": "Dat e-mailadres heeft al een openstaande uitnodiging.",
+        "invalidEmail": "Voer een geldig e-mailadres in.",
+        "generic": "Er ging iets mis. Probeer het opnieuw."
+      }
+    }
   },
   "groups": {
     "picker": {

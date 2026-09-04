@@ -5,6 +5,7 @@ import { SECONDARY_NAV } from "@/lib/config/navigation";
 import { BrandMark } from "./brand-mark";
 import { LocaleToggle } from "./locale-toggle";
 import { NavItem } from "./nav-item";
+import { SignOutItem } from "./sign-out-item";
 
 /**
  * Mobile top bar — sticky, shown below `lg`. Carries the account destinations
@@ -25,14 +26,22 @@ export async function MobileTopBar() {
         <LocaleToggle />
         {SECONDARY_NAV.map((item) => {
           const Icon = item.icon;
-          return (
+          const icon = <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden />;
+          return item.key === "logout" ? (
+            <SignOutItem
+              key={item.key}
+              platform="compact"
+              label={t(`nav.${item.key}`)}
+              icon={icon}
+            />
+          ) : (
             <NavItem
               key={item.key}
               navKey={item.key}
               href={item.href}
               label={t(`nav.${item.key}`)}
               platform="compact"
-              icon={<Icon className="size-[18px]" strokeWidth={1.75} aria-hidden />}
+              icon={icon}
             />
           );
         })}
