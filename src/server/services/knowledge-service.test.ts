@@ -44,6 +44,7 @@ const vocab = (over: Partial<Record<string, unknown>> = {}) => ({
   tags: [],
   source: "manual" as const,
   addedBy: user,
+  updatedBy: null,
   createdAt: "2026-09-04T08:00:00.000Z",
   updatedAt: "2026-09-04T08:00:00.000Z",
   term: "gezellig",

@@ -44,6 +44,7 @@ function mapRow(row: KnowledgeItemRow, addedBy: UserSummary): KnowledgeItem {
     tags: row.tags,
     source: row.source,
     addedBy,
+    updatedBy: null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
