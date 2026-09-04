@@ -2288,11 +2288,13 @@ Add the import and the dataset near the top (after the existing `schema` destruc
 Add, right before `async function main()`:
 
 ```ts
-/** The 10 non-file items from the former MOCK_KNOWLEDGE mock, for a seeded
- * group to render Today/Library with immediately. All attributed to the seed
- * owner — reproducing the mock's multi-author attribution (Sofie/Omar/Lena)
- * would require fabricating auth users outside the invite flow. */
-function demoKnowledgeItems(
+/** The 9 non-reading, non-file items from the former MOCK_KNOWLEDGE mock —
+ * inserted first so the reading item below can link to their real (DB-
+ * generated) ids, same as the mock's `vocabularyIds: ["kn_afentoe",
+ * "kn_rekening", "kn_gezellig"]`. All attributed to the seed owner —
+ * reproducing the mock's multi-author attribution (Sofie/Omar/Lena) would
+ * require fabricating auth users outside the invite flow. */
+function demoKnowledgeItemsExceptReading(
   groupId: string,
   ownerId: string,
 ): (typeof knowledgeItems.$inferInsert)[] {
@@ -2412,17 +2414,6 @@ function demoKnowledgeItems(
     },
     {
       ...by,
-      type: "reading",
-      level: "A2",
-      tags: ["reistekst", "dagelijks leven"],
-      source: "manual",
-      title: "Een dagje Antwerpen",
-      body: "We gingen af en toe naar Antwerpen voor een dagje uit. De trein vanuit Rotterdam duurde ongeveer een uur. We moesten wel rekening houden met de drukte op zaterdag. In de stad liepen we langs de Schelde en dronken we koffie op een gezellig terras. 's Middags spraken we af met een vriendin bij het Centraal Station, een van de mooiste stations van Europa.",
-      wordCount: 84,
-      summary: "reistekst met dagelijkse woordenschat",
-    },
-    {
-      ...by,
       type: "note",
       level: "A2",
       tags: ["uitspraak", "docent"],
@@ -2431,6 +2422,29 @@ function demoKnowledgeItems(
       body: "De 'g' en 'ch' klinken hetzelfde (stemloos), behalve in leenwoorden zoals 'garage'. De 'ui' is een aparte klank — niet 'oe' en niet 'au'. Oefen korte zinnen hardop en let op de klemtoon: die ligt meestal op de eerste lettergreep, maar niet bij woorden met 'be-', 'ge-', 'ver-' of 'ont-'.",
     },
   ] as (typeof knowledgeItems.$inferInsert)[];
+}
+
+/** The 10th item — a reading linking back to three of the vocabulary rows
+ * above by their real (DB-generated) ids, matching the former mock's
+ * `vocabularyIds`. */
+function demoReadingItem(
+  groupId: string,
+  ownerId: string,
+  vocabularyIds: string[],
+): typeof knowledgeItems.$inferInsert {
+  return {
+    groupId,
+    addedBy: ownerId,
+    type: "reading",
+    level: "A2",
+    tags: ["reistekst", "dagelijks leven"],
+    source: "manual",
+    title: "Een dagje Antwerpen",
+    body: "We gingen af en toe naar Antwerpen voor een dagje uit. De trein vanuit Rotterdam duurde ongeveer een uur. We moesten wel rekening houden met de drukte op zaterdag. In de stad liepen we langs de Schelde en dronken we koffie op een gezellig terras. 's Middags spraken we af met een vriendin bij het Centraal Station, een van de mooiste stations van Europa.",
+    wordCount: 84,
+    summary: "reistekst met dagelijkse woordenschat",
+    vocabularyIds,
+  } as typeof knowledgeItems.$inferInsert;
 }
 ```
 
@@ -2448,8 +2462,18 @@ Add the seeding step at the end of `main()`, after the membership upsert:
 +    .from(knowledgeItems)
 +    .where(eq(knowledgeItems.groupId, group.id));
 +  if (count === 0) {
-+    await db.insert(knowledgeItems).values(demoKnowledgeItems(group.id, userId));
-+    console.log(`Seeded ${demoKnowledgeItems(group.id, userId).length} demo knowledge items.`);
++    const inserted = await db
++      .insert(knowledgeItems)
++      .values(demoKnowledgeItemsExceptReading(group.id, userId))
++      .returning({ id: knowledgeItems.id, term: knowledgeItems.term });
++    const idByTerm = (term: string) => inserted.find((r) => r.term === term)!.id;
++    const vocabularyIds = [
++      idByTerm("af en toe"),
++      idByTerm("rekening houden met"),
++      idByTerm("gezellig"),
++    ];
++    await db.insert(knowledgeItems).values(demoReadingItem(group.id, userId, vocabularyIds));
++    console.log("Seeded 10 demo knowledge items (incl. 1 reading linked to 3 vocabulary items).");
 +  }
 +
    console.log(
@@ -2495,7 +2519,7 @@ Not a code task — run through this checklist against `npm run dev` with the se
 - [ ] **Step 1: Today / Library render the 10 seeded items**, grouped/filterable as before.
 - [ ] **Step 2: Add one item of each type** (vocabulary, grammar, reading, note) through the plain manual form. Confirm each appears on `/library` and, if added "today" (it will be — server clock), on `/today`.
 - [ ] **Step 3: Add one item through the AI-confirm path** (paste text, let it structure, confirm). Confirm it saves with `source: "ai-assisted"` — visually check the source icon on its detail page (`Sparkles`, per `SOURCE_ICON` in `knowledge-detail-view.tsx`).
-- [ ] **Step 4: Knowledge detail page** for the seeded reading item ("Een dagje Antwerpen") — confirm it renders (linked vocabulary will show as empty, since `vocabulary_ids` is `null`/`[]` for the seed; that's expected, per spec §10).
+- [ ] **Step 4: Knowledge detail page** for the seeded reading item ("Een dagje Antwerpen") — confirm it renders, and confirm its linked-vocabulary section shows the 3 seeded vocabulary items ("af en toe", "rekening houden met", "gezellig") via `vocabulary_ids`. A newly *added* reading item (through the Add flow) will have an empty linked-vocabulary section instead — no linking UI exists yet, per spec §10.
 - [ ] **Step 5: Run a Practice session** (mixed, scope "all") — confirm questions generate and the session completes.
 - [ ] **Step 6: Run an Exam session** the same way.
 - [ ] **Step 7: Mark 2–3 items for review** from their detail pages, confirm they show on `/profile`'s review list, and that `scope=review` practice pulls only those.
