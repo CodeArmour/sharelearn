@@ -13,7 +13,6 @@ export const testDb = url ? drizzle(postgres(url, { prepare: false }), { schema 
 export async function resetTables(): Promise<void> {
   if (!testDb) return;
   await testDb.execute(
-    // order respects FKs
-    sql`TRUNCATE invitations, group_memberships, groups, profiles RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE knowledge_items, invitations, group_memberships, groups, profiles RESTART IDENTITY CASCADE`,
   );
 }
