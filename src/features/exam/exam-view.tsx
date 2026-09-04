@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { getExamQuestions } from "@/data/mock";
+import { generateExamQuestionsAction } from "@/server/actions/practice";
 import type { PracticeFilter, PracticeQuestion, PracticeScope, PracticeSetup } from "@/types";
 import { useReviewMarks } from "@/lib/review-marks";
 import { useFocusOnChange } from "@/lib/use-focus-on-change";
@@ -51,8 +51,8 @@ export function ExamView({
 
   useEffect(() => {
     let alive = true;
-    getExamQuestions(resolved).then((qs) => {
-      if (alive) setPreview(qs);
+    generateExamQuestionsAction(resolved).then((result) => {
+      if (alive && result.ok) setPreview(result.data);
     });
     return () => {
       alive = false;
