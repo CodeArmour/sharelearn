@@ -7,6 +7,8 @@ vi.mock("@/server/repositories/knowledge", () => ({
   getKnowledgeItemById: vi.fn(),
   getKnowledgeStats: vi.fn(),
   getDistinctLevels: vi.fn(),
+  updateKnowledgeItem: vi.fn(),
+  softDeleteKnowledgeItem: vi.fn(),
 }));
 vi.mock("@/server/repositories/memberships", () => ({ listMembers: vi.fn() }));
 vi.mock("@/server/db/client", () => ({
@@ -14,19 +16,21 @@ vi.mock("@/server/db/client", () => ({
 }));
 vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.fn() }));
 
-import { NotFoundError } from "@/server/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { listMembers } from "@/server/repositories/memberships";
 import * as repo from "@/server/repositories/knowledge";
 import { resolveActiveContext } from "@/server/services/session-service";
 
 import {
   createKnowledgeItem,
+  deleteKnowledgeItem,
   getKnowledgeById,
   getKnowledgeByIds,
   getLibraryFacets,
   getLibraryItems,
   getLibraryStats,
   getTodayFeed,
+  updateKnowledgeItem,
 } from "./knowledge-service";
 
 const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
@@ -176,5 +180,128 @@ describe("getKnowledgeById", () => {
   it("returns null when the id belongs to another group", async () => {
     vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(null);
     expect(await getKnowledgeById("nope")).toBeNull();
+  });
+});
+
+const okCtxWithRole = (role: "owner" | "member") => ({
+  status: "ok" as const,
+  user,
+  activeGroup: { id: "g1", name: "G", slug: "g" },
+  membership: { groupId: "g1", userId: "u1", role },
+});
+
+describe("updateKnowledgeItem", () => {
+  it("rejects a non-author, non-owner member", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(
+      vocab({ id: "k1", addedBy: { ...user, id: "someone-else" } }),
+    );
+    await expect(
+      updateKnowledgeItem("k1", {
+        type: "vocabulary",
+        level: null,
+        tags: [],
+        source: "manual",
+        term: "x",
+        meaning: "y",
+        partOfSpeech: "z",
+        example: null,
+        exampleTranslation: null,
+        article: null,
+        plural: null,
+        pastTense: null,
+        perfect: null,
+        usageNote: null,
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("allows the author", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user }));
+    vi.mocked(repo.updateKnowledgeItem).mockResolvedValue(vocab({ id: "k1" }));
+    const result = await updateKnowledgeItem("k1", {
+      type: "vocabulary",
+      level: null,
+      tags: [],
+      source: "manual",
+      term: "x",
+      meaning: "y",
+      partOfSpeech: "z",
+      example: null,
+      exampleTranslation: null,
+      article: null,
+      plural: null,
+      pastTense: null,
+      perfect: null,
+      usageNote: null,
+    });
+    expect(result.id).toBe("k1");
+  });
+
+  it("allows the owner even if not the author", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("owner"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(
+      vocab({ id: "k1", addedBy: { ...user, id: "someone-else" } }),
+    );
+    vi.mocked(repo.updateKnowledgeItem).mockResolvedValue(vocab({ id: "k1" }));
+    const result = await updateKnowledgeItem("k1", {
+      type: "vocabulary",
+      level: null,
+      tags: [],
+      source: "manual",
+      term: "x",
+      meaning: "y",
+      partOfSpeech: "z",
+      example: null,
+      exampleTranslation: null,
+      article: null,
+      plural: null,
+      pastTense: null,
+      perfect: null,
+      usageNote: null,
+    });
+    expect(result.id).toBe("k1");
+  });
+
+  it("rejects switching an item's type", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user, type: "note" as never }));
+    await expect(
+      updateKnowledgeItem("k1", {
+        type: "vocabulary",
+        level: null,
+        tags: [],
+        source: "manual",
+        term: "x",
+        meaning: "y",
+        partOfSpeech: "z",
+        example: null,
+        exampleTranslation: null,
+        article: null,
+        plural: null,
+        pastTense: null,
+        perfect: null,
+        usageNote: null,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+describe("deleteKnowledgeItem", () => {
+  it("rejects a non-author, non-owner member", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(
+      vocab({ id: "k1", addedBy: { ...user, id: "someone-else" } }),
+    );
+    await expect(deleteKnowledgeItem("k1")).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("allows the author and calls softDeleteKnowledgeItem", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user }));
+    vi.mocked(repo.softDeleteKnowledgeItem).mockResolvedValue(true);
+    await deleteKnowledgeItem("k1");
+    expect(repo.softDeleteKnowledgeItem).toHaveBeenCalledWith("g1", "k1");
   });
 });
