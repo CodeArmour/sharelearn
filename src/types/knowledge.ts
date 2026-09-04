@@ -28,6 +28,8 @@ interface KnowledgeItemBase {
   source: KnowledgeSource;
   /** Person who added it — shared library shows attribution. */
   addedBy: UserSummary;
+  /** Person who last edited it, or null if never edited. */
+  updatedBy: UserSummary | null;
   /** ISO 8601 timestamps. */
   createdAt: string;
   updatedAt: string;
