@@ -132,6 +132,8 @@ run("knowledge repository (integration)", () => {
     expect(await repo.listKnowledgeItems(group.id, { search: "gezellig" })).toHaveLength(1);
     expect(await repo.listKnowledgeItems(group.id, { search: "nothing-matches" })).toHaveLength(0);
     expect(await repo.listKnowledgeItems(group.id)).toHaveLength(2);
+    // File type is not supported in this phase; should return empty even when group has items
+    expect(await repo.listKnowledgeItems(group.id, { type: "file" })).toHaveLength(0);
   });
 
   it("getKnowledgeStats and getDistinctLevels", async () => {

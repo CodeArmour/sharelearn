@@ -102,6 +102,7 @@ function toUserSummary(p: {
 
 function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
   const clauses = [eq(knowledgeItems.groupId, groupId)];
+  // Note: caller must handle type: "file" case since DB enum doesn't support it
   if (filter.type && filter.type !== "file") {
     clauses.push(eq(knowledgeItems.type, filter.type));
   }
@@ -110,6 +111,7 @@ function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
   if (filter.ids) clauses.push(inArray(knowledgeItems.id, filter.ids));
   if (filter.search) {
     const pattern = `%${filter.search}%`;
+    // SEARCH_COLUMNS is a fixed 6-element array, so the non-null assertion is safe
     clauses.push(or(...SEARCH_COLUMNS.map((col) => ilike(col, pattern)))!);
   }
   return and(...clauses);
@@ -155,6 +157,10 @@ export async function listKnowledgeItems(
   groupId: string,
   filter: KnowledgeListFilter = {},
 ): Promise<KnowledgeItem[]> {
+  // File type is not supported in this phase; return empty list rather than unfiltered results
+  if (filter.type === "file") {
+    return [];
+  }
   return selectWithAttribution(buildFilter(groupId, filter));
 }
 
