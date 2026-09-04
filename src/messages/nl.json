@@ -150,10 +150,16 @@
     "retry": "Opnieuw proberen"
   },
   "login": {
-    "welcome": "Welkom terug",
-    "subtitle": "Log in om verder te gaan met de gedeelde leeromgeving.",
-    "continueDemo": "Doorgaan (demo)",
-    "note": "Authenticatie wordt in een latere fase toegevoegd."
+    "welcome": "Welkom",
+    "subtitle": "Log in met je e-mailadres om verder te gaan.",
+    "emailLabel": "E-mailadres",
+    "emailPlaceholder": "naam@voorbeeld.nl",
+    "submit": "Stuur inloglink",
+    "sending": "Bezig met versturen…",
+    "sentTitle": "Check je e-mail",
+    "sentBody": "We hebben een inloglink gestuurd naar {email}. De link is één uur geldig.",
+    "sentResend": "Ander e-mailadres gebruiken",
+    "errorGeneric": "Versturen mislukt. Probeer het opnieuw."
   },
   "foundation": {
     "title": "Foundation",

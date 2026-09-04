@@ -150,10 +150,16 @@
     "retry": "Try again"
   },
   "login": {
-    "welcome": "Welcome back",
-    "subtitle": "Sign in to continue with the shared workspace.",
-    "continueDemo": "Continue (demo)",
-    "note": "Authentication will be added in a later phase."
+    "welcome": "Welcome",
+    "subtitle": "Sign in with your email address to continue.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "name@example.com",
+    "submit": "Send sign-in link",
+    "sending": "Sending…",
+    "sentTitle": "Check your email",
+    "sentBody": "We sent a sign-in link to {email}. It's valid for one hour.",
+    "sentResend": "Use a different email",
+    "errorGeneric": "Couldn't send the link. Try again."
   },
   "foundation": {
     "title": "Foundation",
