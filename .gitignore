@@ -36,8 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
-# worktrees (SDD scratch workspaces)
+# worktrees + SDD scratch workspaces
 /.worktrees
+/.superpowers
 
 # typescript
 *.tsbuildinfo
