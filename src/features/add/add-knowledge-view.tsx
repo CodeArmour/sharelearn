@@ -203,13 +203,18 @@ export function AddKnowledgeView() {
 
     setSaving(true);
     setSaveError(null);
-    const result = await createKnowledgeItemAction(input);
-    setSaving(false);
-    if (!result.ok) {
+    try {
+      const result = await createKnowledgeItemAction(input);
+      if (!result.ok) {
+        setSaveError(t("errors.generic"));
+        return;
+      }
+      setSavedTitle(knowledgeTitle(result.data));
+    } catch {
       setSaveError(t("errors.generic"));
-      return;
+    } finally {
+      setSaving(false);
     }
-    setSavedTitle(knowledgeTitle(result.data));
   };
 
   const afterSuccess = () => {
