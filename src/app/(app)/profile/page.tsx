@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getLibraryStats } from "@/data/mock";
+import { getLibraryStats } from "@/server/services/knowledge-service";
 import { getCurrentUser } from "@/server/auth/session";
 import { getGroupSettings } from "@/server/services/group-service";
 import { titleMetadata } from "@/lib/page-metadata";

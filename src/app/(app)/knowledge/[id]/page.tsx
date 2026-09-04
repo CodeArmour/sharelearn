@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { getKnowledgeById } from "@/data/mock";
+import { getKnowledgeById } from "@/server/services/knowledge-service";
 import { knowledgeTitle } from "@/types";
 import { KnowledgeDetailView } from "@/features/knowledge";
 

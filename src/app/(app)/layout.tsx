@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout";
-import { getLibraryStats } from "@/data/mock";
+import { getLibraryStats } from "@/server/services/knowledge-service";
 import { ActiveGroupProvider } from "@/lib/active-group";
 import { resolveActiveContext } from "@/server/services/session-service";
 

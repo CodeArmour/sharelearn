@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { getTodayFeed } from "@/data/mock";
+import { getTodayFeed } from "@/server/services/knowledge-service";
 import { formatDateLong } from "@/lib/utils/date";
 import { titleMetadata } from "@/lib/page-metadata";
 import { TodayView } from "@/features/today";
