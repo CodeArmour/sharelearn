@@ -6,6 +6,7 @@ import { AddKnowledgeButton } from "./add-knowledge-button";
 import { BrandMark } from "./brand-mark";
 import { LocaleToggle } from "./locale-toggle";
 import { NavItem } from "./nav-item";
+import { SignOutItem } from "./sign-out-item";
 
 /**
  * Desktop sidebar — fixed 264px rail, full viewport height, hidden below `lg`.
@@ -51,15 +52,20 @@ export async function DesktopSidebar({ libraryCount }: { libraryCount: number })
         <ul className="flex flex-col gap-1">
           {SECONDARY_NAV.map((item) => {
             const Icon = item.icon;
+            const icon = <Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />;
             return (
               <li key={item.key}>
-                <NavItem
-                  navKey={item.key}
-                  href={item.href}
-                  label={t(`nav.${item.key}`)}
-                  platform="desktop"
-                  icon={<Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />}
-                />
+                {item.key === "logout" ? (
+                  <SignOutItem platform="desktop" label={t(`nav.${item.key}`)} icon={icon} />
+                ) : (
+                  <NavItem
+                    navKey={item.key}
+                    href={item.href}
+                    label={t(`nav.${item.key}`)}
+                    platform="desktop"
+                    icon={icon}
+                  />
+                )}
               </li>
             );
           })}

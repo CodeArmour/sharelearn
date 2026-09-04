@@ -1,4 +1,4 @@
-import type { GroupMemberSummary, UserSummary } from "@/types";
+import type { GroupMemberSummary } from "@/types";
 
 /**
  * Mock group members. Replace with a `server/repositories/group` call later.
@@ -34,9 +34,6 @@ export const MOCK_MEMBERS: GroupMemberSummary[] = [
     joinedAt: "2026-06-05T12:00:00.000Z",
   },
 ];
-
-/** The signed-in user for this mock session. */
-export const MOCK_CURRENT_USER: UserSummary = MOCK_MEMBERS[1];
 
 export function memberById(id: string): GroupMemberSummary | undefined {
   return MOCK_MEMBERS.find((m) => m.id === id);

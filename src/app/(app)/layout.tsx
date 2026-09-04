@@ -1,13 +1,24 @@
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout";
 import { getLibraryStats } from "@/data/mock";
+import { ActiveGroupProvider } from "@/lib/active-group";
+import { resolveActiveContext } from "@/server/services/session-service";
 
-/**
- * Authenticated application layout — wraps every screen in the persistent shell.
- * (Auth enforcement will be added when the auth backend exists.)
- */
+/** Authenticated application layout. Resolves the active group (or redirects)
+ * before rendering the persistent shell. */
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  const ctx = await resolveActiveContext();
+  if (ctx.status === "needs-login") redirect("/login");
+  if (ctx.status === "needs-group" || ctx.status === "no-access") redirect("/groups");
+
   const stats = await getLibraryStats();
-  return <AppShell libraryCount={stats.total}>{children}</AppShell>;
+  return (
+    <ActiveGroupProvider
+      value={{ user: ctx.user, group: ctx.activeGroup, membership: ctx.membership }}
+    >
+      <AppShell libraryCount={stats.total}>{children}</AppShell>
+    </ActiveGroupProvider>
+  );
 }

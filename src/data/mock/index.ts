@@ -9,14 +9,13 @@ import type {
   PracticeQuestion,
   PracticeSetup,
   ReadingItem,
-  UserSummary,
   VocabularyItem,
 } from "@/types";
 import { knowledgeTitle } from "@/types";
 import { isSameDay } from "@/lib/utils/date";
 
 import { MOCK_KNOWLEDGE } from "./knowledge";
-import { MOCK_CURRENT_USER, MOCK_MEMBERS } from "./users";
+import { MOCK_MEMBERS } from "./users";
 
 /**
  * Read-only mock data access — the single surface screens import from.
@@ -32,14 +31,6 @@ const MOCK_TODAY = "2026-09-02T18:00:00.000Z";
 
 export async function getTodayReferenceDate(): Promise<Date> {
   return new Date(MOCK_TODAY);
-}
-
-export async function getCurrentUser(): Promise<UserSummary> {
-  return MOCK_CURRENT_USER;
-}
-
-export async function getGroupMembers(): Promise<GroupMemberSummary[]> {
-  return MOCK_MEMBERS;
 }
 
 export interface KnowledgeQuery {

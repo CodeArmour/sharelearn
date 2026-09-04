@@ -31,6 +31,8 @@ variables; components mirror the Figma component set.
 ```bash
 npm install
 cp .env.example .env.local   # nothing required to run the foundation
+npm run db:migrate           # apply Drizzle migrations to Supabase
+OWNER_EMAIL=you@example.com npm run db:seed   # bootstrap the first group + owner
 npm run dev                  # http://localhost:3000  → redirects to /today
 ```
 
@@ -42,6 +44,10 @@ npm run dev                  # http://localhost:3000  → redirects to /today
 | `npm run lint`         | ESLint                                  |
 | `npm run typecheck`    | `tsc --noEmit`                          |
 | `npm run format`       | Prettier write                          |
+| `npm test`             | Vitest run                              |
+| `npm run db:generate`  | Generate Drizzle migrations from schema |
+| `npm run db:migrate`   | Apply Drizzle migrations to Supabase    |
+| `npm run db:seed`      | Idempotent first group + owner bootstrap |
 
 `/foundation` renders every design token, the type scale and the base
 components inside the shell — a development reference, not a product page.

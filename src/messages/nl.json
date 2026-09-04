@@ -1,4 +1,19 @@
 {
+  "auth": {
+    "invite": {
+      "acceptingTitle": "Uitnodiging verwerken…",
+      "successBody": "Je bent nu lid. Een moment…",
+      "error": {
+        "expired": "Deze uitnodiging is verlopen. Vraag om een nieuwe.",
+        "revoked": "Deze uitnodiging is ingetrokken.",
+        "emailMismatch": "Deze uitnodiging is voor een ander e-mailadres. Log in met dat adres.",
+        "alreadyMember": "Je bent al lid van deze groep.",
+        "notFound": "Deze uitnodigingslink is ongeldig."
+      },
+      "toLogin": "Naar inloggen",
+      "toGroups": "Naar mijn groepen"
+    }
+  },
   "meta": {
     "title": "Dutch Shared Learning Platform",
     "titleTemplate": "{page} · Nederlands",
@@ -150,10 +165,16 @@
     "retry": "Opnieuw proberen"
   },
   "login": {
-    "welcome": "Welkom terug",
-    "subtitle": "Log in om verder te gaan met de gedeelde leeromgeving.",
-    "continueDemo": "Doorgaan (demo)",
-    "note": "Authenticatie wordt in een latere fase toegevoegd."
+    "welcome": "Welkom",
+    "subtitle": "Log in met je e-mailadres om verder te gaan.",
+    "emailLabel": "E-mailadres",
+    "emailPlaceholder": "naam@voorbeeld.nl",
+    "submit": "Stuur inloglink",
+    "sending": "Bezig met versturen…",
+    "sentTitle": "Check je e-mail",
+    "sentBody": "We hebben een inloglink gestuurd naar {email}. De link is één uur geldig.",
+    "sentResend": "Ander e-mailadres gebruiken",
+    "errorGeneric": "Versturen mislukt. Probeer het opnieuw."
   },
   "foundation": {
     "title": "Foundation",
@@ -400,12 +421,46 @@
   "group": {
     "you": "jij",
     "joined": "Lid geworden op {date}",
-    "invite": {
-      "title": "Lid uitnodigen",
-      "placeholder": "naam@voorbeeld.nl",
-      "send": "Uitnodiging sturen",
-      "note": "Uitnodigingen komen met de backend."
+    "manageNote": "Rollen wijzigen en leden verwijderen komt later.",
+    "settings": {
+      "invite": {
+        "sectionTitle": "Lid uitnodigen",
+        "emailLabel": "E-mailadres",
+        "emailPlaceholder": "naam@voorbeeld.nl",
+        "submit": "Uitnodiging sturen",
+        "sent": "Uitnodiging gestuurd naar {email}.",
+        "pendingTitle": "Openstaande uitnodigingen",
+        "pendingEmpty": "Geen openstaande uitnodigingen.",
+        "revoke": "Intrekken",
+        "invitedBy": "Uitgenodigd door {name}",
+        "expires": "Verloopt op {date}"
+      },
+      "members": {
+        "sectionTitle": "Leden",
+        "roleOwner": "Eigenaar",
+        "roleMember": "Lid"
+      },
+      "errors": {
+        "notOwner": "Alleen een eigenaar kan leden uitnodigen.",
+        "alreadyMember": "Die persoon is al lid.",
+        "alreadyInvited": "Dat e-mailadres heeft al een openstaande uitnodiging.",
+        "invalidEmail": "Voer een geldig e-mailadres in.",
+        "generic": "Er ging iets mis. Probeer het opnieuw."
+      }
+    }
+  },
+  "groups": {
+    "picker": {
+      "title": "Kies een groep",
+      "subtitle": "Je bent lid van meerdere groepen. Kies er één om verder te gaan.",
+      "continueIn": "Ga naar {name}",
+      "roleOwner": "Eigenaar",
+      "roleMember": "Lid"
     },
-    "manageNote": "Rollen wijzigen en leden verwijderen vereist de backend en eigenaarsrechten."
+    "noAccess": {
+      "title": "Nog geen toegang",
+      "body": "Je zit nog in geen enkele groep. Vraag een eigenaar om je uit te nodigen.",
+      "signOut": "Uitloggen"
+    }
   }
 }

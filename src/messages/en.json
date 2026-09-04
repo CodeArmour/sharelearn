@@ -1,4 +1,19 @@
 {
+  "auth": {
+    "invite": {
+      "acceptingTitle": "Processing your invitation…",
+      "successBody": "You're in. One moment…",
+      "error": {
+        "expired": "This invitation has expired. Ask for a new one.",
+        "revoked": "This invitation was revoked.",
+        "emailMismatch": "This invitation is for a different email. Sign in with that address.",
+        "alreadyMember": "You're already a member of this group.",
+        "notFound": "This invitation link isn't valid."
+      },
+      "toLogin": "Go to sign in",
+      "toGroups": "Go to my groups"
+    }
+  },
   "meta": {
     "title": "Dutch Shared Learning Platform",
     "titleTemplate": "{page} · Nederlands",
@@ -150,10 +165,16 @@
     "retry": "Try again"
   },
   "login": {
-    "welcome": "Welcome back",
-    "subtitle": "Sign in to continue with the shared workspace.",
-    "continueDemo": "Continue (demo)",
-    "note": "Authentication will be added in a later phase."
+    "welcome": "Welcome",
+    "subtitle": "Sign in with your email address to continue.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "name@example.com",
+    "submit": "Send sign-in link",
+    "sending": "Sending…",
+    "sentTitle": "Check your email",
+    "sentBody": "We sent a sign-in link to {email}. It's valid for one hour.",
+    "sentResend": "Use a different email",
+    "errorGeneric": "Couldn't send the link. Try again."
   },
   "foundation": {
     "title": "Foundation",
@@ -400,12 +421,46 @@
   "group": {
     "you": "you",
     "joined": "Joined {date}",
-    "invite": {
-      "title": "Invite a member",
-      "placeholder": "name@example.com",
-      "send": "Send invite",
-      "note": "Invitations arrive with the backend."
+    "manageNote": "Changing roles and removing members comes later.",
+    "settings": {
+      "invite": {
+        "sectionTitle": "Invite a member",
+        "emailLabel": "Email address",
+        "emailPlaceholder": "name@example.com",
+        "submit": "Send invitation",
+        "sent": "Invitation sent to {email}.",
+        "pendingTitle": "Pending invitations",
+        "pendingEmpty": "No pending invitations.",
+        "revoke": "Revoke",
+        "invitedBy": "Invited by {name}",
+        "expires": "Expires {date}"
+      },
+      "members": {
+        "sectionTitle": "Members",
+        "roleOwner": "Owner",
+        "roleMember": "Member"
+      },
+      "errors": {
+        "notOwner": "Only an owner can invite members.",
+        "alreadyMember": "That person is already a member.",
+        "alreadyInvited": "That email already has a pending invitation.",
+        "invalidEmail": "Enter a valid email address.",
+        "generic": "Something went wrong. Try again."
+      }
+    }
+  },
+  "groups": {
+    "picker": {
+      "title": "Choose a group",
+      "subtitle": "You're a member of more than one group. Pick one to continue.",
+      "continueIn": "Go to {name}",
+      "roleOwner": "Owner",
+      "roleMember": "Member"
     },
-    "manageNote": "Changing roles and removing members needs the backend and owner permissions."
+    "noAccess": {
+      "title": "No access yet",
+      "body": "You're not in any group yet. Ask an owner to invite you.",
+      "signOut": "Sign out"
+    }
   }
 }
