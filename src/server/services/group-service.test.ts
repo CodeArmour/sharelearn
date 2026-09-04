@@ -17,13 +17,15 @@ vi.mock("@/server/repositories/memberships", () => ({
 }));
 vi.mock("@/server/repositories/invitations", () => ({ listPendingForGroup: vi.fn() }));
 vi.mock("@/server/repositories/profiles", () => ({ getProfile: vi.fn() }));
+vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.fn() }));
 
-import { readActiveGroupId, writeActiveGroupId } from "@/server/active-group";
+import { writeActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
-import { getGroupById, getMembership, listGroupsForUser } from "@/server/repositories/groups";
-import { getRole, listMembers } from "@/server/repositories/memberships";
+import { getMembership, listGroupsForUser } from "@/server/repositories/groups";
+import { listMembers } from "@/server/repositories/memberships";
 import { listPendingForGroup } from "@/server/repositories/invitations";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
+import { resolveActiveContext } from "@/server/services/session-service";
 import { getGroupSettings, getGroupsForPicker, switchActiveGroup } from "./group-service";
 
 const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
@@ -59,21 +61,24 @@ describe("switchActiveGroup", () => {
 });
 
 describe("getGroupSettings", () => {
+  const okCtx = (role: "owner" | "member") => ({
+    status: "ok" as const,
+    user,
+    activeGroup: { id: "g1", name: "G", slug: "g" },
+    membership: { groupId: "g1", userId: "u1", role },
+  });
+
   beforeEach(() => {
-    vi.mocked(readActiveGroupId).mockResolvedValue("g1");
-    vi.mocked(getGroupById).mockResolvedValue({
-      id: "g1", name: "G", slug: "g", createdBy: "u1", createdAt: new Date(),
-    });
     vi.mocked(listMembers).mockResolvedValue([]);
   });
 
   it("throws when no active group resolves", async () => {
-    vi.mocked(readActiveGroupId).mockResolvedValue(null);
+    vi.mocked(resolveActiveContext).mockResolvedValue({ status: "needs-group" });
     await expect(getGroupSettings()).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it("hides pending invites from a member", async () => {
-    vi.mocked(getRole).mockResolvedValue("member");
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx("member"));
     const view = await getGroupSettings();
     expect(view.viewerRole).toBe("member");
     expect(view.pendingInvites).toEqual([]);
@@ -81,7 +86,7 @@ describe("getGroupSettings", () => {
   });
 
   it("includes pending invites for an owner", async () => {
-    vi.mocked(getRole).mockResolvedValue("owner");
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx("owner"));
     vi.mocked(listPendingForGroup).mockResolvedValue([
       {
         id: "i1", groupId: "g1", email: "x@y.z", token: "t", role: "member",

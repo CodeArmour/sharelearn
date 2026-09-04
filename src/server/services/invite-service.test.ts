@@ -31,8 +31,9 @@ vi.mock("@/server/env", () => ({ serverEnv: { siteUrl: "http://localhost:3000" }
 vi.mock("@/server/db/client", () => ({
   db: { transaction: (fn: (tx: unknown) => unknown) => fn({}) },
 }));
+vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.fn() }));
 
-import { writeActiveGroupId, readActiveGroupId } from "@/server/active-group";
+import { writeActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
 import {
@@ -53,6 +54,7 @@ import {
 } from "@/server/repositories/invitations";
 import { createMembership, getRole } from "@/server/repositories/memberships";
 import { upsertProfile } from "@/server/repositories/profiles";
+import { resolveActiveContext } from "@/server/services/session-service";
 
 import { acceptInvitation, inviteMember, revokeInvitation } from "./invite-service";
 
@@ -77,15 +79,21 @@ beforeEach(() => {
 });
 
 describe("inviteMember", () => {
+  const okCtx = (role: "owner" | "member") => ({
+    status: "ok" as const,
+    user: { id: OWNER, name: "O", initials: "OO", avatarUrl: null },
+    activeGroup: { id: GROUP, name: "G", slug: "g" },
+    membership: { groupId: GROUP, userId: OWNER, role },
+  });
+
   beforeEach(() => {
-    vi.mocked(readActiveGroupId).mockResolvedValue(GROUP);
-    vi.mocked(getRole).mockResolvedValue("owner");
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx("owner"));
     vi.mocked(getPendingByEmail).mockResolvedValue([]);
     vi.mocked(getMembership).mockResolvedValue(null);
   });
 
   it("rejects a non-owner", async () => {
-    vi.mocked(getRole).mockResolvedValue("member");
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx("member"));
     await expect(inviteMember({ email: "a@b.com" })).rejects.toBeInstanceOf(ForbiddenError);
   });
 

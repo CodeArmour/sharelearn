@@ -1,12 +1,13 @@
 import "server-only";
 
-import { readActiveGroupId, writeActiveGroupId } from "@/server/active-group";
+import { writeActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
-import { getGroupById, getMembership, listGroupsForUser } from "@/server/repositories/groups";
+import { getMembership, listGroupsForUser } from "@/server/repositories/groups";
 import { listPendingForGroup } from "@/server/repositories/invitations";
-import { getRole, listMembers } from "@/server/repositories/memberships";
+import { listMembers } from "@/server/repositories/memberships";
 import { getProfile } from "@/server/repositories/profiles";
+import { resolveActiveContext } from "@/server/services/session-service";
 import type { GroupSettingsView, GroupSummary, PendingInvite } from "@/types";
 
 async function requireUserId(): Promise<string> {
@@ -28,20 +29,19 @@ export async function switchActiveGroup(groupId: string): Promise<void> {
 }
 
 export async function getGroupSettings(): Promise<GroupSettingsView> {
-  const userId = await requireUserId();
-  const groupId = await readActiveGroupId();
-  if (!groupId) throw new NotFoundError("No active group");
+  // Re-derive the active group the same self-healing way (app)/layout does,
+  // rather than trusting the cookie alone: a single-membership auto-select
+  // never persists the cookie when resolved during a render (Next forbids
+  // cookie writes there), so a raw cookie read would 404 every time.
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") throw new NotFoundError("No active group");
+  const { activeGroup, membership } = ctx;
 
-  const [group, role, members] = await Promise.all([
-    getGroupById(groupId),
-    getRole(userId, groupId),
-    listMembers(groupId),
-  ]);
-  if (!group || !role) throw new NotFoundError("Group not found");
+  const members = await listMembers(activeGroup.id);
 
   let pendingInvites: PendingInvite[] = [];
-  if (role === "owner") {
-    const rows = await listPendingForGroup(groupId);
+  if (membership.role === "owner") {
+    const rows = await listPendingForGroup(activeGroup.id);
     pendingInvites = await Promise.all(
       rows.map(async (r) => {
         const inviter = await getProfile(r.invitedBy);
@@ -58,9 +58,9 @@ export async function getGroupSettings(): Promise<GroupSettingsView> {
   }
 
   return {
-    group: { id: group.id, name: group.name, slug: group.slug },
+    group: activeGroup,
     members,
     pendingInvites,
-    viewerRole: role,
+    viewerRole: membership.role,
   };
 }

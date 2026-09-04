@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 
-import { readActiveGroupId, writeActiveGroupId } from "@/server/active-group";
+import { writeActiveGroupId } from "@/server/active-group";
 import { deriveAccent, deriveInitials } from "@/server/auth/identity";
 import { getCurrentUser } from "@/server/auth/session";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
@@ -26,6 +26,7 @@ import {
 } from "@/server/repositories/invitations";
 import { createMembership, getRole } from "@/server/repositories/memberships";
 import { upsertProfile } from "@/server/repositories/profiles";
+import { resolveActiveContext } from "@/server/services/session-service";
 
 export type { InviteErrorCode } from "@/types";
 export { InviteError } from "@/server/errors";
@@ -46,11 +47,12 @@ export async function inviteMember(input: {
   const email = input.email.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) throw new ValidationError("Enter a valid email address");
 
-  const groupId = await readActiveGroupId();
-  if (!groupId) throw new NotFoundError("No active group");
-
-  const role = await getRole(user.id, groupId);
-  if (role !== "owner") throw new ForbiddenError("Only an owner can invite members");
+  // Re-derive the active group the same self-healing way (app)/layout does —
+  // a raw cookie read can't be trusted (see resolveActiveContext).
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") throw new NotFoundError("No active group");
+  const groupId = ctx.activeGroup.id;
+  if (ctx.membership.role !== "owner") throw new ForbiddenError("Only an owner can invite members");
 
   const existingPending = (await getPendingByEmail(email)).filter((i) => i.groupId === groupId);
   if (existingPending.length > 0) {
