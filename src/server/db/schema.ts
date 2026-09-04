@@ -1,6 +1,9 @@
 import { sql } from "drizzle-orm";
 import {
+  check,
   index,
+  integer,
+  jsonb,
   pgEnum,
   pgSchema,
   pgTable,
@@ -97,6 +100,88 @@ export const invitations = pgTable(
   ],
 );
 
+export const knowledgeType = pgEnum("knowledge_type", [
+  "vocabulary",
+  "grammar",
+  "reading",
+  "note",
+]);
+export const knowledgeSource = pgEnum("knowledge_source", [
+  "manual",
+  "photo",
+  "file-upload",
+  "ai-assisted",
+]);
+export const dutchArticle = pgEnum("dutch_article", ["de", "het"]);
+
+/** One row per shared-library item. Nullable per-type columns rather than
+ * per-type child tables — Today/Library/search/practice all need mixed-type
+ * lists as the primary access pattern; joining four tables on every read
+ * would cost more than it buys at this scale. */
+export const knowledgeItems = pgTable(
+  "knowledge_items",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    type: knowledgeType("type").notNull(),
+    // Free-text CEFR code; constrained by a CHECK below rather than a second
+    // enum, so CEFR_LEVELS (src/types/cefr.ts) doesn't require a migration
+    // whenever it changes.
+    level: text("level"),
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    source: knowledgeSource("source").notNull(),
+    addedBy: uuid("added_by")
+      .notNull()
+      .references(() => authUsers.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // vocabulary
+    term: text("term"),
+    meaning: text("meaning"),
+    partOfSpeech: text("part_of_speech"),
+    example: text("example"),
+    exampleTranslation: text("example_translation"),
+    article: dutchArticle("article"),
+    plural: text("plural"),
+    pastTense: text("past_tense"),
+    perfect: text("perfect"),
+    usageNote: text("usage_note"),
+    // grammar (title/summary also used by reading/note below)
+    title: text("title"),
+    summary: text("summary"),
+    explanation: text("explanation"),
+    examples: jsonb("examples").$type<{ nl: string; en: string | null }[]>(),
+    // reading / note
+    body: text("body"),
+    wordCount: integer("word_count"),
+    vocabularyIds: uuid("vocabulary_ids").array(),
+  },
+  (t) => [
+    index("knowledge_items_group_idx").on(t.groupId),
+    index("knowledge_items_group_type_idx").on(t.groupId, t.type),
+    index("knowledge_items_added_by_idx").on(t.addedBy),
+    check(
+      "knowledge_items_vocabulary_fields",
+      sql`${t.type} <> 'vocabulary' OR (${t.term} IS NOT NULL AND ${t.meaning} IS NOT NULL AND ${t.partOfSpeech} IS NOT NULL)`,
+    ),
+    check(
+      "knowledge_items_grammar_fields",
+      sql`${t.type} <> 'grammar' OR (${t.title} IS NOT NULL AND ${t.summary} IS NOT NULL AND ${t.explanation} IS NOT NULL)`,
+    ),
+    check(
+      "knowledge_items_reading_fields",
+      sql`${t.type} <> 'reading' OR (${t.title} IS NOT NULL AND ${t.body} IS NOT NULL)`,
+    ),
+    check("knowledge_items_note_fields", sql`${t.type} <> 'note' OR ${t.body} IS NOT NULL`),
+    check(
+      "knowledge_items_level_values",
+      sql`${t.level} IS NULL OR ${t.level} IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
+    ),
+  ],
+);
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type Group = typeof groups.$inferSelect;
@@ -105,3 +190,5 @@ export type GroupMembership = typeof groupMemberships.$inferSelect;
 export type NewGroupMembership = typeof groupMemberships.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type KnowledgeItemRow = typeof knowledgeItems.$inferSelect;
+export type NewKnowledgeItemRow = typeof knowledgeItems.$inferInsert;
