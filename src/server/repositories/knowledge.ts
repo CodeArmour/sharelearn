@@ -1,6 +1,7 @@
 import "server-only";
 
-import { and, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { db, type Db } from "@/server/db/client";
 import {
@@ -36,15 +37,21 @@ const SEARCH_COLUMNS = [
   knowledgeItems.body,
 ] as const;
 
+const updatedByProfiles = alias(profiles, "updated_by_profiles");
+
 /** Row + joined attribution → the frontend's `KnowledgeItem` discriminated union. */
-function mapRow(row: KnowledgeItemRow, addedBy: UserSummary): KnowledgeItem {
+function mapRow(
+  row: KnowledgeItemRow,
+  addedBy: UserSummary,
+  updatedBy: UserSummary | null,
+): KnowledgeItem {
   const base = {
     id: row.id,
     level: row.level as CEFRLevel | null,
     tags: row.tags,
     source: row.source,
     addedBy,
-    updatedBy: null,
+    updatedBy,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -110,7 +117,7 @@ function toUserSummary(p: {
 }
 
 function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
-  const clauses = [eq(knowledgeItems.groupId, groupId)];
+  const clauses = [eq(knowledgeItems.groupId, groupId), isNull(knowledgeItems.deletedAt)];
   // Note: caller must handle type: "file" case since DB enum doesn't support it
   if (filter.type && filter.type !== "file") {
     clauses.push(eq(knowledgeItems.type, filter.type));
@@ -126,8 +133,11 @@ function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
   return and(...clauses);
 }
 
-async function selectWithAttribution(where: ReturnType<typeof and>): Promise<KnowledgeItem[]> {
-  const rows = await db
+async function selectWithAttribution(
+  where: ReturnType<typeof and>,
+  executor: Db = db,
+): Promise<KnowledgeItem[]> {
+  const rows = await executor
     .select({
       item: knowledgeItems,
       profile: {
@@ -136,12 +146,21 @@ async function selectWithAttribution(where: ReturnType<typeof and>): Promise<Kno
         initials: profiles.initials,
         accent: profiles.accent,
       },
+      updatedByProfile: {
+        id: updatedByProfiles.id,
+        displayName: updatedByProfiles.displayName,
+        initials: updatedByProfiles.initials,
+        accent: updatedByProfiles.accent,
+      },
     })
     .from(knowledgeItems)
     .innerJoin(profiles, eq(profiles.id, knowledgeItems.addedBy))
+    .leftJoin(updatedByProfiles, eq(updatedByProfiles.id, knowledgeItems.updatedBy))
     .where(where);
 
-  return rows.map(({ item, profile }) => mapRow(item, toUserSummary(profile)));
+  return rows.map(({ item, profile, updatedByProfile }) =>
+    mapRow(item, toUserSummary(profile), updatedByProfile ? toUserSummary(updatedByProfile) : null),
+  );
 }
 
 export async function insertKnowledgeItem(
@@ -159,7 +178,45 @@ export async function insertKnowledgeItem(
     .from(profiles)
     .where(eq(profiles.id, inserted.addedBy))
     .limit(1);
-  return mapRow(inserted, toUserSummary(profile));
+  return mapRow(inserted, toUserSummary(profile), null);
+}
+
+export async function updateKnowledgeItem(
+  tx: Db,
+  groupId: string,
+  id: string,
+  updatedBy: string,
+  fields: Partial<NewKnowledgeItemRow>,
+): Promise<KnowledgeItem | null> {
+  const [updated] = await tx
+    .update(knowledgeItems)
+    .set({ ...fields, updatedBy, updatedAt: new Date() })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    )
+    .returning({ id: knowledgeItems.id });
+  if (!updated) return null;
+  const items = await selectWithAttribution(eq(knowledgeItems.id, updated.id), tx);
+  return items[0] ?? null;
+}
+
+export async function softDeleteKnowledgeItem(groupId: string, id: string): Promise<boolean> {
+  const [deleted] = await db
+    .update(knowledgeItems)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    )
+    .returning({ id: knowledgeItems.id });
+  return !!deleted;
 }
 
 export async function listKnowledgeItems(
@@ -179,7 +236,7 @@ export async function getKnowledgeItemById(
 ): Promise<KnowledgeItem | null> {
   if (!isUuid(id)) return null;
   const items = await selectWithAttribution(
-    and(eq(knowledgeItems.groupId, groupId), eq(knowledgeItems.id, id)),
+    and(eq(knowledgeItems.groupId, groupId), eq(knowledgeItems.id, id), isNull(knowledgeItems.deletedAt)),
   );
   return items[0] ?? null;
 }

@@ -162,4 +162,34 @@ run("knowledge repository (integration)", () => {
     expect(await repo.getKnowledgeStats(group.id)).toEqual([{ type: "note", count: 2 }]);
     expect(await repo.getDistinctLevels(group.id)).toEqual(["B2"]);
   });
+
+  it("excludes soft-deleted rows and supports update", async () => {
+    const group = await makeGroup("G5");
+    const created = await repo.insertKnowledgeItem(testDb!, {
+      groupId: group.id,
+      type: "note",
+      level: null,
+      tags: [],
+      source: "manual",
+      addedBy: owner,
+      title: null,
+      body: "original",
+    });
+    expect(created.updatedBy).toBeNull();
+
+    const updated = await repo.updateKnowledgeItem(testDb!, group.id, created.id, owner, {
+      body: "edited",
+    });
+    expect(updated).toMatchObject({ id: created.id, updatedBy: { id: owner } });
+    expect((updated as { body: string }).body).toBe("edited");
+
+    const deletedOk = await repo.softDeleteKnowledgeItem(group.id, created.id);
+    expect(deletedOk).toBe(true);
+
+    expect(await repo.getKnowledgeItemById(group.id, created.id)).toBeNull();
+    expect(await repo.listKnowledgeItems(group.id)).toHaveLength(0);
+
+    // Deleting again (already gone) reports no row affected.
+    expect(await repo.softDeleteKnowledgeItem(group.id, created.id)).toBe(false);
+  });
 });
