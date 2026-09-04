@@ -413,5 +413,19 @@
       "note": "Uitnodigingen komen met de backend."
     },
     "manageNote": "Rollen wijzigen en leden verwijderen vereist de backend en eigenaarsrechten."
+  },
+  "groups": {
+    "picker": {
+      "title": "Kies een groep",
+      "subtitle": "Je bent lid van meerdere groepen. Kies er één om verder te gaan.",
+      "continueIn": "Ga naar {name}",
+      "roleOwner": "Eigenaar",
+      "roleMember": "Lid"
+    },
+    "noAccess": {
+      "title": "Nog geen toegang",
+      "body": "Je zit nog in geen enkele groep. Vraag een eigenaar om je uit te nodigen.",
+      "signOut": "Uitloggen"
+    }
   }
 }

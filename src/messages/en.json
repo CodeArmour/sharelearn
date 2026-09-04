@@ -413,5 +413,19 @@
       "note": "Invitations arrive with the backend."
     },
     "manageNote": "Changing roles and removing members needs the backend and owner permissions."
+  },
+  "groups": {
+    "picker": {
+      "title": "Choose a group",
+      "subtitle": "You're a member of more than one group. Pick one to continue.",
+      "continueIn": "Go to {name}",
+      "roleOwner": "Owner",
+      "roleMember": "Member"
+    },
+    "noAccess": {
+      "title": "No access yet",
+      "body": "You're not in any group yet. Ask an owner to invite you.",
+      "signOut": "Sign out"
+    }
   }
 }
