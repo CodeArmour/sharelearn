@@ -14,6 +14,8 @@ import type { ReviewMark } from "@/types";
 const KEY = "dutch:review-marks";
 const EVENT = "dutch:review-marks-change";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function read(): ReviewMark[] {
   if (typeof window === "undefined") return [];
   try {
@@ -21,7 +23,11 @@ function read(): ReviewMark[] {
     return Array.isArray(parsed)
       ? parsed.filter(
           (m): m is ReviewMark =>
-            !!m && typeof (m as ReviewMark).knowledgeId === "string",
+            !!m &&
+            typeof (m as ReviewMark).knowledgeId === "string" &&
+            // Pre-Phase-2 mock ids (e.g. "kn_gezellig") are no longer valid
+            // knowledge ids — drop them so stale legacy state self-heals.
+            UUID_RE.test((m as ReviewMark).knowledgeId),
         )
       : [];
   } catch {

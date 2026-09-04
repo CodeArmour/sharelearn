@@ -31,9 +31,18 @@ export function ReviewListSection() {
 
   useEffect(() => {
     let alive = true;
-    resolveKnowledgeByIdsAction(Array.from(marks)).then((result) => {
-      if (alive && result.ok) setItems(result.data);
-    });
+    resolveKnowledgeByIdsAction(Array.from(marks))
+      .then((result) => {
+        if (!alive) return;
+        if (result.ok) {
+          setItems(result.data);
+        } else {
+          console.error("resolveKnowledgeByIdsAction failed:", result.code, result.message);
+        }
+      })
+      .catch((error: unknown) => {
+        if (alive) console.error("resolveKnowledgeByIdsAction threw:", error);
+      });
     return () => {
       alive = false;
     };

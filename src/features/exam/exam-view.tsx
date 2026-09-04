@@ -51,9 +51,18 @@ export function ExamView({
 
   useEffect(() => {
     let alive = true;
-    generateExamQuestionsAction(resolved).then((result) => {
-      if (alive && result.ok) setPreview(result.data);
-    });
+    generateExamQuestionsAction(resolved)
+      .then((result) => {
+        if (!alive) return;
+        if (result.ok) {
+          setPreview(result.data);
+        } else {
+          console.error("generateExamQuestionsAction failed:", result.code, result.message);
+        }
+      })
+      .catch((error: unknown) => {
+        if (alive) console.error("generateExamQuestionsAction threw:", error);
+      });
     return () => {
       alive = false;
     };

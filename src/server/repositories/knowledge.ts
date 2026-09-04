@@ -19,6 +19,14 @@ export interface KnowledgeListFilter {
   ids?: string[];
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Postgres `uuid` columns reject non-uuid strings with a hard `22P02` error —
+ * narrow id-shaped input before it ever reaches a query. */
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 const SEARCH_COLUMNS = [
   knowledgeItems.term,
   knowledgeItems.meaning,
@@ -107,7 +115,7 @@ function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
     clauses.push(eq(knowledgeItems.type, filter.type));
   }
   if (filter.level) clauses.push(eq(knowledgeItems.level, filter.level));
-  if (filter.addedBy) clauses.push(eq(knowledgeItems.addedBy, filter.addedBy));
+  if (filter.addedBy && isUuid(filter.addedBy)) clauses.push(eq(knowledgeItems.addedBy, filter.addedBy));
   if (filter.ids) clauses.push(inArray(knowledgeItems.id, filter.ids));
   if (filter.search) {
     const pattern = `%${filter.search}%`;
@@ -168,6 +176,7 @@ export async function getKnowledgeItemById(
   groupId: string,
   id: string,
 ): Promise<KnowledgeItem | null> {
+  if (!isUuid(id)) return null;
   const items = await selectWithAttribution(
     and(eq(knowledgeItems.groupId, groupId), eq(knowledgeItems.id, id)),
   );

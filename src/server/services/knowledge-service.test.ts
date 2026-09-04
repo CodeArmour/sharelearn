@@ -14,7 +14,6 @@ vi.mock("@/server/db/client", () => ({
 }));
 vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.fn() }));
 
-import { db } from "@/server/db/client";
 import { NotFoundError } from "@/server/errors";
 import { listMembers } from "@/server/repositories/memberships";
 import * as repo from "@/server/repositories/knowledge";

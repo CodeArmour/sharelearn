@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import { InviteError, ForbiddenError } from "@/server/errors";
 
-import { emailSchema, groupIdSchema, toActionError } from "./schemas";
+import {
+  createKnowledgeItemSchema,
+  emailSchema,
+  groupIdSchema,
+  knowledgeIdsSchema,
+  practiceSetupSchema,
+  toActionError,
+} from "./schemas";
 
 describe("action schemas", () => {
   it("accepts a valid email, trims + lowercases", () => {
@@ -32,12 +39,6 @@ describe("toActionError", () => {
     expect(toActionError(new Error("boom"))).toMatchObject({ code: "unknown" });
   });
 });
-
-import {
-  createKnowledgeItemSchema,
-  knowledgeIdsSchema,
-  practiceSetupSchema,
-} from "./schemas";
 
 describe("createKnowledgeItemSchema", () => {
   it("accepts a minimal vocabulary item", () => {
@@ -99,7 +100,16 @@ describe("practiceSetupSchema", () => {
 });
 
 describe("knowledgeIdsSchema", () => {
-  it("requires every id to be a uuid", () => {
-    expect(knowledgeIdsSchema.safeParse(["not-a-uuid"]).success).toBe(false);
+  it("filters out non-uuid ids instead of rejecting the whole array", () => {
+    const parsed = knowledgeIdsSchema.safeParse(["not-a-uuid", "kn_gezellig"]);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data).toEqual([]);
+  });
+
+  it("keeps valid uuids and drops the rest", () => {
+    const uuid = "11111111-1111-1111-1111-111111111111";
+    const parsed = knowledgeIdsSchema.safeParse([uuid, "not-a-uuid"]);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data).toEqual([uuid]);
   });
 });

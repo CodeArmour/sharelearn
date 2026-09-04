@@ -190,7 +190,7 @@ function demoReadingItem(
     source: "manual",
     title: "Een dagje Antwerpen",
     body: "We gingen af en toe naar Antwerpen voor een dagje uit. De trein vanuit Rotterdam duurde ongeveer een uur. We moesten wel rekening houden met de drukte op zaterdag. In de stad liepen we langs de Schelde en dronken we koffie op een gezellig terras. 's Middags spraken we af met een vriendin bij het Centraal Station, een van de mooiste stations van Europa.",
-    wordCount: 84,
+    wordCount: 64,
     summary: "reistekst met dagelijkse woordenschat",
     vocabularyIds,
   } as typeof knowledgeItems.$inferInsert;

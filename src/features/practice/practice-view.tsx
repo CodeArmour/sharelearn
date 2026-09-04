@@ -54,9 +54,18 @@ export function PracticeView({
 
   useEffect(() => {
     let alive = true;
-    generatePracticeQuestionsAction(resolved).then((result) => {
-      if (alive && result.ok) setPreview(result.data);
-    });
+    generatePracticeQuestionsAction(resolved)
+      .then((result) => {
+        if (!alive) return;
+        if (result.ok) {
+          setPreview(result.data);
+        } else {
+          console.error("generatePracticeQuestionsAction failed:", result.code, result.message);
+        }
+      })
+      .catch((error: unknown) => {
+        if (alive) console.error("generatePracticeQuestionsAction threw:", error);
+      });
     return () => {
       alive = false;
     };

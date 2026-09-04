@@ -28,6 +28,8 @@ export function KnowledgeForm({
   onSubmit,
   submitLabel,
   secondaryAction,
+  disabled,
+  error,
 }: {
   type: PickerType;
   onTypeChange: (type: PickerType) => void;
@@ -40,6 +42,8 @@ export function KnowledgeForm({
   onSubmit: (e: FormEvent) => void;
   submitLabel: string;
   secondaryAction?: ReactNode;
+  disabled?: boolean;
+  error?: string | null;
 }) {
   const t = useTranslations("add");
 
@@ -91,8 +95,14 @@ export function KnowledgeForm({
             </Field>
           </div>
 
+          {error ? (
+            <p role="alert" className="text-body-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+
           <div className="flex flex-wrap items-center gap-3 pt-1">
-            <Button type="submit" size="md">
+            <Button type="submit" size="md" disabled={disabled}>
               {submitLabel}
             </Button>
             {secondaryAction}

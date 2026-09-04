@@ -103,8 +103,9 @@ function buildCreateInput(
 /**
  * Capture knowledge, two ways. The manual path is a plain form. The AI path
  * hands pasted text to a (simulated) structuring step, then drops the reviewer
- * into the same form pre-filled — they always confirm before it "saves".
- * Nothing persists yet; a valid submit shows a confirmation that says so.
+ * into the same form pre-filled — they always confirm before it "saves". A
+ * valid submit persists the item via `createKnowledgeItemAction` and shows a
+ * confirmation on success, or an inline error near the submit button on failure.
  */
 export function AddKnowledgeView() {
   const t = useTranslations("add");
@@ -209,7 +210,12 @@ export function AddKnowledgeView() {
         setSaveError(t("errors.generic"));
         return;
       }
-      setSavedTitle(knowledgeTitle(result.data));
+      // knowledgeTitle() returns "" for a titleless note — fall back to a
+      // snippet of the body so the success panel still shows something.
+      const title = knowledgeTitle(result.data);
+      setSavedTitle(
+        title || (result.data.type === "note" ? result.data.body.trim().slice(0, 50) : title),
+      );
     } catch {
       setSaveError(t("errors.generic"));
     } finally {
@@ -239,6 +245,8 @@ export function AddKnowledgeView() {
       onSubmit={handleSubmit}
       submitLabel={submitLabel}
       secondaryAction={secondaryAction}
+      disabled={saving}
+      error={saveError}
     />
   );
 
@@ -246,12 +254,6 @@ export function AddKnowledgeView() {
     <PageContainer>
       <div className="mx-auto w-full max-w-[42rem]">
         <PageHeader title={tPage("title")} description={tPage("subtitle")} />
-
-        {saveError ? (
-          <p role="alert" className="mb-4 text-body-sm text-danger">
-            {saveError}
-          </p>
-        ) : null}
 
         {savedTitle !== null ? (
           <SuccessPanel title={savedTitle} onAddAnother={afterSuccess} />

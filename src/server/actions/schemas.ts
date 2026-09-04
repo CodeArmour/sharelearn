@@ -24,6 +24,15 @@ export function toActionError(e: unknown): { code: string; message: string } {
   return { code: "unknown", message: "Something went wrong" };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Pre-Phase-2 mock ids (e.g. `kn_gezellig`) can still be sitting in a
+ * client's `localStorage` review marks — filter them out instead of
+ * rejecting the whole array, so stale legacy ids don't fail every call. */
+function isUuidString(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 const tagsSchema = z.array(z.string().trim().min(1)).default([]);
 const cefrLevelSchema = z.enum(CEFR_LEVELS).nullable().default(null);
 const knowledgeSourceSchema = z.enum(["manual", "photo", "file-upload", "ai-assisted"]);
@@ -90,8 +99,11 @@ export const practiceSetupSchema = z.object({
       by: z.string().optional(),
     })
     .optional(),
-  reviewIds: z.array(z.string().uuid()).optional(),
+  reviewIds: z
+    .array(z.string())
+    .transform((ids) => ids.filter(isUuidString))
+    .optional(),
   length: z.number().int().min(0),
 });
 
-export const knowledgeIdsSchema = z.array(z.string().uuid());
+export const knowledgeIdsSchema = z.array(z.string()).transform((ids) => ids.filter(isUuidString));
