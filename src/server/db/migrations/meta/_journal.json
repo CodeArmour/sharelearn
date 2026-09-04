@@ -29,6 +29,13 @@
       "when": 1788535877101,
       "tag": "0003_knowledge_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788676800000,
+      "tag": "0004_fix_recursive_rls",
+      "breakpoints": true
     }
   ]
 }
