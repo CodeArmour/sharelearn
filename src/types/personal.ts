@@ -8,6 +8,9 @@
  *   personal  -> review marks, practice sessions/results, exam attempts/results
  */
 
+import type { CEFRLevel } from "./cefr";
+import type { PracticeScope } from "./practice";
+
 /** "I find this vocabulary hard — practise it later." (personal, per user) */
 export interface ReviewMark {
   knowledgeId: string;
@@ -17,23 +20,33 @@ export interface ReviewMark {
 
 export type PracticeMode = "vocabulary" | "grammar" | "reading" | "mixed";
 
-/** Summary of one finished practice session (personal history). */
-export interface PracticeResultSummary {
-  id: string;
-  mode: PracticeMode;
-  startedAt: string;
-  completedAt: string;
+export type StudyRunKind = "practice" | "exam";
+
+/** The client's finished-run payload → the server. */
+export interface StudyRunInput {
+  kind: StudyRunKind;
+  /** null for exams (always mixed); the practice mode otherwise. */
+  mode: PracticeMode | null;
+  scope: PracticeScope;
+  /** Set only when `scope === "level"`. */
+  level: CEFRLevel | null;
   questionCount: number;
   correctCount: number;
+  /** ISO 8601. */
+  startedAt: string;
+  /** ISO 8601. */
+  completedAt: string;
 }
 
-/** Summary of one finished exam attempt (personal history). */
-export interface ExamResultSummary {
+/** One finished practice or exam run (personal history). */
+export interface StudyRunSummary extends StudyRunInput {
   id: string;
-  startedAt: string;
-  completedAt: string;
-  questionCount: number;
-  correctCount: number;
-  /** 0–100. */
+  /** 0–100, derived from the counts. */
   scorePercent: number;
+}
+
+export interface StudyHistory {
+  runs: StudyRunSummary[];
+  totals: { runCount: number; avgScorePercent: number };
+  markedCount: number;
 }
