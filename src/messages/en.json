@@ -270,6 +270,7 @@
     "tagsLabel": "Tags",
     "tagsHint": "Separate with commas",
     "submit": "Save to library",
+    "saveChanges": "Save changes",
     "required": "{field} is required",
     "errors": {
       "generic": "Something went wrong saving that. Try again."

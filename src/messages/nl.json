@@ -270,6 +270,7 @@
     "tagsLabel": "Labels",
     "tagsHint": "Scheiden met komma's",
     "submit": "Opslaan in bibliotheek",
+    "saveChanges": "Wijzigingen opslaan",
     "required": "{field} is verplicht",
     "errors": {
       "generic": "Er ging iets mis bij het opslaan. Probeer het opnieuw."

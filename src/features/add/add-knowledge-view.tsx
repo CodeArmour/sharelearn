@@ -1,16 +1,16 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { getAiSuggestion, getAiSuggestionFromAttachment } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
-import { createKnowledgeItemAction } from "@/server/actions/knowledge";
+import { createKnowledgeItemAction, updateKnowledgeItemAction } from "@/server/actions/knowledge";
 import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
-import type { KnowledgeSource } from "@/types";
+import type { KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
 import { AiCaptureBox } from "./ai-capture-box";
@@ -23,6 +23,7 @@ import {
   type AuthableType,
   type Errors,
   type Example,
+  itemToValues,
   LABEL_KEY,
   type PickerType,
   REQUIRED,
@@ -107,9 +108,12 @@ function buildCreateInput(
  * valid submit persists the item via `createKnowledgeItemAction` and shows a
  * confirmation on success, or an inline error near the submit button on failure.
  */
-export function AddKnowledgeView() {
+export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeItem } = {}) {
   const t = useTranslations("add");
   const tPage = useTranslations("pages.add");
+  const router = useRouter();
+  const isEditing = existingItem != null;
+  const initial = existingItem ? itemToValues(existingItem) : undefined;
 
   const attachParam = useSearchParams().get("attach");
   const autoOpen = attachParam === "photo" || attachParam === "file" ? attachParam : undefined;
@@ -119,9 +123,9 @@ export function AddKnowledgeView() {
   const [attachment, setAttachment] = useState<AiAttachment | null>(null);
   const [noticeKey, setNoticeKey] = useState<string | undefined>();
 
-  const [type, setType] = useState<PickerType>("vocabulary");
-  const [values, setValues] = useState<Values>({});
-  const [examples, setExamples] = useState<Example[]>([]);
+  const [type, setType] = useState<PickerType>(initial?.type ?? "vocabulary");
+  const [values, setValues] = useState<Values>(initial?.values ?? {});
+  const [examples, setExamples] = useState<Example[]>(initial?.examples ?? []);
   const [errors, setErrors] = useState<Errors>({});
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -205,9 +209,15 @@ export function AddKnowledgeView() {
     setSaving(true);
     setSaveError(null);
     try {
-      const result = await createKnowledgeItemAction(input);
+      const result = isEditing
+        ? await updateKnowledgeItemAction(existingItem.id, input)
+        : await createKnowledgeItemAction(input);
       if (!result.ok) {
         setSaveError(t("errors.generic"));
+        return;
+      }
+      if (isEditing) {
+        router.push(`/knowledge/${existingItem.id}`);
         return;
       }
       // knowledgeTitle() returns "" for a titleless note — fall back to a
@@ -247,13 +257,17 @@ export function AddKnowledgeView() {
       secondaryAction={secondaryAction}
       disabled={saving}
       error={saveError}
+      typeLocked={isEditing}
     />
   );
 
   return (
     <PageContainer>
       <div className="mx-auto w-full max-w-[42rem]">
-        <PageHeader title={tPage("title")} description={tPage("subtitle")} />
+        <PageHeader
+          title={isEditing ? t("saveChanges") : tPage("title")}
+          description={isEditing ? undefined : tPage("subtitle")}
+        />
 
         {savedTitle !== null ? (
           <SuccessPanel title={savedTitle} onAddAnother={afterSuccess} />
@@ -283,20 +297,24 @@ export function AddKnowledgeView() {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            <AiCaptureBox
-              value={rawText}
-              onChange={setRawText}
-              attachment={attachment}
-              onAttachmentChange={setAttachment}
-              autoOpen={autoOpen}
-              onSubmit={runAi}
-            />
-            <div className="flex items-center gap-3 text-caption text-fg-muted">
-              <span className="h-px flex-1 bg-border" />
-              {t("ai.divider")}
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            {form(saving ? t("ai.processing") : t("submit"))}
+            {isEditing ? null : (
+              <>
+                <AiCaptureBox
+                  value={rawText}
+                  onChange={setRawText}
+                  attachment={attachment}
+                  onAttachmentChange={setAttachment}
+                  autoOpen={autoOpen}
+                  onSubmit={runAi}
+                />
+                <div className="flex items-center gap-3 text-caption text-fg-muted">
+                  <span className="h-px flex-1 bg-border" />
+                  {t("ai.divider")}
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
+            {form(saving ? t("ai.processing") : isEditing ? t("saveChanges") : t("submit"))}
           </div>
         )}
       </div>

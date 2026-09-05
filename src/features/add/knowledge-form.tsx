@@ -30,6 +30,7 @@ export function KnowledgeForm({
   secondaryAction,
   disabled,
   error,
+  typeLocked,
 }: {
   type: PickerType;
   onTypeChange: (type: PickerType) => void;
@@ -44,12 +45,13 @@ export function KnowledgeForm({
   secondaryAction?: ReactNode;
   disabled?: boolean;
   error?: string | null;
+  typeLocked?: boolean;
 }) {
   const t = useTranslations("add");
 
   return (
     <div className="flex flex-col gap-6">
-      <TypePicker value={type} onChange={onTypeChange} />
+      {typeLocked ? null : <TypePicker value={type} onChange={onTypeChange} />}
 
       {type === "file" ? (
         <FilePlaceholder />

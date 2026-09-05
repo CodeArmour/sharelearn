@@ -1,6 +1,6 @@
 /** Shared shapes for the manual capture form. */
 
-import type { AiAttachmentKind } from "@/types";
+import type { AiAttachmentKind, KnowledgeItem } from "@/types";
 
 /** Types a person can author by typing. */
 export const AUTHABLE_TYPES = ["vocabulary", "grammar", "reading", "note"] as const;
@@ -68,3 +68,62 @@ export const LABEL_KEY: Record<string, string> = {
   readingBody: "field.readingBody",
   noteBody: "field.noteBody",
 };
+
+/** Reverse of the Add form's payload-builder — pre-fills the form from an
+ * existing item for editing. `type` is narrowed to `AuthableType` since a
+ * real `KnowledgeItem` from the DB is never `"file"` (Phase 2 excludes it). */
+export function itemToValues(item: KnowledgeItem): {
+  type: AuthableType;
+  values: Values;
+  examples: Example[];
+} {
+  const shared = { level: item.level ?? "", tags: item.tags.join(", ") };
+
+  switch (item.type) {
+    case "vocabulary":
+      return {
+        type: "vocabulary",
+        values: {
+          ...shared,
+          term: item.term,
+          meaning: item.meaning,
+          partOfSpeech: item.partOfSpeech,
+          example: item.example ?? "",
+          exampleTranslation: item.exampleTranslation ?? "",
+          article: item.article ?? "",
+          plural: item.plural ?? "",
+          pastTense: item.pastTense ?? "",
+          perfect: item.perfect ?? "",
+          usageNote: item.usageNote ?? "",
+        },
+        examples: [],
+      };
+    case "grammar":
+      return {
+        type: "grammar",
+        values: { ...shared, title: item.title, summary: item.summary, explanation: item.explanation },
+        examples: item.examples.map((ex) => ({ id: crypto.randomUUID(), nl: ex.nl, en: ex.en ?? "" })),
+      };
+    case "reading":
+      return {
+        type: "reading",
+        values: {
+          ...shared,
+          title: item.title,
+          readingBody: item.body,
+          summary: item.summary ?? "",
+        },
+        examples: [],
+      };
+    case "note":
+      return {
+        type: "note",
+        values: { ...shared, title: item.title ?? "", noteBody: item.body },
+        examples: [],
+      };
+    case "file":
+      // Unreachable: the DB's knowledge_type enum excludes "file" (Phase 2 §2),
+      // so no real KnowledgeItem from getKnowledgeById is ever this branch.
+      throw new Error("File items cannot be edited");
+  }
+}
