@@ -158,6 +158,17 @@ run("knowledge repository (integration)", () => {
       title: null,
       body: "y",
     });
+    const deleted = await repo.insertKnowledgeItem(testDb!, {
+      groupId: group.id,
+      type: "note",
+      level: "C1",
+      tags: [],
+      source: "manual",
+      addedBy: owner,
+      title: null,
+      body: "z",
+    });
+    await repo.softDeleteKnowledgeItem(group.id, deleted.id);
 
     expect(await repo.getKnowledgeStats(group.id)).toEqual([{ type: "note", count: 2 }]);
     expect(await repo.getDistinctLevels(group.id)).toEqual(["B2"]);

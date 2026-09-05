@@ -123,7 +123,8 @@ function buildFilter(groupId: string, filter: KnowledgeListFilter = {}) {
     clauses.push(eq(knowledgeItems.type, filter.type));
   }
   if (filter.level) clauses.push(eq(knowledgeItems.level, filter.level));
-  if (filter.addedBy && isUuid(filter.addedBy)) clauses.push(eq(knowledgeItems.addedBy, filter.addedBy));
+  if (filter.addedBy && isUuid(filter.addedBy))
+    clauses.push(eq(knowledgeItems.addedBy, filter.addedBy));
   if (filter.ids) clauses.push(inArray(knowledgeItems.id, filter.ids));
   if (filter.search) {
     const pattern = `%${filter.search}%`;
@@ -236,7 +237,11 @@ export async function getKnowledgeItemById(
 ): Promise<KnowledgeItem | null> {
   if (!isUuid(id)) return null;
   const items = await selectWithAttribution(
-    and(eq(knowledgeItems.groupId, groupId), eq(knowledgeItems.id, id), isNull(knowledgeItems.deletedAt)),
+    and(
+      eq(knowledgeItems.groupId, groupId),
+      eq(knowledgeItems.id, id),
+      isNull(knowledgeItems.deletedAt),
+    ),
   );
   return items[0] ?? null;
 }
@@ -246,7 +251,7 @@ export async function getKnowledgeStats(
 ): Promise<{ type: KnowledgeType; count: number }[]> {
   // Using sql raw to work around Drizzle enum type inference issues
   const result = await db.execute<{ type: string; count: number }>(
-    sql`SELECT type, COUNT(*)::int as count FROM public.knowledge_items WHERE group_id = ${groupId} GROUP BY type ORDER BY type`,
+    sql`SELECT type, COUNT(*)::int as count FROM public.knowledge_items WHERE group_id = ${groupId} AND deleted_at IS NULL GROUP BY type ORDER BY type`,
   );
   return result.map((r) => ({ type: r.type as KnowledgeType, count: r.count }));
 }
@@ -255,6 +260,12 @@ export async function getDistinctLevels(groupId: string): Promise<string[]> {
   const rows = await db
     .selectDistinct({ level: knowledgeItems.level })
     .from(knowledgeItems)
-    .where(and(eq(knowledgeItems.groupId, groupId), sql`${knowledgeItems.level} IS NOT NULL`));
+    .where(
+      and(
+        eq(knowledgeItems.groupId, groupId),
+        sql`${knowledgeItems.level} IS NOT NULL`,
+        isNull(knowledgeItems.deletedAt),
+      ),
+    );
   return rows.map((r) => r.level!).sort();
 }
