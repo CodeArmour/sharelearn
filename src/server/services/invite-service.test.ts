@@ -38,6 +38,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
 import {
   ConflictError,
+  EmailSendError,
   ForbiddenError,
   InviteError,
   NotFoundError,
@@ -116,6 +117,20 @@ describe("inviteMember", () => {
     const arg = signInWithOtp.mock.calls[0][0];
     expect(arg.email).toBe("a@b.com");
     expect(arg.options.emailRedirectTo).toMatch(/\/auth\/callback\?token=/);
+  });
+
+  it("revokes the invitation row and throws EmailSendError when the send fails", async () => {
+    vi.mocked(createServerSupabaseClient).mockResolvedValue({
+      auth: {
+        signInWithOtp: vi.fn().mockResolvedValue({
+          error: { message: "email rate limit exceeded" },
+        }),
+      },
+    } as never);
+    vi.mocked(createInvitation).mockResolvedValue({ id: "i1", email: "a@b.com" } as never);
+
+    await expect(inviteMember({ email: "a@b.com" })).rejects.toBeInstanceOf(EmailSendError);
+    expect(markRevoked).toHaveBeenCalledWith("i1");
   });
 });
 

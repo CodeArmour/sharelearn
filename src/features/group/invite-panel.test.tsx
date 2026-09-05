@@ -45,6 +45,23 @@ describe("InvitePanel", () => {
     expect(await screen.findByText("Only an owner can invite members.")).toBeInTheDocument();
   });
 
+  it("maps an email_send error to a distinct message from invalidEmail", async () => {
+    inviteMemberAction.mockResolvedValue({
+      ok: false,
+      code: "email_send",
+      message: "email rate limit exceeded",
+    });
+    setup();
+    await userEvent.type(screen.getByLabelText("Email address"), "x@y.com");
+    await userEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    expect(
+      await screen.findByText(
+        "Couldn't send the invite email. This is usually temporary — wait a bit and try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Enter a valid email address.")).not.toBeInTheDocument();
+  });
+
   it("renders a revoke button per pending invite", () => {
     setup([
       {

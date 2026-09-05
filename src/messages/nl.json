@@ -453,6 +453,7 @@
         "alreadyMember": "Die persoon is al lid.",
         "alreadyInvited": "Dat e-mailadres heeft al een openstaande uitnodiging.",
         "invalidEmail": "Voer een geldig e-mailadres in.",
+        "sendFailed": "De uitnodiging kon niet worden verzonden. Dit is meestal tijdelijk — wacht even en probeer het opnieuw.",
         "generic": "Er ging iets mis. Probeer het opnieuw."
       }
     }

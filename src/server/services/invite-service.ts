@@ -10,6 +10,7 @@ import { db, type Db } from "@/server/db/client";
 import { serverEnv } from "@/server/env";
 import {
   ConflictError,
+  EmailSendError,
   ForbiddenError,
   InviteError,
   NotFoundError,
@@ -79,7 +80,16 @@ export async function inviteMember(input: {
       shouldCreateUser: true,
     },
   });
-  if (error) throw new ValidationError(error.message);
+  if (error) {
+    // The invitation row above already committed — without this, a failed
+    // send (e.g. hitting Supabase's auth email rate limit) leaves an
+    // orphaned "pending" invite with no email ever sent, and blocks any
+    // retry via the existingPending check above until someone manually
+    // revokes it. Revoking here keeps a record of the attempt (for
+    // debugging) while freeing the email up to invite again immediately.
+    await markRevoked(row.id);
+    throw new EmailSendError(error.message);
+  }
 
   return { id: row.id, email: row.email };
 }
