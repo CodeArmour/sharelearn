@@ -86,7 +86,7 @@ export function KnowledgeActions({
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className={buttonVariants({ variant: "outline", size: "md" })}
+            className={buttonVariants({ variant: "danger", size: "md" })}
           >
             <Trash2 className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
             {t("delete")}
