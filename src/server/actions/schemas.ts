@@ -15,6 +15,7 @@ export const emailSchema = z
 
 export const groupIdSchema = z.string().uuid();
 export const invitationIdSchema = z.string().uuid();
+export const knowledgeItemIdSchema = z.string().uuid();
 export const tokenSchema = z.string().min(10);
 
 export function toActionError(e: unknown): { code: string; message: string } {
