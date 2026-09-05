@@ -10,6 +10,7 @@ import {
   knowledgeIdsSchema,
   knowledgeItemIdSchema,
   practiceSetupSchema,
+  studyRunInputSchema,
   toActionError,
 } from "./schemas";
 
@@ -119,5 +120,56 @@ describe("knowledgeItemIdSchema", () => {
   it("requires a uuid", () => {
     expect(knowledgeItemIdSchema.safeParse("not-a-uuid").success).toBe(false);
     expect(knowledgeItemIdSchema.safeParse("11111111-1111-4111-8111-111111111111").success).toBe(true);
+  });
+});
+
+describe("studyRunInputSchema", () => {
+  const base = {
+    scope: "all",
+    level: null,
+    questionCount: 10,
+    correctCount: 7,
+    startedAt: "2026-09-01T10:00:00.000Z",
+    completedAt: "2026-09-01T10:05:00.000Z",
+  };
+
+  it("accepts a practice run with a mode", () => {
+    expect(
+      studyRunInputSchema.safeParse({ ...base, kind: "practice", mode: "mixed" }).success,
+    ).toBe(true);
+  });
+
+  it("accepts an exam run with no mode (defaults to null)", () => {
+    const parsed = studyRunInputSchema.safeParse({ ...base, kind: "exam" });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.mode).toBeNull();
+  });
+
+  it("rejects a practice run without a mode", () => {
+    expect(studyRunInputSchema.safeParse({ ...base, kind: "practice" }).success).toBe(false);
+  });
+
+  it("rejects an exam run that carries a mode", () => {
+    expect(
+      studyRunInputSchema.safeParse({ ...base, kind: "exam", mode: "vocabulary" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects correctCount greater than questionCount", () => {
+    expect(
+      studyRunInputSchema.safeParse({
+        ...base,
+        kind: "practice",
+        mode: "mixed",
+        correctCount: 11,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a zero questionCount", () => {
+    expect(
+      studyRunInputSchema.safeParse({ ...base, kind: "exam", questionCount: 0, correctCount: 0 })
+        .success,
+    ).toBe(false);
   });
 });
