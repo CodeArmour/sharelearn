@@ -9,10 +9,11 @@ import { formatDateShort } from "@/lib/utils/date";
 import { inviteMemberAction, revokeInvitationAction } from "@/server/actions/invites";
 import type { PendingInvite } from "@/types";
 
-const ERROR_KEY: Record<string, "notOwner" | "alreadyInvited" | "invalidEmail"> = {
+const ERROR_KEY: Record<string, "notOwner" | "alreadyInvited" | "invalidEmail" | "sendFailed"> = {
   forbidden: "notOwner",
   conflict: "alreadyInvited",
   validation: "invalidEmail",
+  email_send: "sendFailed",
 };
 
 export function InvitePanel({ pendingInvites }: { pendingInvites: PendingInvite[] }) {

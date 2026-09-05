@@ -32,6 +32,15 @@ export class ConflictError extends AppError {
   }
 }
 
+/** A downstream dependency (e.g. the email provider) failed — distinct from
+ * ValidationError so callers can tell "your input was wrong" apart from
+ * "we couldn't complete the action right now, try again". */
+export class EmailSendError extends AppError {
+  constructor(message = "Couldn't send the email") {
+    super("email_send", 502, message);
+  }
+}
+
 export class InviteError extends AppError {
   readonly inviteCode: InviteErrorCode;
   constructor(inviteCode: InviteErrorCode, message = inviteCode) {

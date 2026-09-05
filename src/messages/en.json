@@ -453,6 +453,7 @@
         "alreadyMember": "That person is already a member.",
         "alreadyInvited": "That email already has a pending invitation.",
         "invalidEmail": "Enter a valid email address.",
+        "sendFailed": "Couldn't send the invite email. This is usually temporary — wait a bit and try again.",
         "generic": "Something went wrong. Try again."
       }
     }
