@@ -27,7 +27,11 @@ import { knowledgeTitle } from "@/types";
 
 import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
 
-async function requireActiveGroupId(): Promise<{ groupId: string; userId: string; role: GroupRole }> {
+async function requireActiveGroupId(): Promise<{
+  groupId: string;
+  userId: string;
+  role: GroupRole;
+}> {
   const ctx = await resolveActiveContext();
   if (ctx.status !== "ok") throw new NotFoundError("No active group");
   return { groupId: ctx.activeGroup.id, userId: ctx.user.id, role: ctx.membership.role };
@@ -98,9 +102,17 @@ export async function updateKnowledgeItem(
     const dbtx = tx as unknown as Db;
     switch (input.type) {
       case "vocabulary":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "vocabulary" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "vocabulary",
+        });
       case "grammar":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "grammar" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "grammar",
+        });
       case "reading":
         return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
           ...input,
@@ -109,7 +121,11 @@ export async function updateKnowledgeItem(
           wordCount: wordCount(input.body),
         });
       case "note":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "note" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "note",
+        });
     }
   });
   if (!updated) throw new NotFoundError("Knowledge item not found");
@@ -186,10 +202,7 @@ export interface LibraryResult {
 
 const PAGE_SIZE = 12;
 
-export async function getLibraryItems(
-  query: LibraryQuery = {},
-  page = 1,
-): Promise<LibraryResult> {
+export async function getLibraryItems(query: LibraryQuery = {}, page = 1): Promise<LibraryResult> {
   const { groupId } = await requireActiveGroupId();
   const [items, libraryTotal] = await Promise.all([
     listKnowledgeItems(groupId, {
@@ -217,10 +230,7 @@ export async function getLibraryFacets(): Promise<{
   members: GroupMemberSummary[];
 }> {
   const { groupId } = await requireActiveGroupId();
-  const [levels, members] = await Promise.all([
-    getDistinctLevels(groupId),
-    listMembers(groupId),
-  ]);
+  const [levels, members] = await Promise.all([getDistinctLevels(groupId), listMembers(groupId)]);
   return { levels: levels as CEFRLevel[], members };
 }
 

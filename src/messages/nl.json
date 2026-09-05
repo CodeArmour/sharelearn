@@ -100,6 +100,7 @@
       "edit": "Bewerken",
       "delete": "Verwijderen",
       "editedBy": "Bewerkt door {name}",
+      "deleteError": "Verwijderen is niet gelukt. Het item is mogelijk al verwijderd — probeer de pagina te vernieuwen.",
       "meaning": "Betekenis",
       "partOfSpeech": "Woordsoort",
       "level": "Niveau",

@@ -140,10 +140,7 @@ describe("getLibraryItems", () => {
 
 describe("getKnowledgeByIds", () => {
   it("preserves input order and drops unknown ids", async () => {
-    vi.mocked(repo.listKnowledgeItems).mockResolvedValue([
-      vocab({ id: "a" }),
-      vocab({ id: "b" }),
-    ]);
+    vi.mocked(repo.listKnowledgeItems).mockResolvedValue([vocab({ id: "a" }), vocab({ id: "b" })]);
     const result = await getKnowledgeByIds(["b", "missing", "a"]);
     expect(result.map((i) => i.id)).toEqual(["b", "a"]);
   });
@@ -298,7 +295,9 @@ describe("updateKnowledgeItem", () => {
 
   it("rejects switching an item's type", async () => {
     vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
-    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user, type: "note" as never }));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(
+      vocab({ id: "k1", addedBy: user, type: "note" as never }),
+    );
     await expect(
       updateKnowledgeItem("k1", {
         type: "vocabulary",

@@ -35,63 +35,74 @@ export function KnowledgeActions({
   const marked = marks.has(item.id);
   const canModify = item.addedBy.id === user.id || membership.role === "owner";
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError(false);
     const result = await deleteKnowledgeItemAction(item.id);
     if (result.ok) {
       router.push("/library");
       return;
     }
     setDeleting(false);
+    setDeleteError(true);
+    router.refresh();
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {practiseable ? (
-        <Link href="/practice" className={buttonVariants({ variant: "primary", size: "md" })}>
-          <Target className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
-          {t("practise")}
-        </Link>
-      ) : null}
-
-      <button
-        type="button"
-        onClick={() => toggle(item.id)}
-        aria-pressed={marked}
-        className={cn(
-          buttonVariants({ variant: marked ? "secondary" : "outline", size: "md" }),
-          marked && "text-knowledge-vocabulary-strong",
-        )}
-      >
-        <Bookmark
-          className="-ml-0.5 size-[18px]"
-          strokeWidth={2}
-          fill={marked ? "currentColor" : "none"}
-          aria-hidden
-        />
-        {marked ? t("marked") : t("markReview")}
-      </button>
-
-      {canModify ? (
-        <>
-          <Link
-            href={`/knowledge/${item.id}/edit`}
-            className={buttonVariants({ variant: "outline", size: "md" })}
-          >
-            <Pencil className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
-            {t("edit")}
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-3">
+        {practiseable ? (
+          <Link href="/practice" className={buttonVariants({ variant: "primary", size: "md" })}>
+            <Target className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
+            {t("practise")}
           </Link>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className={buttonVariants({ variant: "danger", size: "md" })}
-          >
-            <Trash2 className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
-            {t("delete")}
-          </button>
-        </>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => toggle(item.id)}
+          aria-pressed={marked}
+          className={cn(
+            buttonVariants({ variant: marked ? "secondary" : "outline", size: "md" }),
+            marked && "text-knowledge-vocabulary-strong",
+          )}
+        >
+          <Bookmark
+            className="-ml-0.5 size-[18px]"
+            strokeWidth={2}
+            fill={marked ? "currentColor" : "none"}
+            aria-hidden
+          />
+          {marked ? t("marked") : t("markReview")}
+        </button>
+
+        {canModify ? (
+          <>
+            <Link
+              href={`/knowledge/${item.id}/edit`}
+              className={buttonVariants({ variant: "outline", size: "md" })}
+            >
+              <Pencil className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
+              {t("edit")}
+            </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className={buttonVariants({ variant: "danger", size: "md" })}
+            >
+              <Trash2 className="-ml-0.5 size-[18px]" strokeWidth={2} aria-hidden />
+              {t("delete")}
+            </button>
+          </>
+        ) : null}
+      </div>
+      {deleteError ? (
+        <p role="alert" className="text-danger text-body-sm">
+          {t("deleteError")}
+        </p>
       ) : null}
     </div>
   );
