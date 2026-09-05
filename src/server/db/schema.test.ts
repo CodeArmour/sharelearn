@@ -41,3 +41,10 @@ describe("knowledgeItems schema", () => {
     expect(cfg.checks.length).toBeGreaterThanOrEqual(5);
   });
 });
+
+describe("knowledgeItems edit/delete columns", () => {
+  it("has deletedAt and updatedBy", () => {
+    const cols = getTableConfig(knowledgeItems).columns.map((c) => c.name);
+    expect(cols).toEqual(expect.arrayContaining(["deleted_at", "updated_by"]));
+  });
+});

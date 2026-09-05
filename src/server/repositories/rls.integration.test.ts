@@ -158,4 +158,61 @@ run("row level security (integration, always rolled back)", () => {
       expect(asOutsider).toHaveLength(0);
     });
   });
+
+  it("knowledge_items: the author can update their own item; a different member cannot", async () => {
+    await withRolledBackTx(async (tx) => {
+      const { userA, groupA } = await seedTwoGroups(tx);
+      const [item] = await tx.execute(sql`
+        insert into knowledge_items (group_id, type, source, added_by, title, body)
+        values (${groupA}, 'note', 'manual', ${userA}, 'orig', 'orig body')
+        returning id
+      `);
+      const itemId = (item as { id: string }).id;
+
+      // A second member, not the author and not the owner of groupA, added to groupA as a
+      // plain member. Seeded here, before switching to the `authenticated` role below, since
+      // that role lacks INSERT on auth.users.
+      const outsider = randomUUID();
+      await tx.execute(sql`insert into auth.users (id) values (${outsider})`);
+      await tx.execute(sql`
+        insert into group_memberships (group_id, user_id, role) values (${groupA}, ${outsider}, 'member')
+      `);
+
+      await actAs(tx, userA);
+      const updated = await tx.execute(sql`
+        update knowledge_items set body = 'edited by author' where id = ${itemId} returning id
+      `);
+      expect(updated).toHaveLength(1);
+
+      await actAs(tx, outsider);
+      const rejected = await tx.execute(sql`
+        update knowledge_items set body = 'sneaky edit' where id = ${itemId} returning id
+      `);
+      expect(rejected).toHaveLength(0);
+    });
+  });
+
+  it("knowledge_items: the group owner can update someone else's item", async () => {
+    await withRolledBackTx(async (tx) => {
+      const { userA, groupA } = await seedTwoGroups(tx);
+      const member = randomUUID();
+      await tx.execute(sql`insert into auth.users (id) values (${member})`);
+      await tx.execute(sql`
+        insert into group_memberships (group_id, user_id, role) values (${groupA}, ${member}, 'member')
+      `);
+      const [item] = await tx.execute(sql`
+        insert into knowledge_items (group_id, type, source, added_by, title, body)
+        values (${groupA}, 'note', 'manual', ${member}, 'orig', 'orig body')
+        returning id
+      `);
+      const itemId = (item as { id: string }).id;
+
+      // userA is groupA's owner (seedTwoGroups makes the group's creator its owner).
+      await actAs(tx, userA);
+      const updated = await tx.execute(sql`
+        update knowledge_items set body = 'edited by owner' where id = ${itemId} returning id
+      `);
+      expect(updated).toHaveLength(1);
+    });
+  });
 });

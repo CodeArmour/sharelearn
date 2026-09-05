@@ -8,6 +8,7 @@ import {
   emailSchema,
   groupIdSchema,
   knowledgeIdsSchema,
+  knowledgeItemIdSchema,
   practiceSetupSchema,
   toActionError,
 } from "./schemas";
@@ -111,5 +112,12 @@ describe("knowledgeIdsSchema", () => {
     const parsed = knowledgeIdsSchema.safeParse([uuid, "not-a-uuid"]);
     expect(parsed.success).toBe(true);
     expect(parsed.success && parsed.data).toEqual([uuid]);
+  });
+});
+
+describe("knowledgeItemIdSchema", () => {
+  it("requires a uuid", () => {
+    expect(knowledgeItemIdSchema.safeParse("not-a-uuid").success).toBe(false);
+    expect(knowledgeItemIdSchema.safeParse("11111111-1111-4111-8111-111111111111").success).toBe(true);
   });
 });

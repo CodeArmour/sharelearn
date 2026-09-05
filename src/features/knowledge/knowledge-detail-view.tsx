@@ -87,6 +87,9 @@ export async function KnowledgeDetailView({ item }: { item: KnowledgeItem }) {
               label: tSource(item.source),
             }}
           />
+          {item.updatedBy && item.updatedBy.id !== item.addedBy.id ? (
+            <p className="text-caption text-fg-muted">{t("editedBy", { name: item.updatedBy.name })}</p>
+          ) : null}
           {item.level || item.tags.length > 0 ? (
             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
               {item.level ? (
@@ -103,7 +106,7 @@ export async function KnowledgeDetailView({ item }: { item: KnowledgeItem }) {
           ) : null}
         </header>
 
-        <KnowledgeActions knowledgeId={item.id} practiseable={practiseable} />
+        <KnowledgeActions item={item} practiseable={practiseable} />
 
         <div className="h-px w-full bg-border" />
 

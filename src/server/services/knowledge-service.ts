@@ -1,13 +1,15 @@
 import "server-only";
 
 import { db, type Db } from "@/server/db/client";
-import { NotFoundError } from "@/server/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import {
   getDistinctLevels,
   getKnowledgeItemById,
   getKnowledgeStats,
   insertKnowledgeItem,
   listKnowledgeItems,
+  softDeleteKnowledgeItem,
+  updateKnowledgeItem as updateKnowledgeItemRow,
 } from "@/server/repositories/knowledge";
 import { listMembers } from "@/server/repositories/memberships";
 import { resolveActiveContext } from "@/server/services/session-service";
@@ -15,6 +17,7 @@ import type {
   CEFRLevel,
   GrammarItem,
   GroupMemberSummary,
+  GroupRole,
   KnowledgeItem,
   KnowledgeType,
   ReadingItem,
@@ -24,10 +27,20 @@ import { knowledgeTitle } from "@/types";
 
 import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
 
-async function requireActiveGroupId(): Promise<{ groupId: string; userId: string }> {
+async function requireActiveGroupId(): Promise<{
+  groupId: string;
+  userId: string;
+  role: GroupRole;
+}> {
   const ctx = await resolveActiveContext();
   if (ctx.status !== "ok") throw new NotFoundError("No active group");
-  return { groupId: ctx.activeGroup.id, userId: ctx.user.id };
+  return { groupId: ctx.activeGroup.id, userId: ctx.user.id, role: ctx.membership.role };
+}
+
+function assertCanModify(item: KnowledgeItem, userId: string, role: GroupRole): void {
+  if (item.addedBy.id !== userId && role !== "owner") {
+    throw new ForbiddenError("Only the author or the group owner can edit or delete this item");
+  }
 }
 
 function wordCount(body: string): number {
@@ -64,6 +77,68 @@ export async function createKnowledgeItem(input: CreateKnowledgeItemInput): Prom
         return insertKnowledgeItem(dbtx, { ...shared, ...input, type: "note" });
     }
   });
+}
+
+export async function updateKnowledgeItem(
+  id: string,
+  input: CreateKnowledgeItemInput,
+): Promise<KnowledgeItem> {
+  const { groupId, userId, role } = await requireActiveGroupId();
+  const existing = await getKnowledgeItemById(groupId, id);
+  if (!existing) throw new NotFoundError("Knowledge item not found");
+  assertCanModify(existing, userId, role);
+  if (input.type !== existing.type) {
+    throw new ValidationError("Changing a knowledge item's type is not supported");
+  }
+
+  // Provenance (how the item was originally captured) isn't something an edit
+  // should be able to change — the edit form always submits "manual" since it
+  // has no AI-capture UI in edit mode, so preserve the item's original source
+  // rather than trusting input.source here. This must be spread AFTER `input`
+  // below, since `input` also carries a `source` key that would otherwise win.
+  const preserved = { source: existing.source };
+
+  const updated = await db.transaction((tx) => {
+    const dbtx = tx as unknown as Db;
+    switch (input.type) {
+      case "vocabulary":
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "vocabulary",
+        });
+      case "grammar":
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "grammar",
+        });
+      case "reading":
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "reading",
+          wordCount: wordCount(input.body),
+        });
+      case "note":
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
+          ...input,
+          ...preserved,
+          type: "note",
+        });
+    }
+  });
+  if (!updated) throw new NotFoundError("Knowledge item not found");
+  return updated;
+}
+
+export async function deleteKnowledgeItem(id: string): Promise<void> {
+  const { groupId, userId, role } = await requireActiveGroupId();
+  const existing = await getKnowledgeItemById(groupId, id);
+  if (!existing) throw new NotFoundError("Knowledge item not found");
+  assertCanModify(existing, userId, role);
+  const deleted = await softDeleteKnowledgeItem(groupId, id);
+  if (!deleted) throw new NotFoundError("Knowledge item not found");
 }
 
 export interface TodayFeed {
@@ -127,10 +202,7 @@ export interface LibraryResult {
 
 const PAGE_SIZE = 12;
 
-export async function getLibraryItems(
-  query: LibraryQuery = {},
-  page = 1,
-): Promise<LibraryResult> {
+export async function getLibraryItems(query: LibraryQuery = {}, page = 1): Promise<LibraryResult> {
   const { groupId } = await requireActiveGroupId();
   const [items, libraryTotal] = await Promise.all([
     listKnowledgeItems(groupId, {
@@ -158,10 +230,7 @@ export async function getLibraryFacets(): Promise<{
   members: GroupMemberSummary[];
 }> {
   const { groupId } = await requireActiveGroupId();
-  const [levels, members] = await Promise.all([
-    getDistinctLevels(groupId),
-    listMembers(groupId),
-  ]);
+  const [levels, members] = await Promise.all([getDistinctLevels(groupId), listMembers(groupId)]);
   return { levels: levels as CEFRLevel[], members };
 }
 

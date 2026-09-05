@@ -137,6 +137,10 @@ export const knowledgeItems = pgTable(
       .references(() => authUsers.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Soft delete: NULL = active. Set once on delete; never cleared (no
+    // restore UI yet). Who last edited the row (NULL until the first edit).
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    updatedBy: uuid("updated_by").references(() => authUsers.id),
     // vocabulary
     term: text("term"),
     meaning: text("meaning"),

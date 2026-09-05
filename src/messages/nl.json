@@ -97,6 +97,10 @@
       "practise": "Oefen dit",
       "markReview": "Markeer voor herhaling",
       "marked": "Gemarkeerd voor herhaling",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "editedBy": "Bewerkt door {name}",
+      "deleteError": "Verwijderen is niet gelukt. Het item is mogelijk al verwijderd — probeer de pagina te vernieuwen.",
       "meaning": "Betekenis",
       "partOfSpeech": "Woordsoort",
       "level": "Niveau",
@@ -270,6 +274,7 @@
     "tagsLabel": "Labels",
     "tagsHint": "Scheiden met komma's",
     "submit": "Opslaan in bibliotheek",
+    "saveChanges": "Wijzigingen opslaan",
     "required": "{field} is verplicht",
     "errors": {
       "generic": "Er ging iets mis bij het opslaan. Probeer het opnieuw."

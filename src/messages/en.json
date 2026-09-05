@@ -97,6 +97,10 @@
       "practise": "Practise this",
       "markReview": "Mark for review",
       "marked": "Marked for review",
+      "edit": "Edit",
+      "delete": "Delete",
+      "editedBy": "Edited by {name}",
+      "deleteError": "Couldn't delete this item. It may have already been removed — try refreshing the page.",
       "meaning": "Meaning",
       "partOfSpeech": "Word type",
       "level": "Level",
@@ -270,6 +274,7 @@
     "tagsLabel": "Tags",
     "tagsHint": "Separate with commas",
     "submit": "Save to library",
+    "saveChanges": "Save changes",
     "required": "{field} is required",
     "errors": {
       "generic": "Something went wrong saving that. Try again."
