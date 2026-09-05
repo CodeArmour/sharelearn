@@ -265,6 +265,37 @@ describe("updateKnowledgeItem", () => {
     expect(result.id).toBe("k1");
   });
 
+  it("preserves the item's original source, ignoring input.source", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(
+      vocab({ id: "k1", addedBy: user, source: "ai-assisted" }),
+    );
+    vi.mocked(repo.updateKnowledgeItem).mockResolvedValue(vocab({ id: "k1" }));
+    await updateKnowledgeItem("k1", {
+      type: "vocabulary",
+      level: null,
+      tags: [],
+      source: "manual",
+      term: "x",
+      meaning: "y",
+      partOfSpeech: "z",
+      example: null,
+      exampleTranslation: null,
+      article: null,
+      plural: null,
+      pastTense: null,
+      perfect: null,
+      usageNote: null,
+    });
+    expect(repo.updateKnowledgeItem).toHaveBeenCalledWith(
+      expect.anything(),
+      "g1",
+      "k1",
+      "u1",
+      expect.objectContaining({ source: "ai-assisted" }),
+    );
+  });
+
   it("rejects switching an item's type", async () => {
     vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
     vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user, type: "note" as never }));

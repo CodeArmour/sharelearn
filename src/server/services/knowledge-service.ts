@@ -87,24 +87,29 @@ export async function updateKnowledgeItem(
     throw new ValidationError("Changing a knowledge item's type is not supported");
   }
 
-  const shared = { level: input.level, tags: input.tags, source: input.source };
+  // Provenance (how the item was originally captured) isn't something an edit
+  // should be able to change — the edit form always submits "manual" since it
+  // has no AI-capture UI in edit mode, so preserve the item's original source
+  // rather than trusting input.source here. This must be spread AFTER `input`
+  // below, since `input` also carries a `source` key that would otherwise win.
+  const preserved = { source: existing.source };
 
   const updated = await db.transaction((tx) => {
     const dbtx = tx as unknown as Db;
     switch (input.type) {
       case "vocabulary":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...shared, ...input, type: "vocabulary" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "vocabulary" });
       case "grammar":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...shared, ...input, type: "grammar" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "grammar" });
       case "reading":
         return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
-          ...shared,
           ...input,
+          ...preserved,
           type: "reading",
           wordCount: wordCount(input.body),
         });
       case "note":
-        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...shared, ...input, type: "note" });
+        return updateKnowledgeItemRow(dbtx, groupId, id, userId, { ...input, ...preserved, type: "note" });
     }
   });
   if (!updated) throw new NotFoundError("Knowledge item not found");
