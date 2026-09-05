@@ -214,6 +214,7 @@ describe("updateKnowledgeItem", () => {
         usageNote: null,
       }),
     ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(repo.updateKnowledgeItem).not.toHaveBeenCalled();
   });
 
   it("allows the author", async () => {
@@ -295,6 +296,7 @@ describe("deleteKnowledgeItem", () => {
       vocab({ id: "k1", addedBy: { ...user, id: "someone-else" } }),
     );
     await expect(deleteKnowledgeItem("k1")).rejects.toBeInstanceOf(ForbiddenError);
+    expect(repo.softDeleteKnowledgeItem).not.toHaveBeenCalled();
   });
 
   it("allows the author and calls softDeleteKnowledgeItem", async () => {
@@ -303,5 +305,12 @@ describe("deleteKnowledgeItem", () => {
     vi.mocked(repo.softDeleteKnowledgeItem).mockResolvedValue(true);
     await deleteKnowledgeItem("k1");
     expect(repo.softDeleteKnowledgeItem).toHaveBeenCalledWith("g1", "k1");
+  });
+
+  it("throws NotFoundError if the item was already deleted concurrently", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user }));
+    vi.mocked(repo.softDeleteKnowledgeItem).mockResolvedValue(false);
+    await expect(deleteKnowledgeItem("k1")).rejects.toBeInstanceOf(NotFoundError);
   });
 });

@@ -116,7 +116,8 @@ export async function deleteKnowledgeItem(id: string): Promise<void> {
   const existing = await getKnowledgeItemById(groupId, id);
   if (!existing) throw new NotFoundError("Knowledge item not found");
   assertCanModify(existing, userId, role);
-  await softDeleteKnowledgeItem(groupId, id);
+  const deleted = await softDeleteKnowledgeItem(groupId, id);
+  if (!deleted) throw new NotFoundError("Knowledge item not found");
 }
 
 export interface TodayFeed {
