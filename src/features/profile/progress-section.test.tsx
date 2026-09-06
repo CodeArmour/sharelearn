@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("next-intl", () => ({
   useTranslations: () => (k: string, v?: Record<string, unknown>) =>
     v ? `${k}:${JSON.stringify(v)}` : k,
+  useLocale: () => "nl",
 }));
 
 import type { KnowledgeType, StudyHistory } from "@/types";
@@ -68,6 +69,16 @@ describe("ProgressSection", () => {
     expect(screen.getByText("progress.runKind.exam")).toBeInTheDocument();
     // one score line per run
     expect(screen.getAllByText(/progress\.runScore:/)).toHaveLength(2);
-    expect(screen.getByText("68")).toBeInTheDocument(); // avg score headline
+    expect(screen.getByText("68%")).toBeInTheDocument(); // avg score headline
+    // level-scoped run shows the raw CEFR code (runContext level branch)
+    expect(screen.getByText(/A2/)).toBeInTheDocument();
+    // non-level run shows its scope label (stub translator returns the key)
+    expect(screen.getByText(/progress\.scope\.all/)).toBeInTheDocument();
+    // the practice run renders a mode span; the mode: null exam run does not
+    expect(screen.queryAllByText(/progress\.runMode\./)).toHaveLength(1);
+    expect(screen.getByText("progress.runMode.vocabulary")).toBeInTheDocument();
+    // each run row is dated (formatDateShort, nl locale)
+    expect(screen.getByText("2 sep 2026")).toBeInTheDocument();
+    expect(screen.getByText("1 sep 2026")).toBeInTheDocument();
   });
 });

@@ -72,6 +72,24 @@ it("runs the one-time import when the server is empty and localStorage has marks
   expect(importAction).not.toHaveBeenCalled();
 });
 
+it("keeps local marks and retries when the import lands nothing (imported: 0)", async () => {
+  window.localStorage.setItem(
+    "dutch:review-marks",
+    JSON.stringify([{ knowledgeId: A, markedAt: "2026-09-01T00:00:00.000Z" }]),
+  );
+  getAction.mockResolvedValue({ ok: true, data: [] });
+  importAction.mockResolvedValue({ ok: true, data: { imported: 0 } });
+  await hydrateReviewMarks();
+  // none of the local ids were live items in the active group — cache is left intact
+  expect(getReviewMarks().map((m) => m.knowledgeId)).toEqual([A]);
+  // the migration flag is NOT latched, so the import can run again
+  expect(window.localStorage.getItem("dutch:review-marks-migrated")).toBe(null);
+  // the next mount retries the import
+  importAction.mockClear();
+  await hydrateReviewMarks();
+  expect(importAction).toHaveBeenCalledWith([A]);
+});
+
 it("keeps local marks and retries when the one-time import fails", async () => {
   window.localStorage.setItem(
     "dutch:review-marks",

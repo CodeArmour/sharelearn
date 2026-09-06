@@ -1,8 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { KnowledgeType, StudyHistory, StudyRunSummary } from "@/types";
+import { formatDateShort } from "@/lib/utils/date";
 import { Section } from "@/components/layout";
 
 const TYPES: KnowledgeType[] = ["vocabulary", "grammar", "reading", "file", "note"];
@@ -24,10 +25,11 @@ export function ProgressSection({
 }) {
   const t = useTranslations("profile");
   const tType = useTranslations("knowledge.type");
+  const locale = useLocale();
 
   const headline = [
     { label: t("progress.runsCompleted"), value: history.totals.runCount },
-    { label: t("progress.avgScore"), value: history.totals.avgScorePercent },
+    { label: t("progress.avgScore"), value: `${history.totals.avgScorePercent}%` },
     { label: t("progress.marked"), value: history.markedCount },
     { label: t("progress.libraryItems"), value: libraryStats.total },
   ];
@@ -55,6 +57,9 @@ export function ProgressSection({
                   key={run.id}
                   className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-body-sm"
                 >
+                  <span className="text-caption text-fg-muted">
+                    {formatDateShort(run.completedAt, locale)}
+                  </span>
                   <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-caption font-medium text-fg-secondary">
                     {t(`progress.runKind.${run.kind}`)}
                   </span>

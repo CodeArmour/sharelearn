@@ -155,6 +155,16 @@ describe("recordStudyRun", () => {
       }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("rejects a run whose timestamps are not parseable dates (NaN-safe)", async () => {
+    await expect(
+      recordStudyRun({ ...practiceInput, startedAt: "not-a-date" }),
+    ).rejects.toThrow("startedAt is after completedAt");
+    await expect(
+      recordStudyRun({ ...practiceInput, completedAt: "also-not-a-date" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(repo.insertStudyRun).not.toHaveBeenCalled();
+  });
 });
 
 describe("getStudyHistory", () => {

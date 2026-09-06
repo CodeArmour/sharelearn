@@ -53,7 +53,9 @@ export async function recordStudyRun(input: StudyRunInput): Promise<StudyRunSumm
   if ((input.kind === "practice") === (input.mode === null)) {
     throw new ValidationError("practice runs require a mode; exams must not carry one");
   }
-  if (new Date(input.startedAt).getTime() > new Date(input.completedAt).getTime()) {
+  const started = new Date(input.startedAt).getTime();
+  const completed = new Date(input.completedAt).getTime();
+  if (Number.isNaN(started) || Number.isNaN(completed) || started > completed) {
     throw new ValidationError("startedAt is after completedAt");
   }
 

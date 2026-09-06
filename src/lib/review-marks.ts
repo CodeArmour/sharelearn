@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * Review-marks store. The source of truth is the `review_marks` table in
+ * Postgres, reached only through Server Actions. `localStorage`
+ * (`dutch:review-marks`) is a first-paint cache so the UI can render marks
+ * synchronously before the network round-trip — it is NOT authoritative.
+ * `<ReviewMarksHydrator/>` calls `hydrateReviewMarks()` on mount to reconcile
+ * the cache with the server (and runs the one-time import of pre-backend
+ * local marks).
+ */
+
 import { useCallback, useSyncExternalStore } from "react";
 
 import {
@@ -21,6 +31,8 @@ function read(): ReviewMark[] {
     const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as unknown;
     return Array.isArray(parsed)
       ? parsed.filter(
+          // Drop pre-Phase-2 mock ids (e.g. `kn_gezellig`) that never
+          // round-trip to the server — only real UUIDs are kept.
           (m): m is ReviewMark =>
             !!m &&
             typeof (m as ReviewMark).knowledgeId === "string" &&
@@ -56,12 +68,17 @@ export function toggleReviewMark(knowledgeId: string): void {
     : [...before, { knowledgeId, markedAt: new Date().toISOString() }];
   write(optimistic);
 
-  void toggleReviewMarkAction(knowledgeId).then((result) => {
-    if (!result.ok) {
-      write(before); // revert
-      console.error("toggleReviewMarkAction failed:", result.code, result.message);
-    }
-  });
+  void toggleReviewMarkAction(knowledgeId)
+    .then((result) => {
+      if (!result.ok) {
+        write(before); // revert
+        console.error("toggleReviewMarkAction failed:", result.code, result.message);
+      }
+    })
+    .catch((e) => {
+      write(before); // revert — a rejected promise is as much a failure as { ok: false }
+      console.error("toggleReviewMarkAction rejected:", e);
+    });
 }
 
 // --- hydration + one-time import ----------------------------------------
@@ -92,15 +109,22 @@ async function doHydrate(): Promise<void> {
       );
       return;
     }
+    if (importResult.data.imported === 0) {
+      // `ok` but nothing landed — e.g. a multi-group user hydrating while the
+      // active group isn't the marks' origin group, so none of the local ids
+      // are live items here. Latching the flag now would let the trailing
+      // write(serverMarks) (= write([])) wipe never-persisted local marks.
+      // Leave the cache and the flag untouched so a later mount retries.
+      console.warn("importLocalReviewMarksAction imported 0 marks; leaving local cache for retry");
+      return;
+    }
     try {
       window.localStorage.setItem(MIGRATED_KEY, "1");
     } catch {
       /* ignore */
     }
-    if (importResult.data.imported > 0) {
-      // Local marks are now authoritative on the server; keep them in the cache.
-      return;
-    }
+    // Local marks are now authoritative on the server; keep them in the cache.
+    return;
   }
 
   write(serverMarks); // server is the source of truth
@@ -145,6 +169,12 @@ function subscribe(onChange: () => void): () => void {
   };
 }
 
+/**
+ * Reactive access to the review-marks cache.
+ * @returns a `[marked, toggle]` tuple — `marked` is a `Set<string>` of the
+ * currently marked knowledge ids (re-rendered on every change), and `toggle`
+ * optimistically flips one id and persists it via the Server Action.
+ */
 export function useReviewMarks(): [Set<string>, (knowledgeId: string) => void] {
   const marks = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const toggle = useCallback((id: string) => toggleReviewMark(id), []);

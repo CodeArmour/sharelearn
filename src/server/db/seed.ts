@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { createClient } from "@supabase/supabase-js";
@@ -304,12 +304,21 @@ async function main() {
     .from(studyRuns)
     .where(eq(studyRuns.userId, userId));
   if (runCount === 0) {
-    await db.insert(studyRuns).values(demoStudyRuns(group.id, userId));
+    const runs = demoStudyRuns(group.id, userId);
+    await db.insert(studyRuns).values(runs);
 
+    // Spec §9: three deterministic marks on seeded, live vocabulary items.
     const vocab = await db
       .select({ id: knowledgeItems.id })
       .from(knowledgeItems)
-      .where(eq(knowledgeItems.groupId, group.id))
+      .where(
+        and(
+          eq(knowledgeItems.groupId, group.id),
+          eq(knowledgeItems.type, "vocabulary"),
+          isNull(knowledgeItems.deletedAt),
+        ),
+      )
+      .orderBy(knowledgeItems.createdAt)
       .limit(3);
     if (vocab.length > 0) {
       await db
@@ -317,7 +326,7 @@ async function main() {
         .values(vocab.map((v) => ({ userId, groupId: group.id, knowledgeId: v.id })))
         .onConflictDoNothing();
     }
-    console.log(`Seeded ${demoStudyRuns(group.id, userId).length} demo study runs + ${vocab.length} review marks.`);
+    console.log(`Seeded ${runs.length} demo study runs + ${vocab.length} review marks.`);
   }
 
   console.log(

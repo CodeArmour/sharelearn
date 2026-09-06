@@ -150,18 +150,30 @@ run("personal repository (integration, always rolled back)", () => {
     });
   });
 
-  it("RLS: another authenticated user cannot see the first user's study runs", async () => {
+  it("RLS: the owner sees their study run; another authenticated user does not", async () => {
     await withRolledBackTx(async (tx) => {
       const { userId, groupId } = await seedOne(tx);
-      await repo.insertStudyRun(
+      // Seed the outsider's auth.users row up front — the `authenticated` role
+      // lacks INSERT on auth.users once we switch to it below.
+      const outsider = randomUUID();
+      await tx.execute(sql`insert into auth.users (id) values (${outsider})`);
+      const inserted = await repo.insertStudyRun(
         userId,
         groupId,
         { kind: "practice", mode: "mixed", scope: "all", level: null, questionCount: 4, correctCount: 4, startedAt: "2026-09-01T10:00:00.000Z", completedAt: "2026-09-01T10:01:00.000Z" },
         tx,
       );
-      const outsider = randomUUID();
-      await tx.execute(sql`insert into auth.users (id) values (${outsider})`);
+
+      // Positive control: as the owner (authenticated role + their JWT sub) RLS
+      // must expose exactly the row just inserted. Without this, the
+      // toHaveLength(0) below would also pass if auth.uid() were NULL / RLS off.
       await tx.execute(sql`set local role authenticated`);
+      await tx.execute(sql`select set_config('request.jwt.claim.sub', ${userId}, true)`);
+      const asOwner = await tx.execute(sql`select id from study_runs`);
+      expect(asOwner).toHaveLength(1);
+      expect((asOwner[0] as { id: string }).id).toBe(inserted.id);
+
+      // Now act as an unrelated authenticated user: the row must be invisible.
       await tx.execute(sql`select set_config('request.jwt.claim.sub', ${outsider}, true)`);
       const visible = await tx.execute(sql`select id from study_runs`);
       expect(visible).toHaveLength(0);

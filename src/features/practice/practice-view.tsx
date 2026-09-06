@@ -94,15 +94,17 @@ export function PracticeView({
     });
     lastRunRef.current = input;
     setSaveState("saving");
-    void recordStudyRunAction(input).then((r) => setSaveState(r.ok ? "saved" : "error"));
+    void recordStudyRunAction(input)
+      .then((r) => setSaveState(r.ok ? "saved" : "error"))
+      .catch(() => setSaveState("error"));
   };
 
   const retrySave = () => {
     if (!lastRunRef.current) return;
     setSaveState("saving");
-    void recordStudyRunAction(lastRunRef.current).then((r) =>
-      setSaveState(r.ok ? "saved" : "error"),
-    );
+    void recordStudyRunAction(lastRunRef.current)
+      .then((r) => setSaveState(r.ok ? "saved" : "error"))
+      .catch(() => setSaveState("error"));
   };
 
   return (
