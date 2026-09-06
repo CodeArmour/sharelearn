@@ -368,7 +368,10 @@
       "title": "Practice complete",
       "score": "{correct} of {total} correct",
       "percent": "{percent}%",
-      "notSaved": "Results aren't saved yet.",
+      "saving": "Saving…",
+      "saved": "Saved to your progress",
+      "saveError": "Couldn't save this run.",
+      "retry": "Try again",
       "again": "Practice again",
       "toToday": "Back to Today"
     }
@@ -404,7 +407,10 @@
       "score": "{correct} of {total} correct",
       "passed": "Passed",
       "notPassed": "Not passed",
-      "notSaved": "Results aren't saved yet.",
+      "saving": "Saving…",
+      "saved": "Saved to your progress",
+      "saveError": "Couldn't save this run.",
+      "retry": "Try again",
       "again": "New exam",
       "toToday": "Back to Today"
     }
