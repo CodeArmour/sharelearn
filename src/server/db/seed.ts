@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { deriveAccent, deriveInitials } from "@/server/auth/identity";
 import * as schema from "@/server/db/schema";
 
-const { groupMemberships, groups, knowledgeItems, profiles } = schema;
+const { groupMemberships, groups, knowledgeItems, profiles, reviewMarks, studyRuns } = schema;
 
 const email = process.env.OWNER_EMAIL;
 const groupName = process.env.OWNER_GROUP_NAME ?? "Dutch Study Group";
@@ -196,6 +196,41 @@ function demoReadingItem(
   } as typeof knowledgeItems.$inferInsert;
 }
 
+/** A handful of demo study runs for the seed owner, spread over ~2 weeks so
+ * the profile Progress section isn't empty on a fresh dev DB / first preview
+ * deploy. Idempotent: main() only inserts these when the owner has none. */
+function demoStudyRuns(
+  groupId: string,
+  userId: string,
+): (typeof studyRuns.$inferInsert)[] {
+  const day = (n: number) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - n);
+    d.setUTCHours(18, 0, 0, 0);
+    return d;
+  };
+  const run = (
+    n: number,
+    kind: "practice" | "exam",
+    mode: string | null,
+    scope: string,
+    level: string | null,
+    questionCount: number,
+    correctCount: number,
+  ): typeof studyRuns.$inferInsert => {
+    const completedAt = day(n);
+    const startedAt = new Date(completedAt.getTime() - 5 * 60_000);
+    return { groupId, userId, kind, mode, scope, level, questionCount, correctCount, startedAt, completedAt };
+  };
+  return [
+    run(13, "practice", "vocabulary", "all", null, 10, 6),
+    run(10, "practice", "mixed", "today", null, 8, 7),
+    run(7, "exam", null, "all", null, 20, 12),
+    run(4, "practice", "grammar", "level", "A2", 10, 9),
+    run(1, "exam", null, "review", null, 15, 11),
+  ];
+}
+
 async function main() {
   // 1. Ensure the auth user exists and is confirmed.
   const { data: list, error: listError } = await admin.auth.admin.listUsers();
@@ -261,6 +296,28 @@ async function main() {
     ];
     await db.insert(knowledgeItems).values(demoReadingItem(group.id, userId, vocabularyIds));
     console.log("Seeded 10 demo knowledge items (incl. 1 reading linked to 3 vocabulary items).");
+  }
+
+  // 5. Seed demo study history + a few review marks once.
+  const [{ count: runCount }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(studyRuns)
+    .where(eq(studyRuns.userId, userId));
+  if (runCount === 0) {
+    await db.insert(studyRuns).values(demoStudyRuns(group.id, userId));
+
+    const vocab = await db
+      .select({ id: knowledgeItems.id })
+      .from(knowledgeItems)
+      .where(eq(knowledgeItems.groupId, group.id))
+      .limit(3);
+    if (vocab.length > 0) {
+      await db
+        .insert(reviewMarks)
+        .values(vocab.map((v) => ({ userId, groupId: group.id, knowledgeId: v.id })))
+        .onConflictDoNothing();
+    }
+    console.log(`Seeded ${demoStudyRuns(group.id, userId).length} demo study runs + ${vocab.length} review marks.`);
   }
 
   console.log(
