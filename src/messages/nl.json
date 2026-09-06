@@ -421,9 +421,27 @@
     "preferences": { "title": "Voorkeuren", "language": "Taal" },
     "progress": {
       "title": "Voortgang",
-      "placeholder": "Je oefen- en examengeschiedenis verschijnt hier zodra die wordt bewaard.",
       "marked": "Gemarkeerd voor herhaling",
-      "libraryItems": "Bibliotheekitems"
+      "libraryItems": "Bibliotheekitems",
+      "runsCompleted": "Voltooide sessies",
+      "avgScore": "Gemiddelde score",
+      "recentRuns": "Recente sessies",
+      "noRuns": "Nog geen oefeningen of examens.",
+      "runScore": "{correct}/{total} · {percent}%",
+      "runKind": { "practice": "Oefening", "exam": "Examen" },
+      "runMode": {
+        "vocabulary": "Woordenschat",
+        "grammar": "Grammatica",
+        "reading": "Teksten",
+        "mixed": "Gemengd"
+      },
+      "scope": {
+        "all": "Alles",
+        "today": "Vandaag",
+        "level": "Niveau",
+        "custom": "Aangepast",
+        "review": "Herhaling"
+      }
     },
     "review": {
       "title": "Gemarkeerd voor herhaling",

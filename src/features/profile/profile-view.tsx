@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
-import type { GroupMemberSummary, KnowledgeType, UserSummary } from "@/types";
+import type { GroupMemberSummary, KnowledgeType, StudyHistory, UserSummary } from "@/types";
 import { formatDateShort } from "@/lib/utils/date";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { Avatar } from "@/components/ui";
@@ -13,10 +13,12 @@ export async function ProfileView({
   user,
   member,
   libraryStats,
+  studyHistory,
 }: {
   user: UserSummary;
   member?: GroupMemberSummary;
   libraryStats: Record<KnowledgeType, number> & { total: number };
+  studyHistory: StudyHistory;
 }) {
   const [t, tPage, locale] = await Promise.all([
     getTranslations("profile"),
@@ -47,7 +49,7 @@ export async function ProfileView({
         </div>
 
         <PreferencesSection />
-        <ProgressSection libraryStats={libraryStats} />
+        <ProgressSection libraryStats={libraryStats} history={studyHistory} />
         <ReviewListSection />
       </div>
     </PageContainer>
