@@ -138,6 +138,25 @@ CLI):
 > invitee already has an auth account — so a re-invited existing user gets the
 > Magic Link copy, not the Invite copy. Keep both templates coherent.
 
+### The invite button must use `token_hash`, not `{{ .ConfirmationURL }}`
+
+`{{ .ConfirmationURL }}` on an `admin.inviteUserByEmail` link uses Supabase's
+**implicit flow** — the session comes back as a `#access_token=…` URL fragment,
+which our **server** `/auth/callback` route cannot read. The invite then runs
+against a stale/absent session and fails with `email-mismatch`.
+
+So `invite.html`'s button links to:
+
+```
+{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite
+```
+
+`{{ .RedirectTo }}` is `${SITE_URL}/auth/callback?token=<app invite token>` (set
+by `inviteMember`). `/auth/callback` then calls `verifyOtp({ type: 'invite',
+token_hash })` server-side — real cookies, no fragment — and bounces to
+`/invite/<token>`. Magic-link sign-in still uses `{{ .ConfirmationURL }}` (PKCE
+`?code=`); only the invite template is different.
+
 ### Paste them in
 
 Dashboard → **Authentication → Emails → Templates**
@@ -151,7 +170,9 @@ Supabase renders Go `text/template` — only these are in scope:
 
 | Variable | Used for |
 | --- | --- |
-| `{{ .ConfirmationURL }}` | the button link (verifies the token, then redirects to our callback) |
+| `{{ .ConfirmationURL }}` | magic-link button (PKCE `?code=` flow) |
+| `{{ .TokenHash }}` | invite button — verified server-side via `verifyOtp` |
+| `{{ .RedirectTo }}` | the `redirectTo` passed to `inviteUserByEmail` (carries the app token) |
 | `{{ .Token }}` | 6-digit OTP shown as the "or enter this code" fallback |
 | `{{ .SiteURL }}` | the dashboard's **Site URL** — must be `https://dutch.omarcode.dev` |
 | `{{ .Email }}`, `{{ .Data }}` | available, not currently used |
