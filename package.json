@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
-    "db:seed": "dotenv -e .env.local -- tsx src/server/db/seed.ts"
+    "db:seed": "dotenv -e .env.local -- tsx src/server/db/seed.ts",
+    "auth:link": "dotenv -e .env.local -- tsx scripts/auth-link.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

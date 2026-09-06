@@ -12,6 +12,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { isUuid } from "@/lib/is-uuid";
 import {
   getReviewMarksAction,
   importLocalReviewMarksAction,
@@ -23,7 +24,6 @@ import type { ReviewMark } from "@/types";
 const KEY = "dutch:review-marks";
 const MIGRATED_KEY = "dutch:review-marks-migrated";
 const EVENT = "dutch:review-marks-change";
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function read(): ReviewMark[] {
   if (typeof window === "undefined") return [];
@@ -36,7 +36,7 @@ function read(): ReviewMark[] {
           (m): m is ReviewMark =>
             !!m &&
             typeof (m as ReviewMark).knowledgeId === "string" &&
-            UUID_RE.test((m as ReviewMark).knowledgeId),
+            isUuid((m as ReviewMark).knowledgeId),
         )
       : [];
   } catch {

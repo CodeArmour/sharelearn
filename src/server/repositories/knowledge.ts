@@ -3,6 +3,7 @@ import "server-only";
 import { and, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { isUuid } from "@/lib/is-uuid";
 import { db, type Db } from "@/server/db/client";
 import {
   knowledgeItems,
@@ -18,14 +19,6 @@ export interface KnowledgeListFilter {
   addedBy?: string;
   search?: string;
   ids?: string[];
-}
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Postgres `uuid` columns reject non-uuid strings with a hard `22P02` error —
- * narrow id-shaped input before it ever reaches a query. */
-function isUuid(value: string): boolean {
-  return UUID_RE.test(value);
 }
 
 const SEARCH_COLUMNS = [
