@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/server/auth/session", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/server/auth/supabase", () => ({
   createServerSupabaseClient: vi.fn(),
+  createAdminSupabaseClient: vi.fn(),
 }));
 vi.mock("@/server/active-group", () => ({
   readActiveGroupId: vi.fn(),
@@ -35,7 +36,7 @@ vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.f
 
 import { writeActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
-import { createServerSupabaseClient } from "@/server/auth/supabase";
+import { createAdminSupabaseClient, createServerSupabaseClient } from "@/server/auth/supabase";
 import {
   ConflictError,
   EmailSendError,
@@ -62,12 +63,23 @@ import { acceptInvitation, inviteMember, revokeInvitation } from "./invite-servi
 const OWNER = randomUUID();
 const GROUP = randomUUID();
 
-function mockOtp() {
-  const signInWithOtp = vi.fn().mockResolvedValue({ error: null });
+/**
+ * Wire the invite send path: `admin.auth.admin.inviteUserByEmail` (primary) and
+ * `supabase.auth.signInWithOtp` (the already-registered fallback).
+ */
+function mockInvite(
+  inviteResult: { error: unknown } = { error: null },
+  otpResult: { error: unknown } = { error: null },
+) {
+  const inviteUserByEmail = vi.fn().mockResolvedValue(inviteResult);
+  const signInWithOtp = vi.fn().mockResolvedValue(otpResult);
+  vi.mocked(createAdminSupabaseClient).mockReturnValue({
+    auth: { admin: { inviteUserByEmail } },
+  } as never);
   vi.mocked(createServerSupabaseClient).mockResolvedValue({
     auth: { signInWithOtp },
   } as never);
-  return signInWithOtp;
+  return { inviteUserByEmail, signInWithOtp };
 }
 
 beforeEach(() => {
@@ -99,7 +111,7 @@ describe("inviteMember", () => {
   });
 
   it("rejects an invalid email", async () => {
-    mockOtp();
+    mockInvite();
     await expect(inviteMember({ email: "not-an-email" })).rejects.toBeInstanceOf(ValidationError);
   });
 
@@ -108,25 +120,44 @@ describe("inviteMember", () => {
     await expect(inviteMember({ email: "a@b.com" })).rejects.toBeInstanceOf(ConflictError);
   });
 
-  it("creates the row and sends the OTP email on the happy path", async () => {
-    const signInWithOtp = mockOtp();
+  it("creates the row and sends the invite email on the happy path", async () => {
+    const { inviteUserByEmail, signInWithOtp } = mockInvite();
     vi.mocked(createInvitation).mockResolvedValue({ id: "i1", email: "a@b.com" } as never);
     const res = await inviteMember({ email: "a@b.com" });
     expect(res).toMatchObject({ id: "i1", email: "a@b.com" });
     expect(createInvitation).toHaveBeenCalled();
+    const [emailArg, optsArg] = inviteUserByEmail.mock.calls[0];
+    expect(emailArg).toBe("a@b.com");
+    expect(optsArg.redirectTo).toMatch(/\/auth\/callback\?token=/);
+    expect(signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a magic link when the auth user already exists", async () => {
+    const { signInWithOtp } = mockInvite({
+      error: { code: "email_exists", message: "A user with this email has already been registered" },
+    });
+    vi.mocked(createInvitation).mockResolvedValue({ id: "i1", email: "a@b.com" } as never);
+    const res = await inviteMember({ email: "a@b.com" });
+    expect(res).toMatchObject({ id: "i1", email: "a@b.com" });
     const arg = signInWithOtp.mock.calls[0][0];
     expect(arg.email).toBe("a@b.com");
     expect(arg.options.emailRedirectTo).toMatch(/\/auth\/callback\?token=/);
+    expect(markRevoked).not.toHaveBeenCalled();
   });
 
   it("revokes the invitation row and throws EmailSendError when the send fails", async () => {
-    vi.mocked(createServerSupabaseClient).mockResolvedValue({
-      auth: {
-        signInWithOtp: vi.fn().mockResolvedValue({
-          error: { message: "email rate limit exceeded" },
-        }),
-      },
-    } as never);
+    mockInvite({ error: { message: "email rate limit exceeded" } });
+    vi.mocked(createInvitation).mockResolvedValue({ id: "i1", email: "a@b.com" } as never);
+
+    await expect(inviteMember({ email: "a@b.com" })).rejects.toBeInstanceOf(EmailSendError);
+    expect(markRevoked).toHaveBeenCalledWith("i1");
+  });
+
+  it("revokes the row when the already-exists fallback also fails", async () => {
+    mockInvite(
+      { error: { code: "email_exists", message: "already registered" } },
+      { error: { message: "smtp unavailable" } },
+    );
     vi.mocked(createInvitation).mockResolvedValue({ id: "i1", email: "a@b.com" } as never);
 
     await expect(inviteMember({ email: "a@b.com" })).rejects.toBeInstanceOf(EmailSendError);
