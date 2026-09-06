@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" dir="ltr" xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>You've been invited to Welkom</title>
+    <style>
+      /* Honoured by Apple Mail, iOS Mail and a few others; everything critical is also inlined. */
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      body { margin: 0; padding: 0; width: 100% !important; background-color: #faf8f5; }
+      a { color: #2d57d6; }
+      .preheader { display: none !important; visibility: hidden; opacity: 0; height: 0; width: 0; overflow: hidden; mso-hide: all; }
+      @media (prefers-color-scheme: dark) {
+        body, .bg { background-color: #1c1813 !important; }
+        .card { background-color: #26211a !important; border-color: #453e34 !important; }
+        .fg { color: #faf8f5 !important; }
+        .fg-muted { color: #b9b0a2 !important; }
+        .rule { border-color: #453e34 !important; }
+        a { color: #9db4f7 !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preheader">You've been invited to join a group on Welkom — the link expires in 1 hour.</div>
+    <table role="presentation" class="bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #faf8f5;">
+      <tr>
+        <td align="center" style="padding: 32px 16px;">
+          <table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 460px; background-color: #ffffff; border: 1px solid #e6e0d8; border-radius: 14px;">
+            <tr>
+              <td style="padding: 36px 36px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                <img src="https://dutch.omarcode.dev/logo.png" width="64" height="64" alt="Welkom" style="display: block; border: 0; width: 64px; height: 64px;" />
+
+                <h1 class="fg" style="margin: 22px 0 0; font-size: 21px; line-height: 1.3; font-weight: 600; color: #1c1813;">
+                  You've been invited
+                </h1>
+
+                <p class="fg-muted" style="margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #7c7264;">
+                  Someone invited you to join their group on Welkom — a private space for learning
+                  Dutch together. Accept below to set up your account and get started.
+                </p>
+
+                <!-- Bulletproof button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 26px 0 0;">
+                  <tr>
+                    <td align="center" bgcolor="#3b6ff6" style="border-radius: 8px;">
+                      <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="18%" fillcolor="#3b6ff6" stroke="f"><w:anchorlock/><center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Accept invitation</center></v:roundrect><![endif]-->
+                      <!--[if !mso]><!-- -->
+                      <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 28px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px;">Accept invitation</a>
+                      <!--<![endif]-->
+                    </td>
+                  </tr>
+                </table>
+
+                <p class="fg-muted" style="margin: 22px 0 0; font-size: 13px; line-height: 1.5; color: #7c7264;">
+                  Or enter this code:
+                  <span class="fg" style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 15px; font-weight: 600; letter-spacing: 2px; color: #1c1813;">{{ .Token }}</span>
+                </p>
+
+                <hr class="rule" style="margin: 26px 0 0; border: none; border-top: 1px solid #e6e0d8;" />
+
+                <p class="fg-muted" style="margin: 18px 0 0; font-size: 12px; line-height: 1.5; color: #7c7264;">
+                  Not expecting this? You can ignore this email — the invitation can't be used without the link above.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin: 18px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #a49a89;">
+            Welkom — a private space for learning Dutch together
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
