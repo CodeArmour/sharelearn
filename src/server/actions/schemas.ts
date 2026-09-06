@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isUuid } from "@/lib/is-uuid";
 import { InviteError, isAppError } from "@/server/errors";
 import { CEFR_LEVELS, KNOWLEDGE_TYPES } from "@/types";
 
@@ -23,15 +24,6 @@ export function toActionError(e: unknown): { code: string; message: string } {
     return { code: `invite:${e.inviteCode}`, message: e.message };
   if (isAppError(e)) return { code: e.code, message: e.message };
   return { code: "unknown", message: "Something went wrong" };
-}
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Pre-Phase-2 mock ids (e.g. `kn_gezellig`) can still be sitting in a
- * client's `localStorage` review marks — filter them out instead of
- * rejecting the whole array, so stale legacy ids don't fail every call. */
-function isUuidString(value: string): boolean {
-  return UUID_RE.test(value);
 }
 
 const tagsSchema = z.array(z.string().trim().min(1)).default([]);
@@ -102,12 +94,12 @@ export const practiceSetupSchema = z.object({
     .optional(),
   reviewIds: z
     .array(z.string())
-    .transform((ids) => ids.filter(isUuidString))
+    .transform((ids) => ids.filter(isUuid))
     .optional(),
   length: z.number().int().min(0),
 });
 
-export const knowledgeIdsSchema = z.array(z.string()).transform((ids) => ids.filter(isUuidString));
+export const knowledgeIdsSchema = z.array(z.string()).transform((ids) => ids.filter(isUuid));
 
 export const studyRunInputSchema = z
   .object({
