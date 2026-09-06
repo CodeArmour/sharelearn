@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: t("titleTemplate", { page: "%s" }),
     },
     description: t("description"),
-    applicationName: "Nederlands",
+    applicationName: "Welkom",
   };
 }
 

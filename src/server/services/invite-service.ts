@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { writeActiveGroupId } from "@/server/active-group";
 import { deriveAccent, deriveInitials } from "@/server/auth/identity";
 import { getCurrentUser } from "@/server/auth/session";
-import { createServerSupabaseClient } from "@/server/auth/supabase";
+import { createAdminSupabaseClient, createServerSupabaseClient } from "@/server/auth/supabase";
 import { db, type Db } from "@/server/db/client";
 import { serverEnv } from "@/server/env";
 import {
@@ -34,6 +34,11 @@ export { InviteError } from "@/server/errors";
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** supabase-js flags an already-registered auth user with `email_exists`. */
+function isAlreadyRegistered(error: { code?: string; message: string }): boolean {
+  return error.code === "email_exists" || /already.*(registered|exists)/i.test(error.message);
+}
 
 export function generateInviteToken(): string {
   return randomBytes(32).toString("base64url");
@@ -72,14 +77,24 @@ export async function inviteMember(input: {
     }),
   );
 
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${serverEnv.siteUrl}/auth/callback?token=${token}`,
-      shouldCreateUser: true,
-    },
-  });
+  // Supabase sends the branded "Invite user" email via admin.inviteUserByEmail.
+  // The redirect carries our app invite token so the callback lands the invitee
+  // on the invite-accept screen.
+  const redirectTo = `${serverEnv.siteUrl}/auth/callback?token=${token}`;
+  const admin = createAdminSupabaseClient();
+  let { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+
+  if (error && isAlreadyRegistered(error)) {
+    // The invitee already has an auth account (signed up alone, or was invited
+    // to another group). inviteUserByEmail refuses that — fall back to a magic
+    // link that still carries the invite token.
+    const supabase = await createServerSupabaseClient();
+    ({ error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo, shouldCreateUser: true },
+    }));
+  }
+
   if (error) {
     // The invitation row above already committed — without this, a failed
     // send (e.g. hitting Supabase's auth email rate limit) leaves an

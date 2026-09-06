@@ -120,3 +120,59 @@ open Dashboard → **Logs → Auth Logs**
 (`https://supabase.com/dashboard/project/_/logs/auth-logs`). Find the
 magic-link / recovery request and copy the confirmation URL (or the token) out of
 the log entry, then open it in a browser.
+
+---
+
+## Email templates
+
+Both auth emails live in `docs/email-templates/` as the source of truth and are
+pasted into the Supabase dashboard by hand (this project has no `supabase/` dir /
+CLI):
+
+| File | Supabase template | Fires for |
+| --- | --- | --- |
+| `magic-link.html` | **Magic Link** | plain sign-in from `/login` |
+| `invite.html` | **Invite user** | `inviteMember` → `admin.auth.admin.inviteUserByEmail` |
+
+> `inviteMember` falls back to `signInWithOtp` (the Magic Link template) when the
+> invitee already has an auth account — so a re-invited existing user gets the
+> Magic Link copy, not the Invite copy. Keep both templates coherent.
+
+### Paste them in
+
+Dashboard → **Authentication → Emails → Templates**
+(`https://supabase.com/dashboard/project/_/auth/templates`). Pick the template,
+replace the **Message body (HTML)** with the file contents, save. Send yourself a
+test from `/login` (and trigger a real invite) to confirm.
+
+### Template variables
+
+Supabase renders Go `text/template` — only these are in scope:
+
+| Variable | Used for |
+| --- | --- |
+| `{{ .ConfirmationURL }}` | the button link (verifies the token, then redirects to our callback) |
+| `{{ .Token }}` | 6-digit OTP shown as the "or enter this code" fallback |
+| `{{ .SiteURL }}` | the dashboard's **Site URL** — must be `https://dutch.omarcode.dev` |
+| `{{ .Email }}`, `{{ .Data }}` | available, not currently used |
+
+The invite email **cannot** name the group or the person who invited — that data
+isn't exposed to Supabase templates. Doing so would mean the app sending its own
+mail (Resend SDK) instead of Supabase Auth.
+
+### Notes
+
+- The templates reference the logo at `https://dutch.omarcode.dev/logo.png`
+  (committed at `public/logo.png`). It only renders once that build is deployed;
+  until then recipients see the `alt="Welkom"` text.
+- English only. Supabase sends one template regardless of the recipient's locale.
+- Minimal, table-based, inline-CSS, with a `prefers-color-scheme: dark` block
+  (Apple/iOS Mail honour it; Gmail stays light) and an Outlook VML button
+  fallback. They are excluded from Prettier — email HTML must not be reflowed.
+
+## App icons
+
+`src/app/icon.png` (512²) and `src/app/apple-icon.png` (180²) are the Welkom
+owl, cropped from the brand lockup. Next auto-emits the `<link rel="icon">` /
+`<link rel="apple-touch-icon">` tags — there is no `favicon.ico`. `public/logo.png`
+(240²) is the same owl for email and the in-app `BrandMark`.
