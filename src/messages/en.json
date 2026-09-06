@@ -368,7 +368,10 @@
       "title": "Practice complete",
       "score": "{correct} of {total} correct",
       "percent": "{percent}%",
-      "notSaved": "Results aren't saved yet.",
+      "saving": "Saving…",
+      "saved": "Saved to your progress",
+      "saveError": "Couldn't save this run.",
+      "retry": "Try again",
       "again": "Practice again",
       "toToday": "Back to Today"
     }
@@ -404,7 +407,10 @@
       "score": "{correct} of {total} correct",
       "passed": "Passed",
       "notPassed": "Not passed",
-      "notSaved": "Results aren't saved yet.",
+      "saving": "Saving…",
+      "saved": "Saved to your progress",
+      "saveError": "Couldn't save this run.",
+      "retry": "Try again",
       "again": "New exam",
       "toToday": "Back to Today"
     }
@@ -415,9 +421,27 @@
     "preferences": { "title": "Preferences", "language": "Language" },
     "progress": {
       "title": "Progress",
-      "placeholder": "Your practice and exam history will appear here once it's saved.",
       "marked": "Marked for review",
-      "libraryItems": "Library items"
+      "libraryItems": "Library items",
+      "runsCompleted": "Completed sessions",
+      "avgScore": "Average score",
+      "recentRuns": "Recent sessions",
+      "noRuns": "No practice or exam runs yet.",
+      "runScore": "{correct}/{total} · {percent}%",
+      "runKind": { "practice": "Practice", "exam": "Exam" },
+      "runMode": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "reading": "Reading",
+        "mixed": "Mixed"
+      },
+      "scope": {
+        "all": "All",
+        "today": "Today",
+        "level": "Level",
+        "custom": "Custom",
+        "review": "Review"
+      }
     },
     "review": {
       "title": "Marked for review",

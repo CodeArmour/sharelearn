@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout";
+import { ReviewMarksHydrator } from "@/features/profile/review-marks-hydrator";
 import { getLibraryStats } from "@/server/services/knowledge-service";
 import { ActiveGroupProvider } from "@/lib/active-group";
 import { resolveActiveContext } from "@/server/services/session-service";
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <ActiveGroupProvider
       value={{ user: ctx.user, group: ctx.activeGroup, membership: ctx.membership }}
     >
+      <ReviewMarksHydrator />
       <AppShell libraryCount={stats.total}>{children}</AppShell>
     </ActiveGroupProvider>
   );

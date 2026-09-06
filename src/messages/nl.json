@@ -368,7 +368,10 @@
       "title": "Oefening voltooid",
       "score": "{correct} van {total} goed",
       "percent": "{percent}%",
-      "notSaved": "Resultaten worden nog niet bewaard.",
+      "saving": "Bezig met opslaan…",
+      "saved": "Opgeslagen in je voortgang",
+      "saveError": "Deze oefening kon niet worden opgeslagen.",
+      "retry": "Opnieuw proberen",
       "again": "Nog een keer oefenen",
       "toToday": "Terug naar Vandaag"
     }
@@ -404,7 +407,10 @@
       "score": "{correct} van {total} goed",
       "passed": "Geslaagd",
       "notPassed": "Niet geslaagd",
-      "notSaved": "Resultaten worden nog niet bewaard.",
+      "saving": "Bezig met opslaan…",
+      "saved": "Opgeslagen in je voortgang",
+      "saveError": "Dit examen kon niet worden opgeslagen.",
+      "retry": "Opnieuw proberen",
       "again": "Nieuw examen",
       "toToday": "Terug naar Vandaag"
     }
@@ -415,9 +421,27 @@
     "preferences": { "title": "Voorkeuren", "language": "Taal" },
     "progress": {
       "title": "Voortgang",
-      "placeholder": "Je oefen- en examengeschiedenis verschijnt hier zodra die wordt bewaard.",
       "marked": "Gemarkeerd voor herhaling",
-      "libraryItems": "Bibliotheekitems"
+      "libraryItems": "Bibliotheekitems",
+      "runsCompleted": "Voltooide sessies",
+      "avgScore": "Gemiddelde score",
+      "recentRuns": "Recente sessies",
+      "noRuns": "Nog geen oefeningen of examens.",
+      "runScore": "{correct}/{total} · {percent}%",
+      "runKind": { "practice": "Oefening", "exam": "Examen" },
+      "runMode": {
+        "vocabulary": "Woordenschat",
+        "grammar": "Grammatica",
+        "reading": "Teksten",
+        "mixed": "Gemengd"
+      },
+      "scope": {
+        "all": "Alles",
+        "today": "Vandaag",
+        "level": "Niveau",
+        "custom": "Aangepast",
+        "review": "Herhaling"
+      }
     },
     "review": {
       "title": "Gemarkeerd voor herhaling",

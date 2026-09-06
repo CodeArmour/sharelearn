@@ -4,16 +4,21 @@ import { useTranslations } from "next-intl";
 import type { PracticeQuestion } from "@/types";
 import { Button, buttonVariants } from "@/components/ui";
 import { MODE_ACCENT, QuestionReviewList } from "@/components/shared";
+import type { SaveState } from "@/lib/study-run";
 import { cn } from "@/lib/utils/cn";
 
 export function PracticeResults({
   questions,
   answers,
   onAgain,
+  saveState,
+  onRetrySave,
 }: {
   questions: PracticeQuestion[];
   answers: (number | null)[];
   onAgain: () => void;
+  saveState: SaveState | null;
+  onRetrySave: () => void;
 }) {
   const t = useTranslations("practice.results");
   const accent = MODE_ACCENT.practice;
@@ -34,7 +39,24 @@ export function PracticeResults({
         <span className="text-body text-fg-secondary">
           {t("score", { correct: correctCount, total: questions.length })}
         </span>
-        <span className="text-caption text-fg-muted">{t("notSaved")}</span>
+        {saveState === "saving" ? (
+          <span className="text-caption text-fg-muted">{t("saving")}</span>
+        ) : null}
+        {saveState === "saved" ? (
+          <span className="text-caption text-fg-muted">{t("saved")}</span>
+        ) : null}
+        {saveState === "error" ? (
+          <span className="flex items-center gap-2 text-caption text-danger">
+            {t("saveError")}
+            <button
+              type="button"
+              onClick={onRetrySave}
+              className="underline underline-offset-2 hover:no-underline"
+            >
+              {t("retry")}
+            </button>
+          </span>
+        ) : null}
       </div>
 
       <QuestionReviewList questions={questions} answers={answers} />

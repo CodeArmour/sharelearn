@@ -50,6 +50,20 @@
       "when": 1788677000000,
       "tag": "0006_knowledge_update_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788680000000,
+      "tag": "0007_perfect_the_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788680100000,
+      "tag": "0008_personal_rls",
+      "breakpoints": true
     }
   ]
 }

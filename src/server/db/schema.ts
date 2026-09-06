@@ -7,6 +7,7 @@ import {
   pgEnum,
   pgSchema,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -186,6 +187,79 @@ export const knowledgeItems = pgTable(
   ],
 );
 
+export const studyRunKind = pgEnum("study_run_kind", ["practice", "exam"]);
+
+/** "Marked for review" — personal, per (user, group). Toggle-on is an
+ * upsert, toggle-off a delete; the composite PK makes both idempotent. */
+export const reviewMarks = pgTable(
+  "review_marks",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    knowledgeId: uuid("knowledge_id")
+      .notNull()
+      .references(() => knowledgeItems.id, { onDelete: "cascade" }),
+    markedAt: timestamp("marked_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.groupId, t.knowledgeId] }),
+    index("review_marks_user_group_idx").on(t.userId, t.groupId),
+  ],
+);
+
+/** One row per finished practice or exam run. Append-only history —
+ * `score_percent` is derived on read, never stored. */
+export const studyRuns = pgTable(
+  "study_runs",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    kind: studyRunKind("kind").notNull(),
+    // Free text + CHECK rather than an enum, same reasoning as `level`
+    // on knowledge_items: PracticeMode / PracticeScope / CEFR_LEVELS
+    // shouldn't force an enum migration when they change.
+    mode: text("mode"),
+    scope: text("scope").notNull(),
+    level: text("level"),
+    questionCount: integer("question_count").notNull(),
+    correctCount: integer("correct_count").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("study_runs_user_group_completed_idx").on(t.userId, t.groupId, t.completedAt),
+    check(
+      "study_runs_mode_kind",
+      sql`(${t.kind} = 'practice') = (${t.mode} IS NOT NULL)`,
+    ),
+    check(
+      "study_runs_mode_values",
+      sql`${t.mode} IS NULL OR ${t.mode} IN ('vocabulary', 'grammar', 'reading', 'mixed')`,
+    ),
+    check(
+      "study_runs_scope_values",
+      sql`${t.scope} IN ('all', 'today', 'level', 'custom', 'review')`,
+    ),
+    check(
+      "study_runs_level_values",
+      sql`${t.level} IS NULL OR ${t.level} IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
+    ),
+    check(
+      "study_runs_counts",
+      sql`${t.questionCount} > 0 AND ${t.correctCount} >= 0 AND ${t.correctCount} <= ${t.questionCount}`,
+    ),
+  ],
+);
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type Group = typeof groups.$inferSelect;
@@ -196,3 +270,7 @@ export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type KnowledgeItemRow = typeof knowledgeItems.$inferSelect;
 export type NewKnowledgeItemRow = typeof knowledgeItems.$inferInsert;
+export type ReviewMarkRow = typeof reviewMarks.$inferSelect;
+export type NewReviewMarkRow = typeof reviewMarks.$inferInsert;
+export type StudyRunRow = typeof studyRuns.$inferSelect;
+export type NewStudyRunRow = typeof studyRuns.$inferInsert;

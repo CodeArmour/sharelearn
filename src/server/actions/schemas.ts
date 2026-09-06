@@ -108,3 +108,23 @@ export const practiceSetupSchema = z.object({
 });
 
 export const knowledgeIdsSchema = z.array(z.string()).transform((ids) => ids.filter(isUuidString));
+
+export const studyRunInputSchema = z
+  .object({
+    kind: z.enum(["practice", "exam"]),
+    mode: z.enum(["vocabulary", "grammar", "reading", "mixed"]).nullable().default(null),
+    scope: z.enum(["all", "today", "level", "custom", "review"]),
+    level: z.enum(CEFR_LEVELS).nullable().default(null),
+    questionCount: z.number().int().positive(),
+    correctCount: z.number().int().min(0),
+    startedAt: z.string().datetime(),
+    completedAt: z.string().datetime(),
+  })
+  .refine((v) => v.correctCount <= v.questionCount, {
+    message: "correctCount cannot exceed questionCount",
+    path: ["correctCount"],
+  })
+  .refine((v) => (v.kind === "practice") !== (v.mode === null), {
+    message: "practice runs require a mode; exams must not carry one",
+    path: ["mode"],
+  });
