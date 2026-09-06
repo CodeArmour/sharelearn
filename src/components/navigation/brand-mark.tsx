@@ -1,11 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { cn } from "@/lib/utils/cn";
 
 /**
- * The "Nederlands" wordmark used at the top of the desktop sidebar.
- * `compact` renders the mark only (for tight spaces).
+ * The "Welkom" wordmark (owl + name) used at the top of the desktop sidebar.
+ * `compact` renders the owl only (for tight spaces).
  */
 export async function BrandMark({ compact = false }: { compact?: boolean }) {
   const t = await getTranslations();
@@ -18,12 +19,15 @@ export async function BrandMark({ compact = false }: { compact?: boolean }) {
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
       )}
     >
-      <span
+      <Image
+        src="/logo.png"
+        alt=""
         aria-hidden
-        className="grid size-[30px] place-items-center rounded-md bg-primary font-display text-body font-semibold text-on-primary"
-      >
-        N
-      </span>
+        width={30}
+        height={30}
+        className="size-[30px] shrink-0"
+        priority
+      />
       {!compact && (
         <span className="font-display text-title font-medium text-fg">{t("common.appName")}</span>
       )}
