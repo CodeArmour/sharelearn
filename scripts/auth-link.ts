@@ -39,10 +39,7 @@ function parseArgs(argv: string[]): {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === "--help" || arg === "-h") {
-      console.log(USAGE);
-      process.exit(0);
-    } else if (arg === "--type" || arg.startsWith("--type=")) {
+    if (arg === "--type" || arg.startsWith("--type=")) {
       const value = arg.includes("=") ? arg.slice(arg.indexOf("=") + 1) : argv[++i];
       if (!(TYPES as readonly string[]).includes(value)) {
         throw new Error(`Invalid --type "${value}". Expected one of: ${TYPES.join(", ")}`);
@@ -66,7 +63,12 @@ function parseArgs(argv: string[]): {
 }
 
 async function main() {
-  const { email, type, redirectTo } = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (argv.includes("--help") || argv.includes("-h")) {
+    console.log(USAGE);
+    return;
+  }
+  const { email, type, redirectTo } = parseArgs(argv);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -105,9 +107,7 @@ async function main() {
   console.log(`\n${action_link}`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((e) => {
-    console.error(e instanceof Error ? e.message : e);
-    process.exit(1);
-  });
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e);
+  process.exitCode = 1;
+});
