@@ -2,18 +2,17 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import {
+  getReviewMarksAction,
+  importLocalReviewMarksAction,
+  toggleReviewMarkAction,
+} from "@/server/actions/personal";
 import type { ReviewMark } from "@/types";
 
-/**
- * "Marked for review" is personal, per-user state. Until auth + a database
- * exist it lives in `localStorage`; swap `read`/`write` for API calls later and
- * consumers don't change. Kept in sync across every mounted toggle and browser
- * tab via a `storage` event plus a same-tab custom event.
- */
-
+// --- localStorage cache (unchanged) -----------------------------------------
 const KEY = "dutch:review-marks";
+const MIGRATED_KEY = "dutch:review-marks-migrated";
 const EVENT = "dutch:review-marks-change";
-
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function read(): ReviewMark[] {
@@ -25,8 +24,6 @@ function read(): ReviewMark[] {
           (m): m is ReviewMark =>
             !!m &&
             typeof (m as ReviewMark).knowledgeId === "string" &&
-            // Pre-Phase-2 mock ids (e.g. "kn_gezellig") are no longer valid
-            // knowledge ids — drop them so stale legacy state self-heals.
             UUID_RE.test((m as ReviewMark).knowledgeId),
         )
       : [];
@@ -39,7 +36,7 @@ function write(marks: ReviewMark[]): void {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(marks));
   } catch {
-    /* storage unavailable / full — a no-op is fine in the mock phase */
+    /* storage unavailable / full */
   }
   window.dispatchEvent(new Event(EVENT));
 }
@@ -48,17 +45,69 @@ export function getReviewMarks(): ReviewMark[] {
   return read();
 }
 
+// --- write-through toggle --------------------------------------------------
+
+/** Optimistic: flip the cache immediately, then persist. Revert on failure. */
 export function toggleReviewMark(knowledgeId: string): void {
-  const marks = read();
-  const exists = marks.some((m) => m.knowledgeId === knowledgeId);
-  write(
-    exists
-      ? marks.filter((m) => m.knowledgeId !== knowledgeId)
-      : [...marks, { knowledgeId, markedAt: new Date().toISOString() }],
-  );
+  const before = read();
+  const exists = before.some((m) => m.knowledgeId === knowledgeId);
+  const optimistic = exists
+    ? before.filter((m) => m.knowledgeId !== knowledgeId)
+    : [...before, { knowledgeId, markedAt: new Date().toISOString() }];
+  write(optimistic);
+
+  void toggleReviewMarkAction(knowledgeId).then((result) => {
+    if (!result.ok) {
+      write(before); // revert
+      console.error("toggleReviewMarkAction failed:", result.code, result.message);
+    }
+  });
 }
 
-// --- reactive hook -------------------------------------------------------------
+// --- hydration + one-time import ----------------------------------------
+
+let hydrating: Promise<void> | null = null;
+
+async function doHydrate(): Promise<void> {
+  const serverResult = await getReviewMarksAction();
+  if (!serverResult.ok) {
+    console.error("getReviewMarksAction failed:", serverResult.code, serverResult.message);
+    return;
+  }
+  const serverMarks = serverResult.data;
+
+  const alreadyMigrated =
+    typeof window !== "undefined" && window.localStorage.getItem(MIGRATED_KEY) === "1";
+  const localIds = read().map((m) => m.knowledgeId);
+
+  if (serverMarks.length === 0 && localIds.length > 0 && !alreadyMigrated) {
+    const importResult = await importLocalReviewMarksAction(localIds);
+    try {
+      window.localStorage.setItem(MIGRATED_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    if (importResult.ok && importResult.data.imported > 0) {
+      // Local marks are now authoritative on the server; keep them in the cache.
+      return;
+    }
+  }
+
+  write(serverMarks); // server is the source of truth
+}
+
+/** Fetch the server's marks into the cache and run the one-time import.
+ * Safe to call repeatedly; the network round-trip happens once per mount. */
+export function hydrateReviewMarks(): Promise<void> {
+  if (!hydrating) {
+    hydrating = doHydrate().finally(() => {
+      hydrating = null;
+    });
+  }
+  return hydrating;
+}
+
+// --- reactive hook (unchanged mechanics) ---------------------------------
 
 let cachedRaw: string | null = null;
 let cachedIds: Set<string> = new Set();
@@ -86,7 +135,6 @@ function subscribe(onChange: () => void): () => void {
   };
 }
 
-/** `[markedIds, toggle]` — reactive across every mounted consumer and tab. */
 export function useReviewMarks(): [Set<string>, (knowledgeId: string) => void] {
   const marks = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const toggle = useCallback((id: string) => toggleReviewMark(id), []);
