@@ -15,12 +15,12 @@
     }
   },
   "meta": {
-    "title": "Dutch Shared Learning Platform",
-    "titleTemplate": "{page} · Nederlands",
+    "title": "Welkom",
+    "titleTemplate": "{page} · Welkom",
     "description": "A private workspace for a small group learning Dutch together — capture vocabulary, grammar, readings and files, then practise and prepare for exams as a group."
   },
   "common": {
-    "appName": "Nederlands",
+    "appName": "Welkom",
     "add": "Add",
     "cancel": "Cancel",
     "retry": "Try again",
@@ -32,7 +32,7 @@
     "skipToContent": "Skip to main content",
     "mainNav": "Main navigation",
     "accountNav": "Account navigation",
-    "brandHome": "Dutch Shared Learning Platform — go to Today"
+    "brandHome": "Welkom — go to Today"
   },
   "nav": {
     "today": "Today",

@@ -1,4 +1,4 @@
-# Dutch Shared Learning Platform
+# Welkom
 
 A private, collaborative learning workspace for a small group learning Dutch.
 Members capture vocabulary, grammar, readings and files, structure them (with AI
