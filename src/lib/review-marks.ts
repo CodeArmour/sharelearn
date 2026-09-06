@@ -82,12 +82,22 @@ async function doHydrate(): Promise<void> {
 
   if (serverMarks.length === 0 && localIds.length > 0 && !alreadyMigrated) {
     const importResult = await importLocalReviewMarksAction(localIds);
+    if (!importResult.ok) {
+      // A failed attempt is not a completed migration: don't set the flag,
+      // don't fall through to write([]) — leave the cache for the next mount.
+      console.error(
+        "importLocalReviewMarksAction failed:",
+        importResult.code,
+        importResult.message,
+      );
+      return;
+    }
     try {
       window.localStorage.setItem(MIGRATED_KEY, "1");
     } catch {
       /* ignore */
     }
-    if (importResult.ok && importResult.data.imported > 0) {
+    if (importResult.data.imported > 0) {
       // Local marks are now authoritative on the server; keep them in the cache.
       return;
     }
