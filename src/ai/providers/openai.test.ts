@@ -15,8 +15,12 @@ vi.mock("openai", () => {
   return { default: OpenAI };
 });
 
+import OpenAI from "openai";
+
+import { knowledgeSuggestionSchema } from "@/ai/schemas/knowledge-suggestion";
+
 import { AiProviderError } from "./types";
-import { OpenAIProvider } from "./openai";
+import { buildTextFormat, OpenAIProvider } from "./openai";
 
 const schema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("note"), body: z.string().min(1), title: z.string().optional() }),
@@ -53,9 +57,12 @@ describe("OpenAIProvider.generateStructured", () => {
     expect(arg.input).toBe("U");
     expect(arg.text?.format).toBeDefined();
     expect(arg.text.format.type).toBe("json_schema");
+    expect(arg.reasoning).toEqual({ effort: "medium" });
+    expect(arg.max_output_tokens).toBe(16000);
   });
 
   it("retries on the fallback model when the primary parse call throws", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     parse.mockRejectedValueOnce(new Error("network boom"));
     parse.mockResolvedValueOnce(ok({ type: "vocabulary", term: "huis", meaning: "house" }));
 
@@ -65,6 +72,27 @@ describe("OpenAIProvider.generateStructured", () => {
     expect(parse).toHaveBeenCalledTimes(2);
     expect(parse.mock.calls[0][0].model).toBe(PRIMARY);
     expect(parse.mock.calls[1][0].model).toBe(FALLBACK);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    const warned = warn.mock.calls[0][0];
+    expect(warned).toContain(PRIMARY);
+    expect(warned).toContain(FALLBACK);
+    warn.mockRestore();
+  });
+
+  it("wraps an OpenAI.APIError from responses.parse in an AiProviderError carrying its message", async () => {
+    const apiErr = new (OpenAI as unknown as { APIError: new (m: string) => Error }).APIError(
+      "insufficient_quota: the org is out of credit",
+    );
+    parse.mockRejectedValueOnce(apiErr);
+
+    const err = await provider({ model: PRIMARY, fallbackModel: PRIMARY })
+      .generateStructured({ system: "S", user: "U", schema })
+      .catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(AiProviderError);
+    expect((err as Error).message).toContain("insufficient_quota: the org is out of credit");
+    expect(parse).toHaveBeenCalledTimes(1);
   });
 
   it("retries on the fallback model when the primary returns no parsed output (refusal / mismatch)", async () => {
@@ -117,5 +145,35 @@ describe("OpenAIProvider.generateStructured", () => {
 
   it("exposes a name", () => {
     expect(provider().name).toBe("openai");
+  });
+});
+
+describe("buildTextFormat $parseRaw", () => {
+  const fmt = buildTextFormat(knowledgeSuggestionSchema, "x");
+  // `$parseRaw` is a real own prop (non-enumerable) — see openai/lib/parser.d.ts.
+  const parseRaw = (content: string) =>
+    Reflect.get(fmt, "$parseRaw")(content) as unknown;
+
+  it("unwraps a valid { result } envelope", () => {
+    expect(parseRaw(JSON.stringify({ result: { type: "note", body: "hi" } }))).toEqual({
+      type: "note",
+      body: "hi",
+    });
+  });
+
+  it("accepts a bare suggestion object with no envelope", () => {
+    expect(parseRaw(JSON.stringify({ type: "note", body: "hi" }))).toEqual({
+      type: "note",
+      body: "hi",
+    });
+  });
+
+  it("returns null when the payload is not schema-valid", () => {
+    expect(parseRaw(JSON.stringify({ result: { type: "vocabulary", term: "x" } }))).toBeNull();
+  });
+
+  it("returns null (does not throw) on non-JSON content", () => {
+    expect(() => parseRaw("not json{")).not.toThrow();
+    expect(parseRaw("not json{")).toBeNull();
   });
 });

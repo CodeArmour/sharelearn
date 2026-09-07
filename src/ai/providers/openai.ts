@@ -23,8 +23,16 @@ import { type AiProvider, AiProviderError } from "./types";
  *
  * The trade-off vs. `zodTextFormat`: we lean on Zod validation plus the
  * primary → fallback model retry instead of the API's strict-decoding guarantee.
+ *
+ * Making the bare `.optional()` fields `.nullish()` instead was considered and
+ * rejected: the discriminated-union root still fails `zodTextFormat`'s "root must
+ * be `type: object`" check, so the `{ result: … }` wrapper is required either
+ * way, and native `strict: true` over a nested discriminated union is exactly the
+ * brittle path the SDK carries bespoke overrides for — so `strict: false` plus
+ * the client-side Zod pass (which the service re-runs anyway) is the deliberate
+ * trade.
  */
-function buildTextFormat<T>(schema: z.ZodType<T>, name: string) {
+export function buildTextFormat<T>(schema: z.ZodType<T>, name: string) {
   const wrapped = z.object({ result: schema });
   const jsonSchema = z.toJSONSchema(wrapped, {
     target: "draft-7",
@@ -35,8 +43,18 @@ function buildTextFormat<T>(schema: z.ZodType<T>, name: string) {
   return makeParseableTextFormat<T | null>(
     { type: "json_schema", name, strict: false, schema: jsonSchema },
     (content) => {
-      const result = wrapped.safeParse(JSON.parse(content));
-      return result.success ? (result.data.result as T) : null;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        // A raw `SyntaxError` here surfaces as a misleading "OpenAI request
+        // failed"; the service treats `null` as an unusable result and degrades.
+        return null;
+      }
+      const enveloped = wrapped.safeParse(parsed);
+      if (enveloped.success) return enveloped.data.result as T;
+      const bare = schema.safeParse(parsed);
+      return bare.success ? (bare.data as T) : null;
     },
   );
 }
