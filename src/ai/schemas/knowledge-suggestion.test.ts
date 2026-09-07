@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { knowledgeSuggestionSchema, toAiSuggestion } from "./knowledge-suggestion";
+import en from "@/messages/en.json";
+import nl from "@/messages/nl.json";
+
+import { knowledgeSuggestionSchema, NOTICE_KEYS, toAiSuggestion } from "./knowledge-suggestion";
 
 describe("knowledgeSuggestionSchema", () => {
   it("accepts a minimal vocabulary suggestion", () => {
@@ -30,6 +33,15 @@ describe("knowledgeSuggestionSchema", () => {
   it("rejects an unknown type", () => {
     const r = knowledgeSuggestionSchema.safeParse({ type: "flashcard", term: "x", meaning: "y" });
     expect(r.success).toBe(false);
+  });
+});
+
+describe("NOTICE_KEYS", () => {
+  it("has a matching add.ai.notice.* string in both locales", () => {
+    for (const key of NOTICE_KEYS) {
+      expect(en.add.ai.notice, `en.json missing ${key}`).toHaveProperty(key);
+      expect(nl.add.ai.notice, `nl.json missing ${key}`).toHaveProperty(key);
+    }
   });
 });
 

@@ -22,12 +22,12 @@ const MAX_CHARS = 10_000;
  * into a form afterwards, so a soft failure is fine.
  */
 export async function structureKnowledge(rawText: string): Promise<StructureResult> {
-  const provider = getAiProvider();
-  if (!provider) return { status: "unavailable" };
-
-  const user = rawText.trim().slice(0, MAX_CHARS);
-
   try {
+    const provider = getAiProvider();
+    if (!provider) return { status: "unavailable" };
+
+    const user = rawText.trim().slice(0, MAX_CHARS);
+
     const raw = await provider.generateStructured({
       system: KNOWLEDGE_PROCESSOR_PROMPT_V1,
       user,

@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
+import { NOTICE_KEYS } from "@/ai/schemas/knowledge-suggestion";
+
 import { KNOWLEDGE_PROCESSOR_PROMPT_V1, PROMPT_VERSION } from "./knowledge-processor";
 
 describe("KNOWLEDGE_PROCESSOR_PROMPT_V1", () => {
@@ -20,5 +22,11 @@ describe("KNOWLEDGE_PROCESSOR_PROMPT_V1", () => {
 
   it("is versioned", () => {
     expect(PROMPT_VERSION).toBe("v1");
+  });
+
+  it("mentions every NOTICE_KEYS value so the model knows the closed set", () => {
+    for (const key of NOTICE_KEYS) {
+      expect(KNOWLEDGE_PROCESSOR_PROMPT_V1).toContain(key);
+    }
   });
 });

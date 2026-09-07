@@ -1,3 +1,5 @@
+import "server-only";
+
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
@@ -27,7 +29,7 @@ export class AnthropicProvider implements AiProvider {
     try {
       response = await this.client.messages.parse({
         model: this.model,
-        max_tokens: 4096,
+        max_tokens: 16000,
         system,
         messages: [{ role: "user", content: user }],
         output_config: { format: zodOutputFormat(schema) },
@@ -43,6 +45,9 @@ export class AnthropicProvider implements AiProvider {
 
     if (response.stop_reason === "refusal") {
       throw new AiProviderError("Anthropic declined to structure this input");
+    }
+    if (response.stop_reason === "max_tokens") {
+      throw new AiProviderError("Anthropic response was truncated (max_tokens)");
     }
     if (response.parsed_output == null) {
       throw new AiProviderError("Anthropic returned output that did not match the schema");

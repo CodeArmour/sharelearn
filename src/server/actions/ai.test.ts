@@ -29,6 +29,13 @@ describe("structureKnowledgeAction", () => {
     expect(structureKnowledge).not.toHaveBeenCalled();
   });
 
+  it("rejects when there is no active context, without calling the service", async () => {
+    resolveActiveContext.mockResolvedValue({ status: "needs-login" });
+    const r = await structureKnowledgeAction("de hond — the dog");
+    expect(r).toMatchObject({ ok: false, code: "unauthorized" });
+    expect(structureKnowledge).not.toHaveBeenCalled();
+  });
+
   it("returns the suggestion on ok", async () => {
     structureKnowledge.mockResolvedValue({
       status: "ok",

@@ -148,18 +148,22 @@ export function AddKnowledgeView({
 
   const runAi = async () => {
     setMode("processing");
-    const result = await structureKnowledgeAction(rawText);
-    if (!result.ok) {
+    try {
+      const result = await structureKnowledgeAction(rawText);
+      if (!result.ok) {
+        setMode("failed");
+        return;
+      }
+      const suggestion = result.data;
+      setType(suggestion.type as PickerType);
+      setValues(suggestion.fields);
+      setExamples((suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })));
+      setErrors({});
+      setNoticeKey(suggestion.noticeKey);
+      setMode("review");
+    } catch {
       setMode("failed");
-      return;
     }
-    const suggestion = result.data;
-    setType(suggestion.type as PickerType);
-    setValues(suggestion.fields);
-    setExamples((suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })));
-    setErrors({});
-    setNoticeKey(suggestion.noticeKey);
-    setMode("review");
   };
 
   const fillManuallyFromFailure = () => {

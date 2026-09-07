@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { isAiConfigured } from "@/ai/providers";
+import { isAiConfigured } from "@/ai/providers/config";
 import { titleMetadata } from "@/lib/page-metadata";
 import { AddKnowledgeView } from "@/features/add";
 

@@ -20,7 +20,10 @@ export async function structureKnowledgeAction(
     return { ok: false, code: "validation", message: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  await resolveActiveContext();
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") {
+    return { ok: false, code: "unauthorized", message: "Sign in to use AI structuring" };
+  }
 
   const result = await structureKnowledge(parsed.data);
   switch (result.status) {
