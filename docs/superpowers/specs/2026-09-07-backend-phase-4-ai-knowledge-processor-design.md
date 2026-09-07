@@ -1,7 +1,7 @@
 # Backend Phase 4 — AI Knowledge Processor
 
 **Date:** 2026-09-07
-**Status:** Approved design — pending implementation plan
+**Status:** Implemented — branch feature/backend-phase-4-ai-knowledge-processor (manual smoke pending owner)
 **Scope:** The first slice of the AI phase. Stand up the reserved `src/ai/`
 layer with a real Anthropic provider and replace the simulated
 `getAiSuggestion(rawText)` structuring step on the Add-knowledge screen with a
