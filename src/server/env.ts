@@ -44,6 +44,9 @@ export const serverEnv = {
     return optional("AI_API_KEY");
   },
   get aiModel() {
-    return optional("AI_MODEL") ?? "claude-sonnet-5";
+    return optional("AI_MODEL") ?? "gpt-5.6-luna";
+  },
+  get openaiFallbackModel() {
+    return optional("OPENAI_FALLBACK_MODEL") ?? "gpt-5.6-terra";
   },
 };

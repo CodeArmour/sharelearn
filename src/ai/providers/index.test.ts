@@ -1,7 +1,13 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/env", () => ({ serverEnv: { aiApiKey: null as string | null, aiModel: "claude-sonnet-5" } }));
+vi.mock("@/server/env", () => ({
+  serverEnv: {
+    aiApiKey: null as string | null,
+    aiModel: "gpt-5.6-luna",
+    openaiFallbackModel: "gpt-5.6-terra",
+  },
+}));
 
 import { serverEnv } from "@/server/env";
 import { getAiProvider, isAiConfigured } from "./index";
@@ -17,10 +23,10 @@ describe("getAiProvider / isAiConfigured", () => {
   });
 
   it("returns a provider / true when a key is configured", () => {
-    vi.mocked(serverEnv).aiApiKey = "sk-ant-test";
+    vi.mocked(serverEnv).aiApiKey = "sk-openai-test";
     const p = getAiProvider();
     expect(p).not.toBeNull();
-    expect(p?.name).toBe("anthropic");
+    expect(p?.name).toBe("openai");
     expect(isAiConfigured()).toBe(true);
   });
 });

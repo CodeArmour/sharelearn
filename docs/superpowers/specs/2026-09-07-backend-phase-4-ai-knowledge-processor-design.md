@@ -3,7 +3,7 @@
 **Date:** 2026-09-07
 **Status:** Implemented — branch feature/backend-phase-4-ai-knowledge-processor (manual smoke pending owner)
 **Scope:** The first slice of the AI phase. Stand up the reserved `src/ai/`
-layer with a real Anthropic provider and replace the simulated
+layer with a real OpenAI provider and replace the simulated
 `getAiSuggestion(rawText)` structuring step on the Add-knowledge screen with a
 real one. A thin vertical slice that proves the `providers → schemas → prompts
 → services` architecture end-to-end, exactly as Backend Phase 1 did for
@@ -33,7 +33,7 @@ before anything is written.
 
 | Today | After Phase 4 |
 | --- | --- |
-| `getAiSuggestion(rawText)` — heuristic regex classifier in `src/data/mock/index.ts`, called client-side via `window.setTimeout` | `structureKnowledgeAction(rawText)` Server Action → `src/ai/services/knowledge-processor.ts` → real Anthropic call, schema-validated, mapped to the unchanged `AiSuggestion` shape |
+| `getAiSuggestion(rawText)` — heuristic regex classifier in `src/data/mock/index.ts`, called client-side via `window.setTimeout` | `structureKnowledgeAction(rawText)` Server Action → `src/ai/services/knowledge-processor.ts` → real OpenAI call, schema-validated, mapped to the unchanged `AiSuggestion` shape |
 | `getAiSuggestionFromAttachment({ name, kind })` — filename-only stub | **Removed from this screen.** The photo/file attach buttons are hidden; multimodal capture is a later slice. |
 | `AiSuggestion.noticeKey` — any of 7 `add.ai.notice.*` keys, chosen by the mock | A closed `z.enum` of the **4 text-path keys**; the model picks one or omits it |
 
@@ -49,9 +49,9 @@ render the review form are untouched.
 | Decision | Choice | Rationale |
 | --- | --- | --- |
 | Slice size | `KnowledgeProcessor` only, text-paste input only | Smallest surface that stands up `src/ai/` end-to-end. Explainer / practice-gen / answer-eval / embeddings are separate later slices. |
-| Provider isolation | Real `ai/providers/` adapter behind one internal interface; **no `@anthropic-ai/sdk` import outside `ai/providers/`** | The `src/ai/README.md` rule. Keeps provider swappable and lets later AI slices reuse client setup, retries, and error mapping. |
-| SDK | `@anthropic-ai/sdk` (official), one non-streaming `messages.parse()` call with `output_config.format` (structured outputs) | Single structured extraction — no streaming, no tool loop. `messages.parse()` validates the response against the schema for us. |
-| Model default | `claude-sonnet-5`, overridable via `AI_MODEL` | Bounded structured-extraction task; Sonnet 5 is fast, ~⅕ the cost of Opus 5, and comfortably capable here. Matches the `.env.example` placeholder and the "small private group / cost cap only" framing. |
+| Provider isolation | Real `ai/providers/` adapter behind one internal interface; **no `openai` import outside `ai/providers/`** | The `src/ai/README.md` rule. Keeps provider swappable and lets later AI slices reuse client setup, retries, and error mapping. |
+| SDK | `openai` (official), one non-streaming `responses.parse()` call with a `zodTextFormat`-style JSON-schema `text.format` (structured outputs) | Single structured extraction — no streaming, no tool loop. The response is validated against the schema before it reaches the service. |
+| Model default | `gpt-5.6-luna`, overridable via `AI_MODEL`; one retry on `gpt-5.6-terra` (the fallback), overridable via `OPENAI_FALLBACK_MODEL` and disabled by setting it equal to `AI_MODEL`. `reasoning.effort: "medium"`. | Bounded structured-extraction task; the primary model is fast and cheap and comfortably capable here. The fallback covers a transient primary failure or an unusable first response. Matches the `.env.example` placeholder and the "small private group / cost cap only" framing. |
 | Missing API key | **Graceful degradation.** `AI_API_KEY` is optional. When unset, `getAiProvider()` returns `null`, the action returns `ai-unavailable`, and the Add screen renders the manual form only (no AI capture box, no divider). | A fresh clone and CI must run without a key. Mirrors how Phase 1 kept integration tests skippable without a test DB. |
 | `noticeKey` | Closed `z.enum` of the 4 text-path keys; model picks one or omits | Predictable, already translated (NL/EN), and cheap to validate. Model-authored free text would add an untranslated string to the UI. |
 | Guardrails | **Input length cap only** — `z.string().trim().min(2).max(10_000)` at the action boundary | Invite-gating already limits who can call this. No rate-limit or spend-ceiling infra in this slice. |
@@ -64,7 +64,7 @@ add-knowledge-view.tsx (client)
   └─ structureKnowledgeAction(rawText)        src/server/actions/ai.ts
        └─ structureKnowledge(rawText)         src/ai/services/knowledge-processor.ts
             ├─ getAiProvider()                src/ai/providers/index.ts
-            │    └─ AnthropicProvider         src/ai/providers/anthropic.ts  ──►  @anthropic-ai/sdk
+            │    └─ OpenAIProvider           src/ai/providers/openai.ts  ──►  openai
             ├─ KNOWLEDGE_PROCESSOR_PROMPT_V1  src/ai/prompts/knowledge-processor.ts
             └─ knowledgeSuggestionSchema      src/ai/schemas/knowledge-suggestion.ts
        ↳ returns AiSuggestion (unchanged contract)  src/types/ai.ts
@@ -82,7 +82,7 @@ Rules carried from `src/ai/README.md`:
 | File | Exports |
 | --- | --- |
 | `ai/providers/types.ts` | `interface AiProvider { readonly name: string; generateStructured<T>(opts: { system: string; user: string; schema: JsonSchema; schemaName: string }): Promise<T> }`; `class AiProviderError extends Error` (with `cause`) |
-| `ai/providers/anthropic.ts` | `class AnthropicProvider implements AiProvider` — constructs `new Anthropic({ apiKey })`, one `messages.parse()` call, maps `Anthropic.APIError` / parse failure → `AiProviderError` |
+| `ai/providers/openai.ts` | `class OpenAIProvider implements AiProvider` — constructs `new OpenAI({ apiKey })`, one `responses.parse()` call per model attempt with a primary → fallback retry, maps `OpenAI.APIError` / incomplete / parse failure → `AiProviderError` |
 | `ai/providers/index.ts` | `getAiProvider(): AiProvider \| null` (null when `serverEnv.aiApiKey` is absent); `isAiConfigured(): boolean` |
 | `ai/schemas/knowledge-suggestion.ts` | `knowledgeSuggestionSchema` (Zod discriminated union on `type`); `NOTICE_KEYS` const tuple; `type KnowledgeSuggestion = z.infer<...>`; `toAiSuggestion(parsed): AiSuggestion` mapper |
 | `ai/prompts/knowledge-processor.ts` | `KNOWLEDGE_PROCESSOR_PROMPT_V1: string`; `PROMPT_VERSION = "v1"` |
@@ -94,7 +94,7 @@ Rules carried from `src/ai/README.md`:
 | --- | --- |
 | `server/actions/ai.ts` | **New.** `structureKnowledgeAction(rawText: unknown): Promise<ActionResult<AiSuggestion>>` |
 | `server/actions/schemas.ts` | Add `rawKnowledgeTextSchema = z.string().trim().min(2).max(10_000)` |
-| `server/env.ts` | Add `aiApiKey` (optional getter — returns `process.env.AI_API_KEY ?? null`) and `aiModel` (`process.env.AI_MODEL ?? "claude-sonnet-5"`) |
+| `server/env.ts` | Add `aiApiKey` (optional getter — returns `process.env.AI_API_KEY ?? null`), `aiModel` (`process.env.AI_MODEL ?? "gpt-5.6-luna"`), and `openaiFallbackModel` (`process.env.OPENAI_FALLBACK_MODEL ?? "gpt-5.6-terra"`) |
 
 ### Client callers that change
 
@@ -141,31 +141,45 @@ The result shape stays identical to what the mock returned, so
 `add-knowledge-view.tsx`'s `runAi` handler needs no reshaping beyond the call
 site.
 
-## 5. The provider (`ai/providers/anthropic.ts`)
+## 5. The provider (`ai/providers/openai.ts`)
 
-- Constructor takes `{ apiKey, model }`. Builds `new Anthropic({ apiKey })`.
-- `generateStructured<T>({ system, user, schema, schemaName })`:
-  - One non-streaming `client.messages.parse({ model, max_tokens: 4096, system,
-    messages: [{ role: "user", content: user }], output_config: { format: … } })`
-    with the JSON schema as the response format. The exact `output_config.format`
-    shape (and whether `messages.parse()` vs `messages.create()` + manual
-    validation is cleaner) is confirmed against the Anthropic TS SDK
-    structured-output docs (`claude-api` skill → `typescript/claude-api/tool-use.md`)
-    during implementation.
-  - Returns the parsed, schema-valid object (`response.parsed as T`).
-  - `catch`: `Anthropic.APIError` (rate limit, 5xx, auth), a `refusal`
-    stop reason, or a parse/validation failure → throw
-    `AiProviderError(message, { cause })`. Never leak the raw SDK error past
-    this file.
-- `max_tokens: 4096` is ample for a single structured suggestion.
-- No streaming, no prompt caching (input is short and varies every call), no
-  retries in this slice (a failure surfaces as the "add it manually" panel).
+- Constructor takes `{ apiKey, model, fallbackModel }`. Builds `new OpenAI({ apiKey })`.
+- `generateStructured<T>({ system, user, schema })`:
+  - Per model attempt: one non-streaming
+    `client.responses.parse({ model, instructions: system, input: user,
+    reasoning: { effort: "medium" }, max_output_tokens: 16000, text: { format } })`
+    where `format` is a parseable `json_schema` text format built in this file
+    from the caller's Zod schema (see note below).
+  - Returns `response.output_parsed as T`.
+  - A thrown SDK error (`OpenAI.APIError` and anything else), a
+    `status: "incomplete"` response, or `output_parsed == null` (refusal /
+    schema mismatch) → `AiProviderError(message, { cause })`. Never leak the raw
+    SDK error past this file.
+- **Primary → fallback retry:** the primary `model` is attempted first; on any
+  failure the provider logs a warning and retries once with `fallbackModel`.
+  When `fallbackModel` is empty or equal to `model` there is no retry — the
+  primary error propagates. If both attempts fail, an `AiProviderError` naming
+  both models is thrown.
+- **Schema-format adaptation:** OpenAI strict Structured Outputs (and the
+  `zodTextFormat` helper) require an object at the schema root and reject bare
+  `.optional()` fields — our `knowledgeSuggestionSchema` is a discriminated union
+  with several optional fields, so `zodTextFormat` throws on it. The provider
+  instead wraps the schema in `{ result: <schema> }`, emits a lenient
+  (`strict: false`) JSON Schema with `z.toJSONSchema`, and re-validates the
+  model's JSON against the real Zod schema (returning `null` on a mismatch, which
+  triggers the fallback). Contained entirely in `openai.ts`.
+- `max_output_tokens: 16000` is ample for a single structured suggestion.
+- No streaming, no prompt caching (input is short and varies every call); the
+  only retry is the single primary → fallback model swap.
 
 `ai/providers/index.ts`:
 
 ```
 getAiProvider(): AiProvider | null
-  → serverEnv.aiApiKey ? new AnthropicProvider({ apiKey, model: serverEnv.aiModel }) : null
+  → serverEnv.aiApiKey
+      ? new OpenAIProvider({ apiKey, model: serverEnv.aiModel,
+                             fallbackModel: serverEnv.openaiFallbackModel })
+      : null
 
 isAiConfigured(): boolean → serverEnv.aiApiKey != null
 ```
@@ -278,20 +292,25 @@ No `revalidatePath` — nothing is persisted.
 
 ## 10. Environment & dependencies
 
-- **Dependency:** `@anthropic-ai/sdk` (add to `dependencies`).
+- **Dependency:** `openai` (add to `dependencies`).
 - **`.env.example`:** replace the commented `AI_*` block with real (blank) keys:
   ```
   # --- AI (Backend Phase 4) ---
-  # Anthropic API key. Optional — when absent, the Add screen's AI capture
-  # box is hidden and only the manual form shows. CI runs without it.
+  # OpenAI API key (https://platform.openai.com/api-keys). Optional — when
+  # absent, the Add screen's AI capture box is hidden and only the manual form
+  # shows. CI runs without it.
   AI_API_KEY=
-  # Optional model override; defaults to claude-sonnet-5.
+  # Optional primary model override; defaults to gpt-5.6-luna.
   AI_MODEL=
+  # Model to retry with when the primary AI_MODEL call fails. Defaults to
+  # gpt-5.6-terra. Set equal to AI_MODEL to disable the fallback retry.
+  OPENAI_FALLBACK_MODEL=
   ```
 - **`.env.local`:** the owner adds a real `AI_API_KEY` (same out-of-band step as
   the Supabase SMTP setup in Phase 1's follow-up). Not committed.
 - **`src/server/env.ts`:** `aiApiKey` uses a nullable pattern, **not**
-  `required()`; `aiModel` has the `claude-sonnet-5` default.
+  `required()`; `aiModel` has the `gpt-5.6-luna` default and
+  `openaiFallbackModel` the `gpt-5.6-terra` default.
 
 ## 11. Testing (Vitest — matches Phase 2/3)
 
@@ -299,11 +318,11 @@ No `revalidatePath` — nothing is persisted.
 | --- | --- |
 | `ai/schemas/knowledge-suggestion.test.ts` | `toAiSuggestion` maps each of the 4 types to the exact `AiSuggestion.fields` shape the form expects; grammar `examples` lifted; an out-of-set `noticeKey` and a missing required field are rejected by `safeParse` |
 | `ai/services/knowledge-processor.test.ts` | With a **fake `AiProvider`** returning canned structured objects: `status: "ok"` + correct suggestion per type; provider throws → `status: "error"`; provider returns schema-invalid object → `status: "error"`; `getAiProvider()` null → `status: "unavailable"` (via env stub) |
-| `ai/providers/anthropic.test.ts` | `@anthropic-ai/sdk` mocked: `generateStructured` calls `messages.parse` with the schema + `schemaName` and returns `.parsed`; an `Anthropic.APIError` and a `refusal` stop reason are re-thrown as `AiProviderError` |
+| `ai/providers/openai.test.ts` | `openai` mocked: `generateStructured` calls `responses.parse` with the primary model + a `json_schema` `text.format` and returns `output_parsed`; a thrown call, `output_parsed == null`, and a `status: "incomplete"` response each trigger the fallback model; both attempts failing (and `fallbackModel === model`) re-throw as `AiProviderError` |
 | `server/actions/ai.test.ts` | `rawKnowledgeTextSchema` rejects `""`, `" "`, a 1-char string, and a 10 001-char string; accepts a normal paste; `ai-unavailable` surfaces when the provider is null |
 | `features/add/add-knowledge-view.test.tsx` (extend existing if present) | `aiEnabled={false}` → no `AiCaptureBox` in the tree; `aiEnabled` + a mocked `structureKnowledgeAction` rejection → `AiFailedPanel` renders |
 
-**No live API call in CI.** The provider is always faked or the SDK mocked, the
+**No live API call in CI.** The provider is always faked or the `openai` SDK mocked, the
 same way the DB integration suites skip without `TEST_DATABASE_URL`. A short
 note goes in the test file header.
 

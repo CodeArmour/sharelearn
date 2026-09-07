@@ -8,6 +8,7 @@ const ORIGINAL = { ...process.env };
 beforeEach(() => {
   delete process.env.AI_API_KEY;
   delete process.env.AI_MODEL;
+  delete process.env.OPENAI_FALLBACK_MODEL;
 });
 
 afterEach(() => {
@@ -31,12 +32,28 @@ describe("serverEnv.aiApiKey", () => {
 });
 
 describe("serverEnv.aiModel", () => {
-  it("defaults to claude-sonnet-5", () => {
-    expect(serverEnv.aiModel).toBe("claude-sonnet-5");
+  it("defaults to gpt-5.6-luna", () => {
+    expect(serverEnv.aiModel).toBe("gpt-5.6-luna");
   });
 
   it("uses AI_MODEL when set", () => {
-    process.env.AI_MODEL = "claude-opus-5";
-    expect(serverEnv.aiModel).toBe("claude-opus-5");
+    process.env.AI_MODEL = "gpt-5.6-pro";
+    expect(serverEnv.aiModel).toBe("gpt-5.6-pro");
+  });
+});
+
+describe("serverEnv.openaiFallbackModel", () => {
+  it("defaults to gpt-5.6-terra", () => {
+    expect(serverEnv.openaiFallbackModel).toBe("gpt-5.6-terra");
+  });
+
+  it("uses OPENAI_FALLBACK_MODEL when set", () => {
+    process.env.OPENAI_FALLBACK_MODEL = "gpt-5.6-luna";
+    expect(serverEnv.openaiFallbackModel).toBe("gpt-5.6-luna");
+  });
+
+  it("falls back to the default when blank/whitespace", () => {
+    process.env.OPENAI_FALLBACK_MODEL = "   ";
+    expect(serverEnv.openaiFallbackModel).toBe("gpt-5.6-terra");
   });
 });
