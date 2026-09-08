@@ -132,6 +132,11 @@ export function AddKnowledgeView({
 
       const result = await extractFromPhotosAction(paths);
       if (!result.ok || result.data.items.length === 0) {
+        // TEMP DIAGNOSTIC: the specific reason, visible in the browser console.
+        console.error(
+          "[photo-capture] extraction failed:",
+          result.ok ? "no items returned" : `${result.code} — ${result.message}`,
+        );
         setMode("failed");
         return;
       }
@@ -148,7 +153,10 @@ export function AddKnowledgeView({
       setTruncated(result.data.truncated);
       setBatchError(null);
       setMode("review-list");
-    } catch {
+    } catch (error) {
+      // TEMP DIAGNOSTIC: usually the browser Storage upload (missing INSERT RLS
+      // policy, bucket size/MIME limit) or an image the browser can't decode.
+      console.error("[photo-capture] upload/flow threw:", error);
       setMode("failed");
     }
   };
