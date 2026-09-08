@@ -3,6 +3,7 @@ import "server-only";
 import { db, type Db } from "@/server/db/client";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import {
+  findKnowledgeByNormalizedKey,
   getDistinctLevels,
   getKnowledgeItemById,
   getKnowledgeStats,
@@ -14,6 +15,7 @@ import {
 import { listMembers } from "@/server/repositories/memberships";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type {
+  AiSuggestion,
   CEFRLevel,
   GrammarItem,
   GroupMemberSummary,
@@ -105,6 +107,67 @@ export async function createKnowledgeItems(
     }
     return created;
   });
+}
+
+/** The value a new item would collide on: `term` for vocabulary, `title` for
+ *  grammar and reading. Notes are never de-duplicated. */
+export type DuplicateKey = { type: "vocabulary" | "grammar" | "reading"; value: string };
+
+export function duplicateKeyFromInput(input: CreateKnowledgeItemInput): DuplicateKey | null {
+  if (input.type === "vocabulary") return { type: "vocabulary", value: input.term };
+  if (input.type === "grammar" || input.type === "reading")
+    return { type: input.type, value: input.title };
+  return null;
+}
+
+export function duplicateKeyFromSuggestion(s: AiSuggestion): DuplicateKey | null {
+  if (s.type === "vocabulary") return { type: "vocabulary", value: s.fields.term ?? "" };
+  if (s.type === "grammar" || s.type === "reading")
+    return { type: s.type, value: s.fields.title ?? "" };
+  return null;
+}
+
+const normalizeKey = (value: string): string => value.trim().toLowerCase();
+
+/**
+ * For each key (index-aligned with the caller's list), the id and display label
+ * of an existing non-deleted item in the active group with the same normalized
+ * key. `null` entries (notes, blank values) and non-matches are simply absent
+ * from the result. Match is case-insensitive and trims surrounding whitespace.
+ */
+export async function findDuplicateKeys(
+  keys: (DuplicateKey | null)[],
+  groupIdOverride?: string,
+): Promise<Map<number, { existingId: string; label: string }>> {
+  const result = new Map<number, { existingId: string; label: string }>();
+
+  const wanted = keys
+    .map((key, index) => ({ index, key }))
+    .filter(
+      (k): k is { index: number; key: DuplicateKey } =>
+        k.key != null && normalizeKey(k.key.value).length > 0,
+    );
+  if (wanted.length === 0) return result;
+
+  const groupId = groupIdOverride ?? (await requireActiveGroupId()).groupId;
+
+  const byType = { vocabulary: [] as string[], grammar: [] as string[], reading: [] as string[] };
+  for (const { key } of wanted) byType[key.type].push(normalizeKey(key.value));
+
+  const existing = await findKnowledgeByNormalizedKey(groupId, byType);
+
+  const lookup = new Map<string, { existingId: string; label: string }>();
+  for (const row of existing) {
+    const label = row.type === "vocabulary" ? row.term : row.title;
+    if (!label) continue;
+    lookup.set(`${row.type} ${normalizeKey(label)}`, { existingId: row.id, label });
+  }
+
+  for (const { index, key } of wanted) {
+    const hit = lookup.get(`${key.type} ${normalizeKey(key.value)}`);
+    if (hit) result.set(index, hit);
+  }
+  return result;
 }
 
 export async function updateKnowledgeItem(

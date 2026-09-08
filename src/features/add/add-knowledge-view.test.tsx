@@ -35,7 +35,10 @@ vi.mock("next-intl", () => ({
 }));
 
 import { extractFromPhotosAction, structureKnowledgeAction } from "@/server/actions/ai";
-import { createKnowledgeItemsAction } from "@/server/actions/knowledge";
+import {
+  createKnowledgeItemAction,
+  createKnowledgeItemsAction,
+} from "@/server/actions/knowledge";
 
 import { AddKnowledgeView } from "./add-knowledge-view";
 
@@ -75,6 +78,7 @@ describe("AddKnowledgeView", () => {
       ok: true,
       data: {
         truncated: false,
+        duplicates: [],
         items: [
           { type: "vocabulary", fields: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" } },
           { type: "note", fields: { title: "", noteBody: "ask about er" } },
@@ -98,7 +102,11 @@ describe("AddKnowledgeView", () => {
   it("bulk-saves the checked rows and shows the success panel", async () => {
     vi.mocked(extractFromPhotosAction).mockResolvedValue({
       ok: true,
-      data: { truncated: false, items: [{ type: "note", fields: { title: "", noteBody: "n1" } }] },
+      data: {
+        truncated: false,
+        duplicates: [],
+        items: [{ type: "note", fields: { title: "", noteBody: "n1" } }],
+      },
     });
     vi.mocked(createKnowledgeItemsAction).mockResolvedValue({ ok: true, data: { ids: ["a"] } });
 
@@ -114,5 +122,49 @@ describe("AddKnowledgeView", () => {
     fireEvent.click(save);
 
     await waitFor(() => expect(createKnowledgeItemsAction).toHaveBeenCalled());
+  });
+
+  it("prompts before adding a duplicate, then adds it on confirm", async () => {
+    vi.mocked(structureKnowledgeAction).mockResolvedValue({
+      ok: true,
+      data: {
+        type: "vocabulary",
+        fields: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" },
+      },
+    });
+    vi.mocked(createKnowledgeItemAction)
+      .mockResolvedValueOnce({
+        ok: false,
+        code: "duplicate",
+        message: "dup",
+        existingId: "k9",
+        label: "de fiets",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { id: "new1", type: "note", body: "de fiets" } as never,
+      });
+
+    render(<AddKnowledgeView aiEnabled />);
+    fireEvent.change(screen.getByLabelText("add.ai.captureLabel"), {
+      target: { value: "de fiets — the bike" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));
+
+    const confirm = await screen.findByRole("button", { name: "add.ai.confirm" });
+    fireEvent.click(confirm);
+
+    await screen.findByText("add.duplicate.prompt");
+    expect(createKnowledgeItemAction).toHaveBeenCalledTimes(1);
+    expect(createKnowledgeItemAction).toHaveBeenLastCalledWith(expect.anything(), {
+      allowDuplicate: false,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "add.duplicate.addAnyway" }));
+
+    await waitFor(() => expect(createKnowledgeItemAction).toHaveBeenCalledTimes(2));
+    expect(createKnowledgeItemAction).toHaveBeenLastCalledWith(expect.anything(), {
+      allowDuplicate: true,
+    });
   });
 });

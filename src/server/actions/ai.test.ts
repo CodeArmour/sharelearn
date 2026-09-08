@@ -1,18 +1,33 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { structureKnowledge, extractKnowledgeFromImages, resolveActiveContext, createServerSupabaseClient } =
-  vi.hoisted(() => ({
-    structureKnowledge: vi.fn(),
-    extractKnowledgeFromImages: vi.fn(),
-    resolveActiveContext: vi.fn(),
-    createServerSupabaseClient: vi.fn(),
-  }));
+const {
+  structureKnowledge,
+  extractKnowledgeFromImages,
+  resolveActiveContext,
+  createServerSupabaseClient,
+  findDuplicateKeys,
+} = vi.hoisted(() => ({
+  structureKnowledge: vi.fn(),
+  extractKnowledgeFromImages: vi.fn(),
+  resolveActiveContext: vi.fn(),
+  createServerSupabaseClient: vi.fn(),
+  findDuplicateKeys: vi.fn(),
+}));
 
 vi.mock("@/ai/services/knowledge-processor", () => ({ structureKnowledge }));
 vi.mock("@/ai/services/knowledge-extractor", () => ({ extractKnowledgeFromImages }));
 vi.mock("@/server/services/session-service", () => ({ resolveActiveContext }));
 vi.mock("@/server/auth/supabase", () => ({ createServerSupabaseClient }));
+vi.mock("@/server/services/knowledge-service", () => ({
+  findDuplicateKeys,
+  duplicateKeyFromSuggestion: (s: { type: string; fields: Record<string, string> }) =>
+    s.type === "vocabulary"
+      ? { type: "vocabulary", value: s.fields.term ?? "" }
+      : s.type === "grammar" || s.type === "reading"
+        ? { type: s.type, value: s.fields.title ?? "" }
+        : null,
+}));
 
 import { extractFromPhotosAction, structureKnowledgeAction } from "./ai";
 
@@ -84,6 +99,8 @@ describe("extractFromPhotosAction", () => {
   beforeEach(() => {
     extractKnowledgeFromImages.mockReset();
     createServerSupabaseClient.mockReset();
+    findDuplicateKeys.mockReset();
+    findDuplicateKeys.mockResolvedValue(new Map());
     resolveActiveContext.mockResolvedValue({
       status: "ok",
       user: { id: "11111111-1111-1111-1111-111111111111", name: "U", initials: "UU", avatarUrl: null },
@@ -129,10 +146,44 @@ describe("extractFromPhotosAction", () => {
 
     const r = await extractFromPhotosAction(goodPaths);
 
-    expect(r).toEqual({ ok: true, data: { items: [{ type: "note", fields: { title: "", noteBody: "n" } }], truncated: false } });
+    expect(r).toEqual({
+      ok: true,
+      data: {
+        items: [{ type: "note", fields: { title: "", noteBody: "n" } }],
+        truncated: false,
+        duplicates: [],
+      },
+    });
     expect(s.createSignedUrl).toHaveBeenCalledWith(goodPaths[0], 300);
     expect(extractKnowledgeFromImages).toHaveBeenCalledWith([{ url: "https://signed/x" }]);
     expect(s.remove).toHaveBeenCalledWith(goodPaths);
+  });
+
+  it("reports which extracted items are already in the library", async () => {
+    const s = fakeStorage();
+    createServerSupabaseClient.mockResolvedValue(s.client);
+    extractKnowledgeFromImages.mockResolvedValue({
+      status: "ok",
+      truncated: false,
+      items: [
+        { type: "vocabulary", fields: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" } },
+        { type: "note", fields: { title: "", noteBody: "n" } },
+        { type: "vocabulary", fields: { term: "het huis", meaning: "the house", partOfSpeech: "noun" } },
+      ],
+    });
+    findDuplicateKeys.mockResolvedValue(new Map([[2, { existingId: "k9", label: "het huis" }]]));
+
+    const r = await extractFromPhotosAction(goodPaths);
+
+    expect(r).toMatchObject({ ok: true, data: { duplicates: [2] } });
+    expect(findDuplicateKeys).toHaveBeenCalledWith(
+      [
+        { type: "vocabulary", value: "de fiets" },
+        null,
+        { type: "vocabulary", value: "het huis" },
+      ],
+      "g1",
+    );
   });
 
   it("deletes the staged objects even when extraction errors", async () => {

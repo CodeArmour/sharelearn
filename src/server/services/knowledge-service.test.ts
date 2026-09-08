@@ -9,6 +9,7 @@ vi.mock("@/server/repositories/knowledge", () => ({
   getDistinctLevels: vi.fn(),
   updateKnowledgeItem: vi.fn(),
   softDeleteKnowledgeItem: vi.fn(),
+  findKnowledgeByNormalizedKey: vi.fn(),
 }));
 vi.mock("@/server/repositories/memberships", () => ({ listMembers: vi.fn() }));
 vi.mock("@/server/db/client", () => ({
@@ -25,6 +26,9 @@ import {
   createKnowledgeItem,
   createKnowledgeItems,
   deleteKnowledgeItem,
+  duplicateKeyFromInput,
+  duplicateKeyFromSuggestion,
+  findDuplicateKeys,
   getKnowledgeById,
   getKnowledgeByIds,
   getLibraryFacets,
@@ -394,5 +398,104 @@ describe("createKnowledgeItems", () => {
         { type: "note", level: null, tags: [], source: "ai-assisted", title: null, body: "bad" },
       ]),
     ).rejects.toThrow("db boom");
+  });
+});
+
+describe("duplicateKeyFromInput / duplicateKeyFromSuggestion", () => {
+  it("keys vocabulary on term, grammar/reading on title, and ignores notes", () => {
+    expect(
+      duplicateKeyFromInput({
+        type: "vocabulary",
+        level: null,
+        tags: [],
+        source: "manual",
+        term: " De Fiets ",
+        meaning: "the bike",
+        partOfSpeech: "noun",
+        example: null,
+        exampleTranslation: null,
+        article: null,
+        plural: null,
+        pastTense: null,
+        perfect: null,
+        usageNote: null,
+      }),
+    ).toEqual({ type: "vocabulary", value: " De Fiets " });
+    expect(
+      duplicateKeyFromInput({
+        type: "grammar",
+        level: null,
+        tags: [],
+        source: "manual",
+        title: "V2",
+        summary: "s",
+        explanation: "e",
+        examples: [],
+      }),
+    ).toEqual({ type: "grammar", value: "V2" });
+    expect(
+      duplicateKeyFromInput({
+        type: "note",
+        level: null,
+        tags: [],
+        source: "manual",
+        title: null,
+        body: "n",
+      }),
+    ).toBeNull();
+  });
+
+  it("keys a suggestion the same way from its form-shaped fields", () => {
+    expect(
+      duplicateKeyFromSuggestion({ type: "vocabulary", fields: { term: "de hond" } }),
+    ).toEqual({ type: "vocabulary", value: "de hond" });
+    expect(
+      duplicateKeyFromSuggestion({ type: "reading", fields: { title: "Een dag" } }),
+    ).toEqual({ type: "reading", value: "Een dag" });
+    expect(duplicateKeyFromSuggestion({ type: "note", fields: { noteBody: "n" } })).toBeNull();
+  });
+});
+
+describe("findDuplicateKeys", () => {
+  beforeEach(() => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx);
+  });
+
+  it("returns nothing and does not query when every key is null or blank", async () => {
+    const out = await findDuplicateKeys([null, { type: "vocabulary", value: "   " }]);
+    expect(out.size).toBe(0);
+    expect(repo.findKnowledgeByNormalizedKey).not.toHaveBeenCalled();
+  });
+
+  it("matches case-insensitively and trims, mapping back to the caller's indices", async () => {
+    vi.mocked(repo.findKnowledgeByNormalizedKey).mockResolvedValue([
+      { id: "k1", type: "vocabulary", term: "de fiets", title: null },
+      { id: "k2", type: "grammar", term: null, title: "Perfectum" },
+    ]);
+
+    const out = await findDuplicateKeys([
+      { type: "vocabulary", value: "  DE FIETS " },
+      { type: "grammar", value: "word order" },
+      { type: "grammar", value: "perfectum" },
+    ]);
+
+    expect(repo.findKnowledgeByNormalizedKey).toHaveBeenCalledWith("g1", {
+      vocabulary: ["de fiets"],
+      grammar: ["word order", "perfectum"],
+      reading: [],
+    });
+    expect(out.get(0)).toEqual({ existingId: "k1", label: "de fiets" });
+    expect(out.has(1)).toBe(false);
+    expect(out.get(2)).toEqual({ existingId: "k2", label: "Perfectum" });
+  });
+
+  it("uses the group id override without resolving context", async () => {
+    vi.mocked(resolveActiveContext).mockRejectedValue(new Error("should not be called"));
+    vi.mocked(repo.findKnowledgeByNormalizedKey).mockResolvedValue([]);
+    await findDuplicateKeys([{ type: "vocabulary", value: "x" }], "g-override");
+    expect(repo.findKnowledgeByNormalizedKey).toHaveBeenCalledWith(
+      "g-override",
+      expect.objectContaining({ vocabulary: ["x"] }),
+    );
   });
 });

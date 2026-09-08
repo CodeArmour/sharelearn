@@ -30,6 +30,7 @@ export function KnowledgeForm({
   secondaryAction,
   disabled,
   error,
+  notice,
   typeLocked,
 }: {
   type: PickerType;
@@ -45,6 +46,8 @@ export function KnowledgeForm({
   secondaryAction?: ReactNode;
   disabled?: boolean;
   error?: string | null;
+  /** Rendered just above the submit row — e.g. the "already in your library" warning. */
+  notice?: ReactNode;
   typeLocked?: boolean;
 }) {
   const t = useTranslations("add");
@@ -102,6 +105,8 @@ export function KnowledgeForm({
               {error}
             </p>
           ) : null}
+
+          {notice}
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Button type="submit" size="md" disabled={disabled}>

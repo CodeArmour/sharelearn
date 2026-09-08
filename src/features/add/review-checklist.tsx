@@ -13,6 +13,8 @@ export type ReviewRow = {
   type: AuthableType;
   values: Values;
   examples: Example[];
+  /** Set when an item with the same term/title is already in the library. */
+  duplicate?: boolean;
 };
 
 const VOCAB_EXTRAS = ["article", "plural", "pastTense", "perfect", "example", "usageNote"] as const;
@@ -119,6 +121,9 @@ export function ReviewChecklist({
                   <span className="text-caption font-medium text-warning-strong">
                     {t("needsDetails")}
                   </span>
+                ) : null}
+                {row.duplicate ? (
+                  <span className="text-caption font-medium text-fg-muted">{t("duplicate")}</span>
                 ) : null}
               </div>
               <div className="flex shrink-0 gap-1">

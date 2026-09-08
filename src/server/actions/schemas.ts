@@ -6,7 +6,14 @@ import { CEFR_LEVELS, KNOWLEDGE_TYPES } from "@/types";
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }
-  | { ok: false; code: string; message: string };
+  | {
+      ok: false;
+      code: string;
+      message: string;
+      /** Set only when `code === "duplicate"`: the existing item and its label. */
+      existingId?: string;
+      label?: string;
+    };
 
 export const emailSchema = z
   .string()

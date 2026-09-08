@@ -299,7 +299,8 @@
         "empty": "Niets geselecteerd",
         "successCount": "{count} items toegevoegd",
         "failed": "Kon de items niet opslaan. Probeer het opnieuw.",
-        "needsDetails": "Details nodig"
+        "needsDetails": "Details nodig",
+        "duplicate": "Staat al in bibliotheek"
       }
     },
     "levelLabel": "Niveau",
@@ -311,6 +312,11 @@
     "required": "{field} is verplicht",
     "errors": {
       "generic": "Er ging iets mis bij het opslaan. Probeer het opnieuw."
+    },
+    "duplicate": {
+      "prompt": "“{label}” staat al in je bibliotheek.",
+      "addAnyway": "Toch toevoegen",
+      "viewExisting": "Bekijk bestaande"
     },
     "field": {
       "term": "Nederlandse term",

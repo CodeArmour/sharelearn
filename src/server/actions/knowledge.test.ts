@@ -1,18 +1,29 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createKnowledgeItems } = vi.hoisted(() => ({ createKnowledgeItems: vi.fn() }));
+const { createKnowledgeItem, createKnowledgeItems, findDuplicateKeys } = vi.hoisted(() => ({
+  createKnowledgeItem: vi.fn(),
+  createKnowledgeItems: vi.fn(),
+  findDuplicateKeys: vi.fn(),
+}));
 
 vi.mock("@/server/services/knowledge-service", () => ({
-  createKnowledgeItem: vi.fn(),
+  createKnowledgeItem,
   createKnowledgeItems,
   deleteKnowledgeItem: vi.fn(),
+  findDuplicateKeys,
+  duplicateKeyFromInput: (input: { type: string; term?: string; title?: string }) =>
+    input.type === "vocabulary"
+      ? { type: "vocabulary", value: input.term }
+      : input.type === "grammar" || input.type === "reading"
+        ? { type: input.type, value: input.title }
+        : null,
   getKnowledgeByIds: vi.fn(),
   updateKnowledgeItem: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { createKnowledgeItemsAction } from "./knowledge";
+import { createKnowledgeItemAction, createKnowledgeItemsAction } from "./knowledge";
 
 const noteInput = {
   type: "note" as const,
@@ -23,7 +34,27 @@ const noteInput = {
   body: "a note",
 };
 
-beforeEach(() => vi.resetAllMocks());
+const vocabInput = {
+  type: "vocabulary" as const,
+  level: null,
+  tags: [] as string[],
+  source: "manual" as const,
+  term: "de fiets",
+  meaning: "the bike",
+  partOfSpeech: "noun",
+  example: null,
+  exampleTranslation: null,
+  article: null,
+  plural: null,
+  pastTense: null,
+  perfect: null,
+  usageNote: null,
+};
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  findDuplicateKeys.mockResolvedValue(new Map());
+});
 
 describe("createKnowledgeItemsAction", () => {
   it("rejects an empty array", async () => {
@@ -53,5 +84,47 @@ describe("createKnowledgeItemsAction", () => {
     const r = await createKnowledgeItemsAction([noteInput]);
     expect(r.ok).toBe(false);
     expect(typeof (r as { code: string }).code).toBe("string");
+  });
+
+  it("does not run the duplicate check for the batch path", async () => {
+    createKnowledgeItems.mockResolvedValue([{ id: "a" }]);
+    await createKnowledgeItemsAction([vocabInput]);
+    expect(findDuplicateKeys).not.toHaveBeenCalled();
+  });
+});
+
+describe("createKnowledgeItemAction", () => {
+  it("rejects a malformed input without calling the service", async () => {
+    const r = await createKnowledgeItemAction({ type: "vocabulary", term: "x" });
+    expect(r).toMatchObject({ ok: false, code: "validation" });
+    expect(createKnowledgeItem).not.toHaveBeenCalled();
+  });
+
+  it("creates the item when nothing matches", async () => {
+    createKnowledgeItem.mockResolvedValue({ id: "k1", ...vocabInput });
+    const r = await createKnowledgeItemAction(vocabInput);
+    expect(r).toMatchObject({ ok: true });
+    expect(createKnowledgeItem).toHaveBeenCalledOnce();
+  });
+
+  it("returns a duplicate result and does not insert when a match exists", async () => {
+    findDuplicateKeys.mockResolvedValue(new Map([[0, { existingId: "k9", label: "de fiets" }]]));
+    const r = await createKnowledgeItemAction(vocabInput);
+    expect(r).toMatchObject({
+      ok: false,
+      code: "duplicate",
+      existingId: "k9",
+      label: "de fiets",
+    });
+    expect(createKnowledgeItem).not.toHaveBeenCalled();
+  });
+
+  it("skips the duplicate check and inserts when allowDuplicate is set", async () => {
+    findDuplicateKeys.mockResolvedValue(new Map([[0, { existingId: "k9", label: "de fiets" }]]));
+    createKnowledgeItem.mockResolvedValue({ id: "k2", ...vocabInput });
+    const r = await createKnowledgeItemAction(vocabInput, { allowDuplicate: true });
+    expect(r).toMatchObject({ ok: true });
+    expect(findDuplicateKeys).not.toHaveBeenCalled();
+    expect(createKnowledgeItem).toHaveBeenCalledOnce();
   });
 });
