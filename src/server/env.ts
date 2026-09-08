@@ -49,4 +49,7 @@ export const serverEnv = {
   get openaiFallbackModel() {
     return optional("OPENAI_FALLBACK_MODEL") ?? "gpt-5.6-terra";
   },
+  get cronSecret() {
+    return required("CRON_SECRET");
+  },
 };

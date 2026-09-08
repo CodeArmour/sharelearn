@@ -146,6 +146,34 @@ describe("OpenAIProvider.generateStructured", () => {
   it("exposes a name", () => {
     expect(provider().name).toBe("openai");
   });
+
+  it("sends images as input_image parts and raises the token ceiling", async () => {
+    parse.mockResolvedValueOnce(ok({ type: "note", body: "from photo" }));
+
+    await provider().generateStructured({
+      system: "S",
+      user: "U",
+      schema,
+      images: [{ url: "https://signed/one" }, { url: "https://signed/two" }],
+    });
+
+    const arg = parse.mock.calls[0][0];
+    expect(Array.isArray(arg.input)).toBe(true);
+    expect(arg.input[0].role).toBe("user");
+    const parts = arg.input[0].content;
+    expect(parts[0]).toMatchObject({ type: "input_text", text: "U" });
+    expect(parts.filter((p: { type: string }) => p.type === "input_image")).toHaveLength(2);
+    expect(parts[1].image_url).toBe("https://signed/one");
+    expect(arg.max_output_tokens).toBe(32000);
+  });
+
+  it("keeps the plain-string input and 16000 ceiling when no images are given", async () => {
+    parse.mockResolvedValueOnce(ok({ type: "note", body: "hi" }));
+    await provider().generateStructured({ system: "S", user: "U", schema });
+    const arg = parse.mock.calls[0][0];
+    expect(arg.input).toBe("U");
+    expect(arg.max_output_tokens).toBe(16000);
+  });
 });
 
 describe("buildTextFormat $parseRaw", () => {

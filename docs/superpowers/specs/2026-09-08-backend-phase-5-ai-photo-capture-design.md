@@ -1,7 +1,7 @@
 # Backend Phase 5 — AI Photo Capture
 
 **Date:** 2026-09-08
-**Status:** Design — not started
+**Status:** Implemented — branch worktree-backend-phase-5-ai-photo-capture (Supabase bucket + RLS + CRON_SECRET owner setup pending; manual smoke pending)
 **Scope:** Add a third input mode to the Add-knowledge screen's AI-capture
 step: **Upload photos**. A person picks 1–3 photos, the AI reads them together
 and returns a *set* of typed knowledge drafts (`vocabulary` / `grammar` /

@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/sweep-capture-staging", "schedule": "0 * * * *" }
+  ]
+}

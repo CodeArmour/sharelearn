@@ -25,6 +25,8 @@ import type {
 } from "@/types";
 import { knowledgeTitle } from "@/types";
 
+import type { NewKnowledgeItemRow } from "@/server/db/schema";
+
 import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
 
 async function requireActiveGroupId(): Promise<{
@@ -47,35 +49,61 @@ function wordCount(body: string): number {
   return body.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export async function createKnowledgeItem(input: CreateKnowledgeItemInput): Promise<KnowledgeItem> {
-  const { groupId, userId } = await requireActiveGroupId();
-
+/** Shape one validated create-input into the DB row, per type. Shared by the
+ *  single-item and batch create paths so they cannot drift. */
+export function buildKnowledgeRow(
+  ctx: { groupId: string; userId: string },
+  input: CreateKnowledgeItemInput,
+): NewKnowledgeItemRow {
   const shared = {
-    groupId,
-    addedBy: userId,
+    groupId: ctx.groupId,
+    addedBy: ctx.userId,
     level: input.level,
     tags: input.tags,
     source: input.source,
   };
 
-  return db.transaction((tx) => {
+  switch (input.type) {
+    case "vocabulary":
+      return { ...shared, ...input, type: "vocabulary" };
+    case "grammar":
+      return { ...shared, ...input, type: "grammar" };
+    case "reading":
+      return {
+        ...shared,
+        ...input,
+        type: "reading",
+        wordCount: wordCount(input.body),
+        vocabularyIds: [],
+      };
+    case "note":
+      return { ...shared, ...input, type: "note" };
+  }
+}
+
+export async function createKnowledgeItem(input: CreateKnowledgeItemInput): Promise<KnowledgeItem> {
+  const { groupId, userId } = await requireActiveGroupId();
+  return db.transaction((tx) =>
+    insertKnowledgeItem(tx as unknown as Db, buildKnowledgeRow({ groupId, userId }, input)),
+  );
+}
+
+/**
+ * Bulk-create knowledge items from the AI photo-capture review checklist. One
+ * transaction, one `insertKnowledgeItem` per input, sequential so the rows
+ * share the connection cleanly. Any row throwing rolls the whole batch back.
+ */
+export async function createKnowledgeItems(
+  inputs: CreateKnowledgeItemInput[],
+): Promise<KnowledgeItem[]> {
+  const { groupId, userId } = await requireActiveGroupId();
+  return db.transaction(async (tx) => {
     const dbtx = tx as unknown as Db;
-    switch (input.type) {
-      case "vocabulary":
-        return insertKnowledgeItem(dbtx, { ...shared, ...input, type: "vocabulary" });
-      case "grammar":
-        return insertKnowledgeItem(dbtx, { ...shared, ...input, type: "grammar" });
-      case "reading":
-        return insertKnowledgeItem(dbtx, {
-          ...shared,
-          ...input,
-          type: "reading",
-          wordCount: wordCount(input.body),
-          vocabularyIds: [],
-        });
-      case "note":
-        return insertKnowledgeItem(dbtx, { ...shared, ...input, type: "note" });
+    const created: KnowledgeItem[] = [];
+    for (const input of inputs) {
+      created.push(await insertKnowledgeItem(dbtx, buildKnowledgeRow({ groupId, userId }, input)));
     }
+    return created;
   });
 }
 

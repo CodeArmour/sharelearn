@@ -34,6 +34,15 @@ export const rawKnowledgeTextSchema = z
   .min(2, "Paste a little more text")
   .max(10_000, "That is too long to structure at once");
 
+/**
+ * Storage paths for AI photo capture — `"{userId}/{uuid}.jpg"`, 1–3 of them.
+ * The action additionally checks each path is under the caller's own id prefix.
+ */
+export const capturePathsSchema = z
+  .array(z.string().regex(/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+\.jpg$/))
+  .min(1)
+  .max(3);
+
 export function toActionError(e: unknown): { code: string; message: string } {
   if (e instanceof InviteError)
     return { code: `invite:${e.inviteCode}`, message: e.message };

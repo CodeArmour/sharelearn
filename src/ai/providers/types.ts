@@ -18,5 +18,7 @@ export interface AiProvider {
     system: string;
     user: string;
     schema: z.ZodType<T>;
+    /** Signed image URLs — sent as `input_image` parts when present. */
+    images?: { url: string }[];
   }): Promise<T>;
 }

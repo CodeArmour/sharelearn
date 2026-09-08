@@ -2,7 +2,13 @@ import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /** Header for the AI review step — the reviewer edits freely below this. */
-export function AiReviewBanner({ noticeKey }: { noticeKey?: string }) {
+export function AiReviewBanner({
+  noticeKey,
+  truncated,
+}: {
+  noticeKey?: string;
+  truncated?: boolean;
+}) {
   const t = useTranslations("add.ai");
   // noticeKey is a controlled set of `add.ai.notice.*` keys; cast past the
   // literal-key type the same way the rest of this feature does.
@@ -14,6 +20,9 @@ export function AiReviewBanner({ noticeKey }: { noticeKey?: string }) {
         <Sparkles className="size-4" strokeWidth={2} aria-hidden />
         {t("reviewTitle")}
       </span>
+      {truncated ? (
+        <p className="text-body-sm text-warning-strong">{t("photos.truncated")}</p>
+      ) : null}
       {notice ? <p className="text-body-sm text-fg-secondary">{notice}</p> : null}
     </div>
   );

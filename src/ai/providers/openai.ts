@@ -102,20 +102,39 @@ export class OpenAIProvider implements AiProvider {
     system,
     user,
     schema,
+    images,
   }: {
     system: string;
     user: string;
     schema: z.ZodType<T>;
+    images?: { url: string }[];
   }): Promise<T> {
     const attempt = async (modelId: string): Promise<T> => {
       let response;
       try {
+        const hasImages = images != null && images.length > 0;
+        const input = hasImages
+          ? [
+              {
+                role: "user" as const,
+                content: [
+                  { type: "input_text" as const, text: user },
+                  ...images!.map((img) => ({
+                    type: "input_image" as const,
+                    image_url: img.url,
+                    detail: "auto" as const,
+                  })),
+                ],
+              },
+            ]
+          : user;
+
         response = await this.client.responses.parse({
           model: modelId,
           instructions: system,
-          input: user,
+          input,
           reasoning: { effort: "medium" },
-          max_output_tokens: 16000,
+          max_output_tokens: hasImages ? 32000 : 16000,
           text: { format: buildTextFormat(schema, "knowledge_suggestion") },
         });
       } catch (cause) {
