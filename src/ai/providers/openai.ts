@@ -134,7 +134,9 @@ export class OpenAIProvider implements AiProvider {
           instructions: system,
           input,
           reasoning: { effort: "medium" },
-          max_output_tokens: hasImages ? 32000 : 16000,
+          // 16000 is enough for a ~30-item extraction; some models reject a
+          // larger ceiling outright, which failed the whole photo path.
+          max_output_tokens: 16000,
           text: { format: buildTextFormat(schema, "knowledge_suggestion") },
         });
       } catch (cause) {

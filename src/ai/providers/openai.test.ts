@@ -147,7 +147,7 @@ describe("OpenAIProvider.generateStructured", () => {
     expect(provider().name).toBe("openai");
   });
 
-  it("sends images as input_image parts and raises the token ceiling", async () => {
+  it("sends images as input_image parts", async () => {
     parse.mockResolvedValueOnce(ok({ type: "note", body: "from photo" }));
 
     await provider().generateStructured({
@@ -164,7 +164,7 @@ describe("OpenAIProvider.generateStructured", () => {
     expect(parts[0]).toMatchObject({ type: "input_text", text: "U" });
     expect(parts.filter((p: { type: string }) => p.type === "input_image")).toHaveLength(2);
     expect(parts[1].image_url).toBe("https://signed/one");
-    expect(arg.max_output_tokens).toBe(32000);
+    expect(arg.max_output_tokens).toBe(16000);
   });
 
   it("keeps the plain-string input and 16000 ceiling when no images are given", async () => {
