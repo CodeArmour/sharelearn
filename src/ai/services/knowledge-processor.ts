@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAiProvider } from "@/ai/providers";
-import { KNOWLEDGE_PROCESSOR_PROMPT_V1, PROMPT_VERSION } from "@/ai/prompts/knowledge-processor";
+import { KNOWLEDGE_PROCESSOR_PROMPT_V2, PROMPT_VERSION } from "@/ai/prompts/knowledge-processor";
 import {
   knowledgeSuggestionSchema,
   toAiSuggestion,
@@ -26,10 +26,10 @@ export async function structureKnowledge(rawText: string): Promise<StructureResu
     const provider = getAiProvider();
     if (!provider) return { status: "unavailable" };
 
-    const user = rawText.trim().slice(0, MAX_CHARS);
+    const user = `<pasted_text>\n${rawText.trim().slice(0, MAX_CHARS)}\n</pasted_text>`;
 
     const raw = await provider.generateStructured({
-      system: KNOWLEDGE_PROCESSOR_PROMPT_V1,
+      system: KNOWLEDGE_PROCESSOR_PROMPT_V2,
       user,
       schema: knowledgeSuggestionSchema,
     });
