@@ -9,6 +9,7 @@ import {
   groupIdSchema,
   knowledgeIdsSchema,
   knowledgeItemIdSchema,
+  otpCodeSchema,
   practiceSetupSchema,
   rawKnowledgeTextSchema,
   studyRunInputSchema,
@@ -24,6 +25,14 @@ describe("action schemas", () => {
   });
   it("requires a uuid group id", () => {
     expect(groupIdSchema.safeParse("not-uuid").success).toBe(false);
+  });
+  it("accepts a 6-digit OTP code and trims it", () => {
+    expect(otpCodeSchema.parse("  123456 ")).toBe("123456");
+  });
+  it("rejects OTP codes that are not exactly 6 digits", () => {
+    for (const bad of ["12345", "1234567", "12a456", "abcdef", ""]) {
+      expect(otpCodeSchema.safeParse(bad).success).toBe(false);
+    }
   });
 });
 

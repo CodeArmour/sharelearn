@@ -178,7 +178,12 @@
     "sentTitle": "Check je e-mail",
     "sentBody": "We hebben een inloglink gestuurd naar {email}. De link is één uur geldig.",
     "sentResend": "Ander e-mailadres gebruiken",
-    "errorGeneric": "Versturen mislukt. Probeer het opnieuw."
+    "errorGeneric": "Versturen mislukt. Probeer het opnieuw.",
+    "codeLabel": "Of voer de 6-cijferige code in",
+    "codePlaceholder": "123456",
+    "verifySubmit": "Code verifiëren",
+    "verifying": "Bezig met verifiëren…",
+    "codeError": "Die code is onjuist of verlopen."
   },
   "foundation": {
     "title": "Foundation",

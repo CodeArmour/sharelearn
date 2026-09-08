@@ -19,6 +19,12 @@ export const invitationIdSchema = z.string().uuid();
 export const knowledgeItemIdSchema = z.string().uuid();
 export const tokenSchema = z.string().min(10);
 
+/** The 6-digit sign-in code from the magic-link email (`{{ .Token }}`). */
+export const otpCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Enter the 6-digit code from the email");
+
 export const rawKnowledgeTextSchema = z
   .string()
   .trim()
