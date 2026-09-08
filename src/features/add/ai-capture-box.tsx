@@ -6,7 +6,8 @@ import { Button, Field, Textarea } from "@/components/ui";
 
 import { PhotoCapturePanel } from "./photo-capture-panel";
 
-/** Paste raw text and hand it to the AI structuring step. */
+/** Hand raw study material to the AI structuring step: paste text, or (when
+ *  `photosEnabled`) switch to a photo mode that uploads 1–3 images instead. */
 export function AiCaptureBox({
   value,
   onChange,

@@ -61,6 +61,7 @@ export function PhotoCapturePanel({
           ref={inputRef}
           id="photo-capture"
           type="file"
+          accept="image/*"
           multiple
           disabled={busy}
           onChange={(e) => add(e.target.files)}

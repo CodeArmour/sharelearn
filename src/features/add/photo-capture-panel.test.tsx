@@ -50,8 +50,12 @@ describe("PhotoCapturePanel", () => {
 
   it("rejects a non-image file", async () => {
     setup();
+    // `accept="image/*"` on the input would make user-event drop the file
+    // before it reaches onChange; opt that filter out for this one case so the
+    // component's own isImage() guard is what's under test.
+    const user = userEvent.setup({ applyAccept: false });
     const input = screen.getByLabelText("Choose photos (up to 3)");
-    await userEvent.upload(input, [new File(["x"], "notes.txt", { type: "text/plain" })]);
+    await user.upload(input, [new File(["x"], "notes.txt", { type: "text/plain" })]);
     expect(screen.getByText("Couldn't read that image. Try a JPEG or PNG.")).toBeInTheDocument();
   });
 });
