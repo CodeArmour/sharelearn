@@ -26,11 +26,13 @@ describe("action schemas", () => {
   it("requires a uuid group id", () => {
     expect(groupIdSchema.safeParse("not-uuid").success).toBe(false);
   });
-  it("accepts a 6-digit OTP code and trims it", () => {
+  it("accepts a 6- to 10-digit OTP code and trims it", () => {
     expect(otpCodeSchema.parse("  123456 ")).toBe("123456");
+    expect(otpCodeSchema.safeParse("03120952").success).toBe(true); // Supabase 8-digit
+    expect(otpCodeSchema.safeParse("1234567890").success).toBe(true);
   });
-  it("rejects OTP codes that are not exactly 6 digits", () => {
-    for (const bad of ["12345", "1234567", "12a456", "abcdef", ""]) {
+  it("rejects OTP codes outside 6–10 digits or non-numeric", () => {
+    for (const bad of ["12345", "12345678901", "12a456", "abcdef", ""]) {
       expect(otpCodeSchema.safeParse(bad).success).toBe(false);
     }
   });

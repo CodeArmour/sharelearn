@@ -97,8 +97,8 @@ function CodeForm({ email }: { email: string }) {
           name="code"
           inputMode="numeric"
           autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={6}
+          pattern="\d{6,10}"
+          maxLength={10}
           required
           placeholder={t("codePlaceholder")}
         />

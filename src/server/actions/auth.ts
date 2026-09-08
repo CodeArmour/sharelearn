@@ -55,7 +55,7 @@ export async function verifyMagicLinkCode(
     return {
       ok: false,
       code: "validation",
-      message: "Enter the 6-digit code from the email",
+      message: "Enter the code from the email",
     };
   }
 
