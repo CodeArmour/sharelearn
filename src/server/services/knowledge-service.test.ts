@@ -23,6 +23,7 @@ import { resolveActiveContext } from "@/server/services/session-service";
 
 import {
   createKnowledgeItem,
+  createKnowledgeItems,
   deleteKnowledgeItem,
   getKnowledgeById,
   getKnowledgeByIds,
@@ -342,5 +343,56 @@ describe("deleteKnowledgeItem", () => {
     vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(vocab({ id: "k1", addedBy: user }));
     vi.mocked(repo.softDeleteKnowledgeItem).mockResolvedValue(false);
     await expect(deleteKnowledgeItem("k1")).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("createKnowledgeItems", () => {
+  beforeEach(() => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtx);
+    vi.mocked(repo.insertKnowledgeItem).mockImplementation(
+      async (_tx, row) =>
+        ({
+          ...vocab(),
+          id: `id-${(row as { type: string }).type}`,
+          type: (row as { type: string }).type,
+        }) as never,
+    );
+  });
+
+  it("inserts one row per input inside a single transaction and returns them", async () => {
+    const out = await createKnowledgeItems([
+      { type: "note", level: null, tags: [], source: "ai-assisted", title: null, body: "n1" },
+      { type: "note", level: null, tags: [], source: "ai-assisted", title: null, body: "n2" },
+    ]);
+    expect(repo.insertKnowledgeItem).toHaveBeenCalledTimes(2);
+    expect(out).toHaveLength(2);
+  });
+
+  it("maps a reading input with a computed wordCount", async () => {
+    await createKnowledgeItems([
+      {
+        type: "reading",
+        level: null,
+        tags: [],
+        source: "ai-assisted",
+        title: "T",
+        body: "een twee drie vier",
+        summary: null,
+      },
+    ]);
+    const row = vi.mocked(repo.insertKnowledgeItem).mock.calls[0][1] as Record<string, unknown>;
+    expect(row).toMatchObject({ type: "reading", wordCount: 4, vocabularyIds: [] });
+  });
+
+  it("rolls the whole batch back when one row throws", async () => {
+    vi.mocked(repo.insertKnowledgeItem)
+      .mockResolvedValueOnce(vocab() as never)
+      .mockRejectedValueOnce(new Error("db boom"));
+    await expect(
+      createKnowledgeItems([
+        { type: "note", level: null, tags: [], source: "ai-assisted", title: null, body: "ok" },
+        { type: "note", level: null, tags: [], source: "ai-assisted", title: null, body: "bad" },
+      ]),
+    ).rejects.toThrow("db boom");
   });
 });
