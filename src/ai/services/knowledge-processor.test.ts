@@ -82,4 +82,90 @@ describe("structureKnowledge", () => {
     expect(arg.system).toContain("Dutch-language learning");
     expect(arg.user).toBe("<pasted_text>\nsome pasted text\n</pasted_text>");
   });
+
+  it("does not make a follow-up call when a grammar result already has examples", async () => {
+    generateStructured.mockResolvedValue({
+      type: "grammar",
+      title: "V2",
+      explanation: "verb second",
+      examples: [{ nl: "Morgen ga ik.", en: "Tomorrow I go." }],
+    });
+    const result = await structureKnowledge("v2 word order");
+    expect(generateStructured).toHaveBeenCalledTimes(1);
+    expect(result.status).toBe("ok");
+  });
+
+  it("fetches examples in a follow-up call when a grammar result has none", async () => {
+    generateStructured
+      .mockResolvedValueOnce({
+        type: "grammar",
+        title: "Perfectum",
+        explanation: "hebben/zijn + past participle",
+      })
+      .mockResolvedValueOnce({
+        examples: [
+          { nl: "Ik heb gewerkt.", en: "I have worked." },
+          { nl: "Zij is gekomen.", en: "She has come." },
+        ],
+      });
+
+    const result = await structureKnowledge("the perfect tense");
+
+    expect(generateStructured).toHaveBeenCalledTimes(2);
+    const followup = generateStructured.mock.calls[1][0];
+    expect(followup.system).toContain("example sentences for a Dutch grammar rule");
+    expect(followup.user).toContain("Perfectum");
+    expect(result).toMatchObject({
+      status: "ok",
+      suggestion: {
+        type: "grammar",
+        examples: [
+          { nl: "Ik heb gewerkt.", en: "I have worked." },
+          { nl: "Zij is gekomen.", en: "She has come." },
+        ],
+      },
+    });
+  });
+
+  it("accepts the follow-up examples under the `sentences` alias key", async () => {
+    generateStructured
+      .mockResolvedValueOnce({ type: "grammar", title: "V2", explanation: "verb second" })
+      .mockResolvedValueOnce({
+        sentences: [
+          { nl: "Morgen ga ik.", en: "Tomorrow I go." },
+          { nl: "Hier woon ik.", en: "I live here." },
+        ],
+      });
+
+    const result = await structureKnowledge("v2");
+
+    expect(result).toMatchObject({
+      status: "ok",
+      suggestion: {
+        examples: [
+          { nl: "Morgen ga ik.", en: "Tomorrow I go." },
+          { nl: "Hier woon ik.", en: "I live here." },
+        ],
+      },
+    });
+  });
+
+  it("keeps the grammar suggestion if the examples follow-up fails", async () => {
+    generateStructured
+      .mockResolvedValueOnce({ type: "grammar", title: "Perfectum", explanation: "..." })
+      .mockRejectedValueOnce(new Error("boom"));
+
+    const result = await structureKnowledge("the perfect tense");
+
+    expect(result.status).toBe("ok");
+    if (result.status === "ok") {
+      expect(result.suggestion.examples).toEqual([]);
+    }
+  });
+
+  it("makes no follow-up call for a non-grammar result without examples", async () => {
+    generateStructured.mockResolvedValue({ type: "note", body: "n" });
+    await structureKnowledge("a note");
+    expect(generateStructured).toHaveBeenCalledTimes(1);
+  });
 });

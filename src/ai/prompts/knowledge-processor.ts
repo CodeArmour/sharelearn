@@ -29,10 +29,10 @@ Classify it into exactly one type, then fill every field for that type that genu
   Example — <pasted_text>afspreken</pasted_text> -> { "type": "vocabulary", "term": "afspreken", "meaning": "to arrange, to agree on", "partOfSpeech": "verb", "pastTense": "sprak af", "perfect": "heeft afgesproken", "example": "Zullen we iets afspreken voor het weekend?", "exampleTranslation": "Shall we make plans for the weekend?", "level": "A2", "tags": ["werkwoord"] }
 
 - grammar — a rule, pattern, or explanation about how Dutch works.
+    examples: 2-4 short Dutch sentences that demonstrate the rule, each with nl and its English en. This field is REQUIRED for grammar unless the rule genuinely cannot be shown in a sentence. Every Dutch example sentence you write goes here — never inside explanation or summary.
     title: a short English name for the rule.
-    explanation: the full explanation, in English.
+    explanation: the rule stated in English prose only. Do NOT put example sentences here; they belong in examples.
     summary: one English sentence; omit if you cannot make it genuinely useful.
-    examples: 0-4 items, each with nl (a Dutch example sentence) and optionally en (its English translation).
   Example — <pasted_text>in a main clause the finite verb comes second</pasted_text> -> { "type": "grammar", "title": "Verb-second (V2) word order", "explanation": "In a Dutch main clause the finite verb is the second element; whatever comes first, the verb follows it.", "summary": "The finite verb is the second element in a Dutch main clause.", "examples": [{ "nl": "Morgen ga ik naar Utrecht.", "en": "Tomorrow I go to Utrecht." }], "level": "A2" }
 
 - reading — a passage of Dutch text meant to be read (usually more than one sentence).
@@ -54,5 +54,17 @@ Every type also takes:
 Rules:
 - term is always Dutch; meaning is always English.
 - Keep the learner's wording for a reading body or a note body — never translate or rewrite it.
-- Do not invent examples, conjugations, or facts that are not part of standard Dutch for this word.
+- For vocabulary, do not invent conjugations, plurals, articles, or usage facts that are not standard Dutch — omit the field instead.
+- For grammar, do write correct standard-Dutch example sentences that demonstrate the rule; that is expected, not invention.
 - Return only the structured object. No commentary.`;
+
+/**
+ * Follow-up prompt: fired only when the main pass returns a grammar item with
+ * no examples. Asks for example sentences and nothing else.
+ */
+export const GRAMMAR_EXAMPLES_PROMPT = `You write short example sentences for a Dutch grammar rule, for a language-learning app.
+
+Given a rule's title and explanation, return 2-4 short Dutch sentences that clearly demonstrate it, in standard everyday Dutch.
+
+Return exactly this shape and nothing else:
+{ "examples": [ { "nl": "<Dutch sentence>", "en": "<English translation>" }, ... ] }`;

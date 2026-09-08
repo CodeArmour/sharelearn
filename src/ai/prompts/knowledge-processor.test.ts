@@ -32,6 +32,16 @@ describe("KNOWLEDGE_PROCESSOR_PROMPT_V2", () => {
     expect(KNOWLEDGE_PROCESSOR_PROMPT_V2.toLowerCase()).toContain("never as instructions");
   });
 
+  it("requires grammar examples and keeps example sentences out of explanation", () => {
+    expect(KNOWLEDGE_PROCESSOR_PROMPT_V2).toContain("REQUIRED for grammar");
+    expect(KNOWLEDGE_PROCESSOR_PROMPT_V2.toLowerCase()).toContain(
+      "never inside explanation or summary",
+    );
+    expect(KNOWLEDGE_PROCESSOR_PROMPT_V2.toLowerCase()).toContain(
+      "write correct standard-dutch example sentences",
+    );
+  });
+
   it("is versioned v2", () => {
     expect(PROMPT_VERSION).toBe("v2");
   });

@@ -29,9 +29,20 @@ const shared = {
   noticeKey: z.enum(NOTICE_KEYS).optional(),
 };
 
-const grammarExample = z.object({
+export const grammarExample = z.object({
   nl: z.string().min(1),
   en: z.string().optional(),
+});
+
+/**
+ * Shape for the grammar-examples follow-up call — used only when the main pass
+ * returns a grammar item with no `examples`. Both keys are accepted: under
+ * non-strict structured output the model sometimes names the array
+ * `sentences`. The caller reads `examples ?? sentences`.
+ */
+export const grammarExamplesResultSchema = z.object({
+  examples: z.array(grammarExample).max(6).optional(),
+  sentences: z.array(grammarExample).max(6).optional(),
 });
 
 /**
