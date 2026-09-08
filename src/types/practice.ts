@@ -2,9 +2,10 @@ import type { KnowledgeType } from "./knowledge";
 import type { PracticeMode } from "./personal";
 
 /**
- * Frontend contracts for a practice run. Questions are generated from the
- * shared library (mock: `data/mock`; later: `ai/services/PracticeGenerator`).
- * A run is entirely client-side state — nothing is persisted yet.
+ * Frontend contracts for a practice run. Questions are generated from the shared
+ * library by `server/services/practice-service` (a deterministic algorithm; an
+ * `ai/services` generator is a later slice). Run state is client-side; the
+ * finished result is persisted via `actions/personal`.
  */
 
 /** Which slice of the library to draw questions from. */

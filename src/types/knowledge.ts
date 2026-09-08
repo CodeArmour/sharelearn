@@ -4,9 +4,9 @@ import type { UserSummary } from "./user";
 /**
  * Frontend rendering contracts for shared knowledge.
  *
- * These are deliberately close to the likely API / database models so that
- * swapping mock data for real server data later is a narrow change: replace the
- * `data/mock` loaders with repository/service calls that return these shapes.
+ * These stay close to the database models: the `server/repositories` and
+ * `server/services` layers return exactly these shapes, so the frontend does
+ * not change when data moves.
  *
  * All knowledge is SHARED (group library). Personal state (review marks,
  * practice history) lives in `types/personal.ts`.
