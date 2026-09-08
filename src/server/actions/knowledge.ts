@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import {
   createKnowledgeItem,
+  createKnowledgeItems,
   deleteKnowledgeItem,
   getKnowledgeByIds,
   updateKnowledgeItem,
@@ -30,6 +32,23 @@ export async function createKnowledgeItemAction(
     revalidatePath("/today");
     revalidatePath("/library");
     return { ok: true, data: item };
+  } catch (e) {
+    return { ok: false, ...toActionError(e) };
+  }
+}
+
+export async function createKnowledgeItemsAction(
+  inputs: unknown,
+): Promise<ActionResult<{ ids: string[] }>> {
+  const parsed = z.array(createKnowledgeItemSchema).min(1).max(30).safeParse(inputs);
+  if (!parsed.success) {
+    return { ok: false, code: "validation", message: "Invalid knowledge items" };
+  }
+  try {
+    const items = await createKnowledgeItems(parsed.data);
+    revalidatePath("/today");
+    revalidatePath("/library");
+    return { ok: true, data: { ids: items.map((i) => i.id) } };
   } catch (e) {
     return { ok: false, ...toActionError(e) };
   }
