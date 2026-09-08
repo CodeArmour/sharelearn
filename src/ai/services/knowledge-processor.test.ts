@@ -33,6 +33,10 @@ describe("structureKnowledge", () => {
       term: "de hond",
       meaning: "the dog",
       partOfSpeech: "noun",
+      article: "de",
+      plural: "de honden",
+      level: "A1",
+      tags: ["dieren", "zelfstandig naamwoord"],
       noticeKey: "checkTypeAndLevel",
     });
 
@@ -42,7 +46,20 @@ describe("structureKnowledge", () => {
       status: "ok",
       suggestion: {
         type: "vocabulary",
-        fields: { term: "de hond", meaning: "the dog", partOfSpeech: "noun" },
+        fields: {
+          term: "de hond",
+          meaning: "the dog",
+          partOfSpeech: "noun",
+          example: "",
+          exampleTranslation: "",
+          article: "de",
+          plural: "de honden",
+          pastTense: "",
+          perfect: "",
+          usageNote: "",
+          level: "A1",
+          tags: "dieren, zelfstandig naamwoord",
+        },
         noticeKey: "checkTypeAndLevel",
       },
     });
@@ -58,11 +75,11 @@ describe("structureKnowledge", () => {
     expect(await structureKnowledge("x y")).toEqual({ status: "error" });
   });
 
-  it("passes the system prompt and the raw text to the provider", async () => {
+  it("passes the system prompt and the delimited raw text to the provider", async () => {
     generateStructured.mockResolvedValue({ type: "note", body: "n" });
     await structureKnowledge("  some pasted text  ");
     const arg = generateStructured.mock.calls[0][0];
     expect(arg.system).toContain("Dutch-language learning");
-    expect(arg.user).toContain("some pasted text");
+    expect(arg.user).toBe("<pasted_text>\nsome pasted text\n</pasted_text>");
   });
 });
