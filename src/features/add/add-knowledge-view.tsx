@@ -1,13 +1,13 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { getAiSuggestion, getAiSuggestionFromAttachment } from "@/data/mock";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
+import { structureKnowledgeAction } from "@/server/actions/ai";
 import { createKnowledgeItemAction, updateKnowledgeItemAction } from "@/server/actions/knowledge";
 import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
 import type { KnowledgeItem, KnowledgeSource } from "@/types";
@@ -19,7 +19,6 @@ import { AiReviewBanner } from "./ai-review-banner";
 import { KnowledgeForm } from "./knowledge-form";
 import { SuccessPanel } from "./success-panel";
 import {
-  type AiAttachment,
   type AuthableType,
   type Errors,
   type Example,
@@ -103,24 +102,23 @@ function buildCreateInput(
 
 /**
  * Capture knowledge, two ways. The manual path is a plain form. The AI path
- * hands pasted text to a (simulated) structuring step, then drops the reviewer
- * into the same form pre-filled — they always confirm before it "saves". A
+ * hands pasted text to `structureKnowledgeAction`, then drops the reviewer
+ * into the same form pre-filled — they always confirm before it saves. A
  * valid submit persists the item via `createKnowledgeItemAction` and shows a
  * confirmation on success, or an inline error near the submit button on failure.
  */
-export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeItem } = {}) {
+export function AddKnowledgeView({
+  existingItem,
+  aiEnabled = false,
+}: { existingItem?: KnowledgeItem; aiEnabled?: boolean } = {}) {
   const t = useTranslations("add");
   const tPage = useTranslations("pages.add");
   const router = useRouter();
   const isEditing = existingItem != null;
   const initial = existingItem ? itemToValues(existingItem) : undefined;
 
-  const attachParam = useSearchParams().get("attach");
-  const autoOpen = attachParam === "photo" || attachParam === "file" ? attachParam : undefined;
-
   const [mode, setMode] = useState<Mode>("manual");
   const [rawText, setRawText] = useState("");
-  const [attachment, setAttachment] = useState<AiAttachment | null>(null);
   const [noticeKey, setNoticeKey] = useState<string | undefined>();
 
   const [type, setType] = useState<PickerType>(initial?.type ?? "vocabulary");
@@ -148,23 +146,24 @@ export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeIte
     resetFields();
   };
 
-  const runAi = () => {
+  const runAi = async () => {
     setMode("processing");
-    window.setTimeout(async () => {
-      const suggestion = attachment
-        ? await getAiSuggestionFromAttachment(attachment)
-        : await getAiSuggestion(rawText);
-      if (!suggestion) {
+    try {
+      const result = await structureKnowledgeAction(rawText);
+      if (!result.ok) {
         setMode("failed");
         return;
       }
+      const suggestion = result.data;
       setType(suggestion.type as PickerType);
       setValues(suggestion.fields);
       setExamples((suggestion.examples ?? []).map((ex) => ({ id: crypto.randomUUID(), ...ex })));
       setErrors({});
       setNoticeKey(suggestion.noticeKey);
       setMode("review");
-    }, 900);
+    } catch {
+      setMode("failed");
+    }
   };
 
   const fillManuallyFromFailure = () => {
@@ -202,8 +201,7 @@ export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeIte
       return;
     }
 
-    const source: KnowledgeSource =
-      mode !== "review" ? "manual" : attachment ? (attachment.kind === "image" ? "photo" : "file-upload") : "ai-assisted";
+    const source: KnowledgeSource = mode !== "review" ? "manual" : "ai-assisted";
     const input = buildCreateInput(type, values, examples, source);
 
     setSaving(true);
@@ -236,7 +234,6 @@ export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeIte
   const afterSuccess = () => {
     resetFields();
     setRawText("");
-    setAttachment(null);
     setNoticeKey(undefined);
     setSavedTitle(null);
     setMode("manual");
@@ -281,7 +278,6 @@ export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeIte
             onFillManually={fillManuallyFromFailure}
             onCancel={() => {
               setRawText("");
-              setAttachment(null);
               backToManual();
             }}
           />
@@ -297,23 +293,16 @@ export function AddKnowledgeView({ existingItem }: { existingItem?: KnowledgeIte
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {isEditing ? null : (
+            {!isEditing && aiEnabled ? (
               <>
-                <AiCaptureBox
-                  value={rawText}
-                  onChange={setRawText}
-                  attachment={attachment}
-                  onAttachmentChange={setAttachment}
-                  autoOpen={autoOpen}
-                  onSubmit={runAi}
-                />
+                <AiCaptureBox value={rawText} onChange={setRawText} onSubmit={runAi} />
                 <div className="flex items-center gap-3 text-caption text-fg-muted">
                   <span className="h-px flex-1 bg-border" />
                   {t("ai.divider")}
                   <span className="h-px flex-1 bg-border" />
                 </div>
               </>
-            )}
+            ) : null}
             {form(saving ? t("ai.processing") : isEditing ? t("saveChanges") : t("submit"))}
           </div>
         )}

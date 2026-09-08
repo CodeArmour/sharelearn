@@ -250,7 +250,7 @@
       "attachFile": "File",
       "removeAttachment": "Remove attachment",
       "submit": "Structure with AI",
-      "disclaimer": "AI proposes a structure — you review and confirm before anything is saved. Simulated for now.",
+      "disclaimer": "AI proposes a structure — you review and confirm before anything is saved.",
       "processing": "Analysing your input…",
       "reviewTitle": "AI suggestion — review & confirm",
       "confirm": "Confirm & save",

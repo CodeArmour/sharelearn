@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera, FileText, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -11,8 +11,8 @@ const focusRing =
 /**
  * CaptureBar — the always-present "add knowledge" entry point on Today.
  * Maps to the Figma `capture-bar` (desktop) / `capture` (mobile). The prompt
- * area, the photo/file shortcuts and the submit button are separate links so
- * each can later carry its own `source` intent; for now they all open /add.
+ * area and the submit button are separate links so each can later carry its
+ * own `source` intent; for now they both open /add.
  */
 export async function CaptureBar() {
   const t = await getTranslations("today.capture");
@@ -29,22 +29,6 @@ export async function CaptureBar() {
           <span className="hidden sm:inline">{t("placeholder")}</span>
         </span>
         <span className="sr-only">{t("openLabel")}</span>
-      </Link>
-
-      <Link
-        href={{ pathname: "/add", query: { attach: "photo" } }}
-        aria-label={t("photoLabel")}
-        className={cn("shrink-0 p-1 text-fg-secondary hover:text-fg", focusRing)}
-      >
-        <Camera className="size-5" strokeWidth={1.75} aria-hidden />
-      </Link>
-
-      <Link
-        href={{ pathname: "/add", query: { attach: "file" } }}
-        aria-label={t("fileLabel")}
-        className={cn("hidden shrink-0 p-1 text-fg-secondary hover:text-fg sm:block", focusRing)}
-      >
-        <FileText className="size-5" strokeWidth={1.75} aria-hidden />
       </Link>
 
       <Link

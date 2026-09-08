@@ -18,6 +18,11 @@ function trimTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
+function optional(name: string): string | null {
+  const value = process.env[name]?.trim();
+  return value ? value : null;
+}
+
 export const serverEnv = {
   get supabaseUrl() {
     return required("NEXT_PUBLIC_SUPABASE_URL");
@@ -34,5 +39,14 @@ export const serverEnv = {
   get siteUrl() {
     if (process.env.VERCEL_ENV === "production") return PRODUCTION_SITE_URL;
     return trimTrailingSlash(process.env.SITE_URL ?? "http://localhost:3000");
+  },
+  get aiApiKey() {
+    return optional("AI_API_KEY");
+  },
+  get aiModel() {
+    return optional("AI_MODEL") ?? "gpt-5.6-luna";
+  },
+  get openaiFallbackModel() {
+    return optional("OPENAI_FALLBACK_MODEL") ?? "gpt-5.6-terra";
   },
 };

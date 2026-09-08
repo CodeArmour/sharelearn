@@ -19,6 +19,12 @@ export const invitationIdSchema = z.string().uuid();
 export const knowledgeItemIdSchema = z.string().uuid();
 export const tokenSchema = z.string().min(10);
 
+export const rawKnowledgeTextSchema = z
+  .string()
+  .trim()
+  .min(2, "Paste a little more text")
+  .max(10_000, "That is too long to structure at once");
+
 export function toActionError(e: unknown): { code: string; message: string } {
   if (e instanceof InviteError)
     return { code: `invite:${e.inviteCode}`, message: e.message };

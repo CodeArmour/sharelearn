@@ -10,6 +10,7 @@ import {
   knowledgeIdsSchema,
   knowledgeItemIdSchema,
   practiceSetupSchema,
+  rawKnowledgeTextSchema,
   studyRunInputSchema,
   toActionError,
 } from "./schemas";
@@ -171,5 +172,19 @@ describe("studyRunInputSchema", () => {
       studyRunInputSchema.safeParse({ ...base, kind: "exam", questionCount: 0, correctCount: 0 })
         .success,
     ).toBe(false);
+  });
+});
+
+describe("rawKnowledgeTextSchema", () => {
+  it("rejects empty / whitespace / 1-char input", () => {
+    for (const bad of ["", "   ", "a"]) {
+      expect(rawKnowledgeTextSchema.safeParse(bad).success).toBe(false);
+    }
+  });
+  it("rejects input longer than 10k chars", () => {
+    expect(rawKnowledgeTextSchema.safeParse("x".repeat(10_001)).success).toBe(false);
+  });
+  it("accepts and trims a normal paste", () => {
+    expect(rawKnowledgeTextSchema.parse("  de hond — the dog  ")).toBe("de hond — the dog");
   });
 });

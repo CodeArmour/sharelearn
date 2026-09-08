@@ -7,7 +7,7 @@ app so provider choice stays swappable.
 
 | Directory        | Responsibility                                                          |
 | ---------------- | --------------------------------------------------------------------- |
-| `ai/providers/`  | Provider adapters (Anthropic, …) behind one internal interface.        |
+| `ai/providers/`  | Provider adapters (OpenAI, …) behind one internal interface.        |
 | `ai/schemas/`    | Zod schemas for every structured AI output.                           |
 | `ai/prompts/`    | Prompt templates, versioned.                                          |
 | `ai/services/`   | Task services: `KnowledgeProcessor`, `Explainer`, `PracticeGenerator`, `AnswerEvaluator`, `ExamGenerator`. |
