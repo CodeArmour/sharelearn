@@ -43,7 +43,7 @@ export async function structureKnowledgeAction(
  * Read 1–3 already-uploaded staging photos into a reviewable set of
  * `AiSuggestion`s. Nothing is persisted — the reviewer confirms the set on the
  * checklist, which then calls `createKnowledgeItemsAction`. The staged objects
- * are deleted on every exit path; the hourly sweep is the backstop.
+ * are deleted on every exit path; the daily sweep is the backstop.
  */
 export async function extractFromPhotosAction(
   paths: unknown,

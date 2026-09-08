@@ -4,7 +4,9 @@ import { createAdminSupabaseClient } from "@/server/auth/supabase";
 const MAX_AGE_MS = 60 * 60 * 1000;
 
 /**
- * Hourly backstop that deletes any AI-capture staging photo older than an hour.
+ * Scheduled backstop that deletes any AI-capture staging photo older than an
+ * hour. Runs daily by default (Vercel Hobby caps cron at once/day); the cutoff,
+ * not the cadence, decides what gets swept.
  * `extractFromPhotosAction` deletes them inline on every exit path; this only
  * catches objects orphaned when the browser tab closed mid-flow.
  *
