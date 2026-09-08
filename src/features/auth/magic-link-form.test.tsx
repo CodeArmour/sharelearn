@@ -50,9 +50,9 @@ describe("MagicLinkForm", () => {
 });
 
 describe("MagicLinkForm — code entry", () => {
-  it("renders the 6-digit code field in the check-your-email state", async () => {
+  it("renders the code field in the check-your-email state", async () => {
     await requestLink();
-    expect(screen.getByLabelText("Or enter the 6-digit code")).toBeInTheDocument();
+    expect(screen.getByLabelText("Or enter the code from the email")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Verify code" })).toBeInTheDocument();
   });
 
@@ -61,13 +61,13 @@ describe("MagicLinkForm — code entry", () => {
     verifyMagicLinkCode.mockResolvedValue({ ok: true, data: undefined });
     await requestLink();
 
-    await userEvent.type(screen.getByLabelText("Or enter the 6-digit code"), "123456");
+    await userEvent.type(screen.getByLabelText("Or enter the code from the email"), "12345678");
     await userEvent.click(screen.getByRole("button", { name: "Verify code" }));
 
     expect(verifyMagicLinkCode).toHaveBeenCalledTimes(1);
     const formData = verifyMagicLinkCode.mock.calls[0][1] as FormData;
     expect(formData.get("email")).toBe("me@example.com");
-    expect(formData.get("code")).toBe("123456");
+    expect(formData.get("code")).toBe("12345678");
     expect(screen.queryByText("That code is wrong or expired.")).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("MagicLinkForm — code entry", () => {
     verifyMagicLinkCode.mockResolvedValue({ ok: false, code: "supabase", message: "bad" });
     await requestLink();
 
-    await userEvent.type(screen.getByLabelText("Or enter the 6-digit code"), "000000");
+    await userEvent.type(screen.getByLabelText("Or enter the code from the email"), "000000");
     await userEvent.click(screen.getByRole("button", { name: "Verify code" }));
 
     expect(await screen.findByText("That code is wrong or expired.")).toBeInTheDocument();

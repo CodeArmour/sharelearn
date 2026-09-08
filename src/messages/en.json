@@ -179,8 +179,8 @@
     "sentBody": "We sent a sign-in link to {email}. It's valid for one hour.",
     "sentResend": "Use a different email",
     "errorGeneric": "Couldn't send the link. Try again.",
-    "codeLabel": "Or enter the 6-digit code",
-    "codePlaceholder": "123456",
+    "codeLabel": "Or enter the code from the email",
+    "codePlaceholder": "12345678",
     "verifySubmit": "Verify code",
     "verifying": "Verifying…",
     "codeError": "That code is wrong or expired."

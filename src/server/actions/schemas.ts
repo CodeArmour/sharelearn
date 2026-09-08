@@ -19,11 +19,14 @@ export const invitationIdSchema = z.string().uuid();
 export const knowledgeItemIdSchema = z.string().uuid();
 export const tokenSchema = z.string().min(10);
 
-/** The 6-digit sign-in code from the magic-link email (`{{ .Token }}`). */
+/**
+ * The numeric sign-in code from the magic-link email (`{{ .Token }}`). Supabase's
+ * "Email OTP Length" is configurable (6–10); accept the whole range.
+ */
 export const otpCodeSchema = z
   .string()
   .trim()
-  .regex(/^\d{6}$/, "Enter the 6-digit code from the email");
+  .regex(/^\d{6,10}$/, "Enter the code from the email");
 
 export const rawKnowledgeTextSchema = z
   .string()
