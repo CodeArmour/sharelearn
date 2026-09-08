@@ -272,6 +272,34 @@
         "fromPhoto": "Dit heb ik van je foto gelezen — controleer elk veld voordat je opslaat.",
         "fromPdf": "Controleer de titel en voeg daarna de tekst en een samenvatting toe.",
         "fromDocument": "Controleer de titel en plak of typ daarna de inhoud."
+      },
+      "mode": {
+        "text": "Tekst plakken",
+        "photos": "Foto's uploaden"
+      },
+      "photos": {
+        "pick": "Kies foto's (max. 3)",
+        "hint": "Een werkblad, lesboekpagina of je aantekeningen. JPEG of PNG.",
+        "preparing": "Foto's voorbereiden…",
+        "analysing": "Je foto's lezen…",
+        "rejectedFormat": "Kon die afbeelding niet lezen. Probeer een JPEG of PNG.",
+        "rejectedSize": "Die afbeelding is groter dan 10 MB.",
+        "tooMany": "Maximaal 3 foto's tegelijk.",
+        "truncated": "Sommige items ontbreken mogelijk — upload een kleiner deel voor de rest."
+      },
+      "review": {
+        "title": "Controleer wat de AI heeft gevonden",
+        "extraFields": "+{fields}",
+        "exampleCount": "{count} voorbeelden",
+        "selectAll": "Alles selecteren",
+        "selected": "{count} geselecteerd",
+        "edit": "Bewerken",
+        "remove": "Verwijderen",
+        "submit": "{count} geselecteerde toevoegen",
+        "empty": "Niets geselecteerd",
+        "successCount": "{count} items toegevoegd",
+        "failed": "Kon de items niet opslaan. Probeer het opnieuw.",
+        "needsDetails": "Details nodig"
       }
     },
     "levelLabel": "Niveau",

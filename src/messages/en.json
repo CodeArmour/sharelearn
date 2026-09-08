@@ -272,6 +272,34 @@
         "fromPhoto": "I read this from your photo — check every field before saving.",
         "fromPdf": "Check the title, then add the text and a summary.",
         "fromDocument": "Check the title, then paste or type the content."
+      },
+      "mode": {
+        "text": "Paste text",
+        "photos": "Upload photos"
+      },
+      "photos": {
+        "pick": "Choose photos (up to 3)",
+        "hint": "A worksheet, textbook page, or your notes. JPEG or PNG.",
+        "preparing": "Preparing photos…",
+        "analysing": "Reading your photos…",
+        "rejectedFormat": "Couldn't read that image. Try a JPEG or PNG.",
+        "rejectedSize": "That image is over 10 MB.",
+        "tooMany": "Up to 3 photos at a time.",
+        "truncated": "Some items may be missing — upload a smaller section for the rest."
+      },
+      "review": {
+        "title": "Review what the AI found",
+        "extraFields": "+{fields}",
+        "exampleCount": "{count} examples",
+        "selectAll": "Select all",
+        "selected": "{count} selected",
+        "edit": "Edit",
+        "remove": "Remove",
+        "submit": "Add {count} selected",
+        "empty": "Nothing selected",
+        "successCount": "{count} items added",
+        "failed": "Couldn't save the items. Try again.",
+        "needsDetails": "Needs details"
       }
     },
     "levelLabel": "Level",
