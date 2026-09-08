@@ -68,14 +68,13 @@ src/
 │   ├── layout/              AppShell, PageContainer, PageHeader, Section
 │   ├── navigation/          DesktopSidebar, MobileBottomNav, NavItem, BrandMark, Add action
 │   └── shared/              cross-feature helpers
-├── features/                domain-oriented UI (grows per screen; empty for now)
+├── features/                domain-oriented UI, one folder per screen/area
 ├── lib/
 │   ├── config/navigation.ts single source of truth for nav
 │   └── utils/cn.ts          class-name merge helper
 ├── types/                   frontend/domain contracts (knowledge, user, cefr, personal)
-├── data/mock/               typed mock data + a read-only access surface
-├── server/                  RESERVED — db / auth / storage / repositories / services (README)
-└── ai/                      RESERVED — providers / schemas / prompts / services (README)
+├── server/                  db / auth / repositories / services / actions (README)
+└── ai/                      providers / schemas / prompts / services (README)
 ```
 
 ### Directory responsibilities
@@ -84,13 +83,10 @@ src/
 - **`components/ui/`** — generic, reusable, unaware of Dutch-learning concepts.
 - **`components/layout` + `components/navigation`** — the application shell.
 - **`features/<name>/`** — everything specific to one screen/domain area
-  (`components/`, `hooks/`, `types/`, `utils/`, `mock-data.ts`). Created when a
-  screen needs it, not upfront.
-- **`data/mock/`** — the only place mock data lives. Screens import the async
-  accessors (`getKnowledgeItems`, `getCurrentUser`, …); when the backend lands
-  these are re-pointed at `server/services` with minimal call-site change.
-- **`server/`, `ai/`** — reserved; see their READMEs. **Client components must
-  never import from `server/` or `ai/`.**
+  (`components/`, `hooks/`, `types/`, `utils/`). Created when a screen needs it.
+- **`server/`, `ai/`** — data, auth, business logic and AI; see their READMEs.
+  Screens reach them through Server Components and Server Actions. **Client
+  components must never import from `server/` or `ai/`** (except `ai/providers/config`).
 
 ### Shared vs personal data
 

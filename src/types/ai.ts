@@ -5,9 +5,8 @@ export type AiAttachmentKind = "image" | "pdf" | "document";
 
 /**
  * Frontend contract for what the AI structuring step returns. A *proposal* only —
- * nothing is written to the shared library until a person confirms it. When the
- * real provider lands, `ai/services/KnowledgeProcessor` returns this shape and
- * the `data/mock` stand-in is dropped.
+ * nothing is written to the shared library until a person confirms it.
+ * `ai/services/knowledge-processor` produces this shape from the model output.
  */
 export interface AiSuggestion {
   type: KnowledgeType;

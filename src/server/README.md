@@ -1,18 +1,19 @@
-# `src/server/` — server-side application logic (reserved)
+# `src/server/` — server-side application logic
 
-Intentionally minimal during the frontend-foundation phase. This is where
-**all** database, auth, storage and business logic will live once backend work
-starts. Nothing here is implemented yet.
+All database, auth and business logic. Backed by Supabase (Postgres + Auth) with
+Drizzle ORM; see `docs/superpowers/specs/` for the per-phase design docs.
 
-## Planned layout
+## Layout
 
 | Directory            | Responsibility                                                            |
 | -------------------- | ------------------------------------------------------------------------- |
-| `server/db/`         | Database client + schema (Prisma or Drizzle — decision pending).          |
-| `server/auth/`       | Session/auth helpers (Auth.js or Supabase Auth — decision pending).       |
-| `server/storage/`    | File & image storage adapter (Supabase Storage or S3-compatible).         |
-| `server/repositories/` | Data access — one module per aggregate (knowledge, group, practice…).   |
+| `server/db/`         | Drizzle client + schema + migrations.                                    |
+| `server/auth/`       | Supabase Auth session helpers.                                           |
+| `server/repositories/` | Data access — one module per aggregate (knowledge, groups, personal…). |
 | `server/services/`   | Use-case orchestration; the only layer route handlers / actions call.    |
+| `server/actions/`    | `"use server"` entry points; validate input, call a service.             |
+
+Storage (files) is not yet implemented — `FileItem.url` stays `null`.
 
 ## Rules
 
@@ -20,7 +21,5 @@ starts. Nothing here is implemented yet.
   Route Handlers and Server Actions may.
 - Route/action code talks to `services`; `services` talk to `repositories` and
   `storage`; `repositories` are the only code that touches `db`.
-- Return types should match the contracts in `src/types/` so the frontend does
-  not change shape when mock data is replaced.
-
-Until then, `src/data/mock/` provides the same contracts for the UI to build on.
+- Return types match the contracts in `src/types/`, so the frontend shape does
+  not depend on where the data comes from.
