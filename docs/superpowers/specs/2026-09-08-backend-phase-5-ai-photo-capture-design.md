@@ -3,11 +3,13 @@
 **Date:** 2026-09-08
 **Status:** Design — not started
 **Scope:** Add a third input mode to the Add-knowledge screen's AI-capture
-step: **Upload photos**. A person picks 1–3 photos, the AI reads them together,
+step: **Upload photos**. A person picks 1–3 photos, the AI reads them together
 and returns a *set* of typed knowledge drafts (`vocabulary` / `grammar` /
-`reading` / `note`) plus a one-line summary. The reviewer confirms the set on a
-new checklist screen and bulk-inserts what they keep. Photos are transient —
-staged in Supabase Storage for the duration of the call, then deleted.
+`reading` / `note`), each with its per-type fields filled. The reviewer confirms
+the set on a new checklist screen and bulk-inserts what they keep. Photos are
+transient — staged in Supabase Storage for the duration of the call, then
+deleted. **No summary of the upload is produced or stored** — the output is the
+item set and nothing else.
 
 **Photos only. No PDF, no document/text files, no audio. No permanent
 attachments — nothing links a saved knowledge item back to its source image.**
@@ -32,8 +34,8 @@ introduces the first bucket.
 
 | Today | After Phase 5 |
 | --- | --- |
-| AI-capture step: one input, a textarea → `structureKnowledgeAction(rawText)` → **one** `AiSuggestion` → pre-filled Add form | A mode toggle: **Paste text** (unchanged) / **Upload photos**. The photo path → `extractFromPhotosAction(paths)` → **`{ summary, items: AiSuggestion[] }`** → a review **checklist** → bulk insert |
-| `structureKnowledge` returns a single discriminated-union member — one type, one item | `extractKnowledgeFromImages` returns `{ summary, items[] }`; each item is the **same** union member Phase 4 already defines. Mixed types and repeated items (10 vocab words) are the normal case |
+| AI-capture step: one input, a textarea → `structureKnowledgeAction(rawText)` → **one** `AiSuggestion` → pre-filled Add form | A mode toggle: **Paste text** (unchanged) / **Upload photos**. The photo path → `extractFromPhotosAction(paths)` → **`{ items: AiSuggestion[] }`** → a review **checklist** → bulk insert |
+| `structureKnowledge` returns a single discriminated-union member — one type, one item | `extractKnowledgeFromImages` returns `{ items[] }`; each item is the **same** union member Phase 4 already defines, with the **same per-type fields** filled. Mixed types and repeated items (10 vocab words) are the normal case |
 | No file storage anywhere | One Supabase Storage bucket, `knowledge-capture-staging`, per-user prefix, RLS-scoped, swept |
 | `AiProvider.generateStructured({ system, user, schema })` — text in | Same method gains an optional `images` field — image parts in |
 
@@ -54,9 +56,8 @@ screen built for confirming a set rather than filling N forms.
 | Size ceiling | Each file ≤ **10 MB** before downscaling; rejected client-side before upload. | Matches a phone photo; bounds the upload. |
 | Client-side downscaling | Every image is redrawn to **≤ 1600 px on the long edge, JPEG q≈0.82** in the browser before upload. | A vision model reads worksheet text fine at ~1600 px. Turns 3 × 8 MB into 3 × ~400 KB — sidesteps the Next.js Server Action body limit, cuts token cost, speeds the upload. |
 | Storage lifetime | **Transient.** Staged in `knowledge-capture-staging`, deleted on every exit path (success, extraction failure, user abandons). A scheduled sweep deletes anything older than 1 hour as a backstop. | "Supabase storage" here means a staging area, not a source-of-truth artifact. No `sources` table, no back-links, no storage RLS surface beyond the staging bucket. |
-| Extraction shape | One call across all 1–3 images → `{ summary: string, items: KnowledgeSuggestion[] }`, `items` capped at **30**. | One call keeps latency and cost predictable; 3 downscaled images fit comfortably. 30 is the point past which the review screen stops being reviewable. |
-| Per-item schema | **Reuse `knowledgeSuggestionSchema` and `toAiSuggestion` unchanged.** New wrapper `knowledgeExtractionSchema = { summary, items: array(union).min(1).max(30) }`. | The union already models all four types with the exact field names the Add form wants. Phase 5 only adds the envelope. |
-| The summary | **Review-screen context only.** Shown at the top of the checklist ("A vocabulary list from a beginner lesson on food, ~12 words"). Never persisted. | A trust aid, not knowledge worth keeping. Saving it would clutter the corpus. |
+| Extraction shape | One call across all 1–3 images → `{ items: KnowledgeSuggestion[] }`, `items` capped at **30**. **No summary field.** | One call keeps latency and cost predictable; 3 downscaled images fit comfortably. 30 is the point past which the review screen stops being reviewable. A summary was considered and cut — the output is the item set. |
+| Per-item schema | **Reuse `knowledgeSuggestionSchema` and `toAiSuggestion` unchanged.** New wrapper `knowledgeExtractionSchema = { items: array(union).min(1).max(30) }`. | The union already models all four types with the exact field names the Add form wants, including the full per-type field set (§5). Phase 5 only adds the envelope. |
 | Review UX | A **checklist screen**: one row per item (type badge + key fields), all checked by default, inline quick-edit, "expand" opens the full Phase 4 Add form for that row, one "Add N selected" button. | Keeps Phase 4's human-confirmation gate without making anyone fill 10 forms. |
 | Invalid rows | Items that fail `knowledgeSuggestionSchema` are dropped before the screen renders. If **every** item fails (or `items` is empty), fall back to the manual Add form exactly as Phase 4 does on `error`. | Partial extraction is still useful; a total miss behaves like today. |
 | Bulk insert | New `createKnowledgeItemsAction(inputs[])` → all selected rows in **one DB transaction**, all-or-nothing. | A half-inserted batch with no clear "which ones" is worse than a retry. |
@@ -83,7 +84,7 @@ add-knowledge-view.tsx (client)
        │         ├─ KNOWLEDGE_EXTRACTION_PROMPT src/ai/prompts/knowledge-extractor.ts
        │         ├─ knowledgeExtractionSchema   src/ai/schemas/knowledge-suggestion.ts
        │         └─ ensureGrammarExamples(...)  (reused, per grammar item)
-       │    ↳ returns { summary, items: AiSuggestion[] }
+       │    ↳ returns { items: AiSuggestion[] }
        ├─ delete staged objects (user session) always — success or failure
        │
        └─ review checklist → createKnowledgeItemsAction(selected)  src/server/actions/knowledge.ts
@@ -199,41 +200,74 @@ Add, alongside the untouched `knowledgeSuggestionSchema` /
 
 ```ts
 export const knowledgeExtractionSchema = z.object({
-  summary: z.string().min(1).max(400),
   items: z.array(knowledgeSuggestionSchema).min(1).max(30),
 });
 export type KnowledgeExtraction = z.infer<typeof knowledgeExtractionSchema>;
 ```
 
-No change to the union, `NOTICE_KEYS`, `shared`, or `toAiSuggestion`. The
-service maps `toAiSuggestion` over `items`.
+**No `summary` field.** No change to the union, `NOTICE_KEYS`, `shared`, or
+`toAiSuggestion`. The service maps `toAiSuggestion` over `items`.
+
+### Per-type fields the extractor fills
+
+Each `items[]` entry is one member of the existing Phase 4 union — the
+extractor fills the **same fields the paste-text path fills** (schema in
+`knowledge-suggestion.ts`, guidance from `KNOWLEDGE_PROCESSOR_PROMPT_V2`). No
+field is added or removed for Phase 5; the photo prompt just has to produce
+them from an image instead of pasted text.
+
+| Type | Required | Also filled when they apply | Shared (every type) |
+| --- | --- | --- | --- |
+| `vocabulary` | `term` (Dutch, verbatim), `meaning` (English gloss) | `partOfSpeech` (English); `article` `"de"`/`"het"` (nouns); `plural` (nouns); `pastTense`, `perfect` (verbs); `example` (short Dutch sentence), `exampleTranslation`; `usageNote` (register / common mistake / collocation) | `level` (proposed CEFR A1–C2, reviewer confirms), `tags` (0–4 short lowercase), `noticeKey` (optional, from the closed set) |
+| `grammar` | `title` (short English name), `explanation` (English prose only — **no example sentences in here**) | `summary` (one English sentence); `examples` — 2–4 `{ nl, en }` demonstrating the rule, **required unless the rule genuinely can't be shown in a sentence**; the `ensureGrammarExamples` follow-up backfills when empty | same |
+| `reading` | `title`, `body` (the passage **verbatim** — never translate/edit) | `summary` (1–2 English sentences) | same |
+| `note` | `body` (the text, learner's wording kept) | `title` (short label) | same |
+
+Notes carried from Phase 4 and unchanged here:
+- `term` is always Dutch, `meaning` always English.
+- A `reading` `body` and a `note` `body` are never rewritten or translated.
+- For `vocabulary`, conjugations / plurals / articles that aren't standard
+  Dutch are **omitted**, not guessed.
+- Per-item `level` **is** proposed (Phase 4 PR #12/#13 reversed the earlier
+  "never guess level" rule — the extractor follows the current prompt).
 
 ### `src/ai/prompts/knowledge-extractor.ts` — new, versioned
 
-`KNOWLEDGE_EXTRACTION_PROMPT` + `EXTRACTION_PROMPT_VERSION = "v1"`. Content:
+`KNOWLEDGE_EXTRACTION_PROMPT` + `EXTRACTION_PROMPT_VERSION = "v1"`. It reuses the
+**per-type field guidance from `KNOWLEDGE_PROCESSOR_PROMPT_V2` almost verbatim**
+(the four type blocks, the "fill every field that genuinely applies / omit
+rather than invent" rule, the shared `level` / `tags` / `noticeKey` block, the
+Dutch-vs-English and don't-rewrite-bodies rules) — the only real change is the
+input and the fact that it returns a list. Content:
 
 - Role: extract study material from **photos** for a Dutch-language learning
-  library. The images may be a worksheet, textbook page, whiteboard, or
-  handwritten notes.
+  app. The images may be a worksheet, textbook page, whiteboard, or handwritten
+  notes.
 - Read **all** provided images as one source. If the same word/rule appears in
   more than one image, emit it **once**.
-- Produce a one-line `summary` (what the photos are, roughly how much) — plain
-  text, ≤ 400 chars, no markdown.
-- Split the content into `items`, each one of the four types, using the **same**
-  field conventions as the text prompt (`term` = Dutch, `meaning` = English
-  gloss; grammar `examples` are `nl` + optional `en`; a passage → `reading`;
-  a standalone tip → `note`). One vocab word = one `vocabulary` item.
-- **Do not guess `level`** — omit it.
-- Per item, pick the single most useful `noticeKey` or omit it.
+- Produce `items`: for **each distinct thing to learn** in the photos, one
+  entry of the right type with **every applicable per-type field filled** (the
+  table in §5 — same fields as the paste-text path):
+  - a single word/phrase → one `vocabulary` item (10 words on a list = 10
+    items), with `partOfSpeech` / `article` / `plural` / `pastTense` /
+    `perfect` / `example` + `exampleTranslation` / `usageNote` where they apply;
+  - a rule or pattern → `grammar`, with `explanation` in English prose and
+    `examples` as 2–4 `{ nl, en }` sentences (never put sentences in
+    `explanation`);
+  - a passage to read → `reading`, `body` verbatim;
+  - anything else → `note`.
+- Every item also gets a proposed `level` (CEFR A1–C2), 0–4 `tags`, and
+  optionally one `noticeKey` from the closed set.
+- **No summary of the upload** — do not describe the photos; only return items.
 - Hard cap: at most 30 items. If the photos contain more, return the 30 most
-  useful and nothing else (the reviewer is told some may be missing).
+  useful and nothing else.
 - Output must satisfy the provided JSON schema. No prose outside it.
 
 ### `src/ai/services/knowledge-extractor.ts` — new
 
 ```ts
 export type ExtractResult =
-  | { status: "ok"; summary: string; items: AiSuggestion[]; truncated: boolean }
+  | { status: "ok"; items: AiSuggestion[]; truncated: boolean }
   | { status: "unavailable" }
   | { status: "error" };
 
@@ -248,7 +282,7 @@ export async function extractKnowledgeFromImages(
    user: "<see below>", schema: knowledgeExtractionSchema, images })` inside a
    `try`.
    - `user` text: a short instruction line, e.g. `"Extract every distinct
-     study item from the ${n} attached image(s)."`
+     study item from the ${n} attached image(s), with all per-type fields."`
 4. `knowledgeExtractionSchema.safeParse(raw)` — belt-and-braces. On failure ⇒
    `{ status: "error" }` (logged with `EXTRACTION_PROMPT_VERSION`).
 5. `items = parsed.items.map(toAiSuggestion)`.
@@ -258,7 +292,7 @@ export async function extractKnowledgeFromImages(
    into a dozen slow follow-up calls. (Lift `ensureGrammarExamples` to a shared
    helper module — `src/ai/services/grammar-examples.ts` — imported by both
    `knowledge-processor.ts` and `knowledge-extractor.ts`.)
-7. Return `{ status: "ok", summary, items, truncated: parsed.items.length === 30 }`.
+7. Return `{ status: "ok", items, truncated: parsed.items.length === 30 }`.
 8. Any `AiProviderError` / unexpected throw ⇒ log, `{ status: "error" }`.
 
 `src/ai/README.md`: update the services row — `knowledge-extractor` implemented;
@@ -271,7 +305,7 @@ note the shared `grammar-examples` helper.
 ```ts
 export async function extractFromPhotosAction(
   paths: unknown,
-): Promise<ActionResult<{ summary: string; items: AiSuggestion[]; truncated: boolean }>> {
+): Promise<ActionResult<{ items: AiSuggestion[]; truncated: boolean }>> {
   const parsed = capturePathsSchema.safeParse(paths);   // 1–3 strings, each "{uuid}/{uuid}.jpg" ({userId}/{file})
   if (!parsed.success) return { ok: false, code: "validation", message: "..." };
 
@@ -294,7 +328,7 @@ export async function extractFromPhotosAction(
     );
     const result = await extractKnowledgeFromImages(signed);
     switch (result.status) {
-      case "ok":          return { ok: true, data: { summary: result.summary, items: result.items, truncated: result.truncated } };
+      case "ok":          return { ok: true, data: { items: result.items, truncated: result.truncated } };
       case "unavailable": return { ok: false, code: "ai-unavailable", message: "..." };
       case "error":       return { ok: false, code: "ai-error", message: "..." };
     }
@@ -394,7 +428,7 @@ fixture.
 
 State machine gains one mode between `loading` and `review`:
 
-- `mode = "review-list"` holds `{ summary, rows: ReviewRow[] }` where
+- `mode = "review-list"` holds `{ truncated, rows: ReviewRow[] }` where
   `ReviewRow = { id: string; checked: boolean; suggestion: AiSuggestion }`.
 - Renders `<ReviewChecklist>` (new component, §8).
 - "Add N selected" → build `CreateKnowledgeItemInput[]` from the checked rows
@@ -411,9 +445,10 @@ State machine gains one mode between `loading` and `review`:
 
 ### `ai-review-banner.tsx`
 
-Reused above the checklist, with the `summary` string and, when `truncated`,
-an extra line: `add.ai.photos.truncated` ("Some items may be missing — upload a
-smaller section for the rest").
+Reused above the checklist. No summary line. When `truncated`, it shows
+`add.ai.photos.truncated` ("Some items may be missing — upload a smaller
+section for the rest"); otherwise it's the existing "review before saving"
+reminder.
 
 ## 8. `ReviewChecklist` component (new)
 
@@ -421,7 +456,6 @@ smaller section for the rest").
 
 ```
 props: {
-  summary: string;
   truncated: boolean;
   rows: ReviewRow[];
   onToggle(id): void;
@@ -433,16 +467,18 @@ props: {
 }
 ```
 
-- Header: summary line + "select all / none" + live "N selected".
+- Header: "select all / none" + live "N selected". No summary.
 - Each row: a checkbox, a **type badge** (`vocabulary` / `grammar` / `reading` /
   `note` — reuse the badge/label from the knowledge list if one exists), and a
-  one-line preview:
-  - vocabulary → `term — meaning`
-  - grammar → `title`
+  one-line preview built from that row's own fields:
+  - vocabulary → `term — meaning` (＋ a small muted count of extra fields filled,
+    e.g. "+article, plural, example", so the reviewer can see the AI populated
+    them without expanding)
+  - grammar → `title` (＋ "N examples")
   - reading → `title`
   - note → `title || first ~60 chars of body`
-- Row actions: **Edit** (opens the full form), **Remove** (drops the row
-  entirely).
+- Row actions: **Edit** (opens the full form with **every** per-type field the
+  AI filled), **Remove** (drops the row entirely).
 - No inline field editing in v1 beyond check/remove — "Edit" is the escape
   hatch. (Inline editing of `term`/`meaning` is a noted nicety, not in scope.)
 - Footer: **Add N selected** (disabled when 0 checked or `submitting`).
@@ -467,6 +503,8 @@ New keys under `add.ai`:
 | `photos.submit` | "Structure with AI" |
 | `photos.truncated` | "Some items may be missing — upload a smaller section for the rest." |
 | `review.title` | "Review what the AI found" |
+| `review.extraFields` | "+{fields}" |
+| `review.exampleCount` | "{count} examples" |
 | `review.selectAll` | "Select all" |
 | `review.selected` | "{count} selected" |
 | `review.edit` | "Edit" |
@@ -523,15 +561,15 @@ No new `notice.*` keys — the per-item `noticeKey` set is unchanged.
 
 | File | Covers |
 | --- | --- |
-| `src/ai/schemas/knowledge-suggestion.test.ts` (extend) | `knowledgeExtractionSchema`: accepts a mixed 8-item set; enforces `items.max(30)` and `.min(1)`; rejects a set with one malformed member; `summary` length bound |
-| `src/ai/services/knowledge-extractor.test.ts` (new) | Fake `AiProvider`: happy path (mixed items) → `ok` with mapped `AiSuggestion[]`; `items` length 30 → `truncated: true`; provider throws → `error`; schema-invalid envelope → `error`; `getAiProvider()` null → `unavailable`; grammar-examples follow-up runs for ≤ 3 grammar items only |
+| `src/ai/schemas/knowledge-suggestion.test.ts` (extend) | `knowledgeExtractionSchema`: accepts a mixed 8-item set; enforces `items.max(30)` and `.min(1)`; rejects a set with one malformed member; has **no** `summary` key; a vocabulary item with the full grammatical extras and a grammar item with `examples` both parse |
+| `src/ai/services/knowledge-extractor.test.ts` (new) | Fake `AiProvider`: happy path (mixed items, per-type fields preserved through `toAiSuggestion`) → `ok` with mapped `AiSuggestion[]`; `items` length 30 → `truncated: true`; provider throws → `error`; schema-invalid envelope → `error`; `getAiProvider()` null → `unavailable`; grammar-examples follow-up runs for ≤ 3 grammar items only |
 | `src/ai/services/grammar-examples.test.ts` (new, moved from processor test) | The lifted helper still behaves as in Phase 4 |
 | `src/ai/providers/openai.test.ts` (extend) | `generateStructured` with `images` builds the content-parts `input` with one `input_image` per URL; text-only path unchanged; `max_output_tokens` bump asserted |
 | `src/server/actions/ai.test.ts` (extend) | `capturePathsSchema` rejects 0 paths, 4 paths, a path outside the caller's prefix, a non-`.jpg`; `finally` calls `storage.remove` on both the `ok` and `error` branch (mocked storage); `ai-unavailable` surfaces with no provider |
 | `src/server/actions/knowledge.test.ts` (extend) | `createKnowledgeItemsAction`: rejects an empty array and > 30; a mixed valid batch returns `ids` of the right length; a thrown service error maps to `code: "error"` |
 | `src/server/services/knowledge-service.test.ts` (extend) | `createKnowledgeItems` calls `insertKnowledgeItem` once per input inside one `db.transaction`; `buildKnowledgeRow` maps each of the 4 types (reading gets `wordCount`); one row throwing rejects the whole call (transaction rolls back); `createKnowledgeItem` still passes after the `buildKnowledgeRow` extraction |
 | `src/features/add/downscale-image.test.ts` (new) | A > 1600 px fixture comes back ≤ 1600 px on the long edge and `type === "image/jpeg"`; an undecodable blob rejects with the typed error |
-| `src/features/add/review-checklist.test.tsx` (new) | Renders one row per item with the right badge + preview per type; toggle / toggle-all / remove update the count; "Add N selected" disabled at 0; fires `onSubmit` |
+| `src/features/add/review-checklist.test.tsx` (new) | Renders one row per item with the right badge + preview per type (vocab shows `term — meaning` + extra-field hint, grammar shows the example count); toggle / toggle-all / remove update the count; "Add N selected" disabled at 0; fires `onSubmit`; `truncated` shows the notice |
 | `src/features/add/add-knowledge-view.test.tsx` (extend) | Photos mode + mocked `extractFromPhotosAction` → `review-list` renders; "Edit" round-trips a row through the form and back; "Add N selected" + mocked `createKnowledgeItemsAction` → `SuccessPanel` with the count; action rejection → inline error, still on the list |
 | `src/app/api/cron/sweep-capture-staging/route.test.ts` (new) | 401 without the bearer secret; 503 when `CRON_SECRET` unset; with a mocked admin client, deletes only objects older than 1h |
 
