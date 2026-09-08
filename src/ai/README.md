@@ -10,7 +10,7 @@ Provider-isolated so the model vendor stays swappable. Currently backs the
 | `ai/providers/`  | Provider adapters (OpenAI) behind the `AiProvider` interface; `config.ts` holds the SDK-free `isAiConfigured()`. |
 | `ai/schemas/`    | Zod schemas for every structured AI output.                                        |
 | `ai/prompts/`    | Prompt templates, versioned (`PROMPT_VERSION`).                                     |
-| `ai/services/`   | Task services. Implemented: `knowledge-processor`. Planned: `Explainer`, `PracticeGenerator`, `AnswerEvaluator`, `ExamGenerator`. |
+| `ai/services/`   | Task services. Implemented: `knowledge-processor`, `knowledge-extractor` (share `grammar-examples`). Planned: `Explainer`, `PracticeGenerator`, `AnswerEvaluator`, `ExamGenerator`. |
 
 ## Flow
 
@@ -21,6 +21,9 @@ Server Action  →  ai/services  →  ai/providers  (one structured model call)
 
 The knowledge processor also makes a focused follow-up call when a grammar
 result comes back without examples.
+
+The knowledge processor and the photo extractor share `ensureGrammarExamples`
+(`ai/services/grammar-examples.ts`) for the grammar-examples follow-up call.
 
 ## Rules
 
