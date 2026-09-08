@@ -9,7 +9,6 @@ import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
 import { structureKnowledgeAction } from "@/server/actions/ai";
 import { createKnowledgeItemAction, updateKnowledgeItemAction } from "@/server/actions/knowledge";
-import type { CreateKnowledgeItemInput } from "@/server/actions/schemas";
 import type { KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
@@ -18,8 +17,8 @@ import { AiFailedPanel } from "./ai-failed-panel";
 import { AiReviewBanner } from "./ai-review-banner";
 import { KnowledgeForm } from "./knowledge-form";
 import { SuccessPanel } from "./success-panel";
+import { buildCreateInput } from "./suggestion-to-input";
 import {
-  type AuthableType,
   type Errors,
   type Example,
   itemToValues,
@@ -30,75 +29,6 @@ import {
 } from "./types";
 
 type Mode = "manual" | "processing" | "review" | "failed";
-
-function parseTags(raw: string | undefined): string[] {
-  return (raw ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
-function toNullable(raw: string | undefined): string | null {
-  const trimmed = raw?.trim();
-  return trimmed ? trimmed : null;
-}
-
-function buildCreateInput(
-  type: AuthableType,
-  values: Values,
-  examples: Example[],
-  source: KnowledgeSource,
-): CreateKnowledgeItemInput {
-  const shared = {
-    level: (values.level || null) as CreateKnowledgeItemInput["level"],
-    tags: parseTags(values.tags),
-    source,
-  };
-
-  switch (type) {
-    case "vocabulary":
-      return {
-        ...shared,
-        type: "vocabulary",
-        term: values.term!.trim(),
-        meaning: values.meaning!.trim(),
-        partOfSpeech: values.partOfSpeech!.trim(),
-        example: toNullable(values.example),
-        exampleTranslation: toNullable(values.exampleTranslation),
-        article: values.article === "de" || values.article === "het" ? values.article : null,
-        plural: toNullable(values.plural),
-        pastTense: toNullable(values.pastTense),
-        perfect: toNullable(values.perfect),
-        usageNote: toNullable(values.usageNote),
-      };
-    case "grammar":
-      return {
-        ...shared,
-        type: "grammar",
-        title: values.title!.trim(),
-        summary: values.summary!.trim(),
-        explanation: values.explanation!.trim(),
-        examples: examples
-          .filter((e) => e.nl.trim().length > 0)
-          .map((e) => ({ nl: e.nl.trim(), en: toNullable(e.en) })),
-      };
-    case "reading":
-      return {
-        ...shared,
-        type: "reading",
-        title: values.title!.trim(),
-        body: values.readingBody!.trim(),
-        summary: toNullable(values.summary),
-      };
-    case "note":
-      return {
-        ...shared,
-        type: "note",
-        title: toNullable(values.title),
-        body: values.noteBody!.trim(),
-      };
-  }
-}
 
 /**
  * Capture knowledge, two ways. The manual path is a plain form. The AI path
