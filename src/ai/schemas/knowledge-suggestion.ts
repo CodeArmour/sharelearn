@@ -169,3 +169,14 @@ export function toAiSuggestion(parsed: KnowledgeSuggestion): AiSuggestion {
       };
   }
 }
+
+/**
+ * What the photo extractor returns — the whole item set from one vision call.
+ * No summary: the output is just the items. Each entry is the same union member
+ * the paste-text path uses, so `toAiSuggestion` maps it unchanged.
+ */
+export const knowledgeExtractionSchema = z.object({
+  items: z.array(knowledgeSuggestionSchema).min(1).max(30),
+});
+
+export type KnowledgeExtraction = z.infer<typeof knowledgeExtractionSchema>;

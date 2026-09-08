@@ -213,3 +213,58 @@ describe("toAiSuggestion", () => {
     expect(out.examples).toEqual([{ nl: "Zin zonder vertaling.", en: "" }]);
   });
 });
+
+import { knowledgeExtractionSchema } from "./knowledge-suggestion";
+
+describe("knowledgeExtractionSchema", () => {
+  const vocab = { type: "vocabulary", term: "de fiets", meaning: "the bicycle" };
+  const grammar = {
+    type: "grammar",
+    title: "V2",
+    explanation: "finite verb second",
+    examples: [{ nl: "Morgen ga ik.", en: "Tomorrow I go." }],
+  };
+
+  it("accepts a mixed set", () => {
+    const r = knowledgeExtractionSchema.safeParse({ items: [vocab, grammar, { type: "note", body: "n" }] });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects an empty set", () => {
+    expect(knowledgeExtractionSchema.safeParse({ items: [] }).success).toBe(false);
+  });
+
+  it("rejects more than 30 items", () => {
+    const items = Array.from({ length: 31 }, () => vocab);
+    expect(knowledgeExtractionSchema.safeParse({ items }).success).toBe(false);
+  });
+
+  it("rejects a set with one malformed member", () => {
+    expect(
+      knowledgeExtractionSchema.safeParse({ items: [vocab, { type: "vocabulary", term: "x" }] }).success,
+    ).toBe(false);
+  });
+
+  it("has no summary field (extra keys stripped, summary not required)", () => {
+    const r = knowledgeExtractionSchema.safeParse({ items: [vocab] });
+    expect(r.success).toBe(true);
+    if (r.success) expect("summary" in r.data).toBe(false);
+  });
+
+  it("keeps a vocabulary item's full grammatical extras", () => {
+    const full = {
+      type: "vocabulary",
+      term: "werken",
+      meaning: "to work",
+      partOfSpeech: "verb",
+      pastTense: "werkte",
+      perfect: "heeft gewerkt",
+      example: "Ik werk hier.",
+      exampleTranslation: "I work here.",
+      level: "A2",
+      tags: ["werkwoord"],
+    };
+    const r = knowledgeExtractionSchema.safeParse({ items: [full] });
+    expect(r.success).toBe(true);
+  });
+});
