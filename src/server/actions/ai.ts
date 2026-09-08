@@ -66,22 +66,13 @@ export async function extractFromPhotosAction(
   const bucket = supabase.storage.from(CAPTURE_BUCKET);
 
   try {
-    let signed: { url: string }[];
-    try {
-      signed = await Promise.all(
-        parsed.data.map(async (path) => {
-          const { data, error } = await bucket.createSignedUrl(path, 300);
-          if (error || !data) throw new Error(error?.message ?? "could not sign upload");
-          return { url: data.signedUrl };
-        }),
-      );
-    } catch (error) {
-      console.error("[action:extractFromPhotos] signing failed", error);
-      // TEMP DIAGNOSTIC: surface the real reason (usually a missing SELECT RLS
-      // policy on the staging bucket). Revert to a generic message once fixed.
-      const detail = error instanceof Error ? error.message : String(error);
-      return { ok: false, code: "ai-error", message: `Sign failed: ${detail}` };
-    }
+    const signed = await Promise.all(
+      parsed.data.map(async (path) => {
+        const { data, error } = await bucket.createSignedUrl(path, 300);
+        if (error || !data) throw new Error(error?.message ?? "could not sign upload");
+        return { url: data.signedUrl };
+      }),
+    );
 
     const result = await extractKnowledgeFromImages(signed);
     switch (result.status) {
@@ -90,18 +81,11 @@ export async function extractFromPhotosAction(
       case "unavailable":
         return { ok: false, code: "ai-unavailable", message: "AI capture is not available" };
       case "error":
-        return {
-          ok: false,
-          code: "ai-error",
-          // TEMP DIAGNOSTIC: the model/vision call failed or returned nothing
-          // usable — see the `[ai:knowledge-extractor:v1]` server log for detail.
-          message: "Extraction failed — the vision call errored or returned no usable items",
-        };
+        return { ok: false, code: "ai-error", message: "Could not read those photos — add items manually" };
     }
   } catch (error) {
     console.error("[action:extractFromPhotos] failed", error);
-    const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, code: "ai-error", message: `Unexpected: ${detail}` };
+    return { ok: false, code: "ai-error", message: "Could not read those photos — add items manually" };
   } finally {
     await bucket.remove(parsed.data).catch(() => {});
   }
