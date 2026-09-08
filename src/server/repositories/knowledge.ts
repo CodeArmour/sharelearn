@@ -157,6 +157,63 @@ async function selectWithAttribution(
   );
 }
 
+/**
+ * Non-deleted items in `groupId` whose normalized key matches one of the given
+ * lists: `lower(btrim(term))` for vocabulary, `lower(btrim(title))` for grammar
+ * and reading. Callers pass already-normalized (trimmed + lowercased) values.
+ * Used only to warn about duplicates on add — returns just id/type/term/title.
+ */
+export async function findKnowledgeByNormalizedKey(
+  groupId: string,
+  keys: { vocabulary: string[]; grammar: string[]; reading: string[] },
+): Promise<{ id: string; type: KnowledgeType; term: string | null; title: string | null }[]> {
+  const typeClauses = [
+    keys.vocabulary.length > 0
+      ? and(
+          eq(knowledgeItems.type, "vocabulary"),
+          inArray(sql`lower(btrim(${knowledgeItems.term}))`, keys.vocabulary),
+        )
+      : null,
+    keys.grammar.length > 0
+      ? and(
+          eq(knowledgeItems.type, "grammar"),
+          inArray(sql`lower(btrim(${knowledgeItems.title}))`, keys.grammar),
+        )
+      : null,
+    keys.reading.length > 0
+      ? and(
+          eq(knowledgeItems.type, "reading"),
+          inArray(sql`lower(btrim(${knowledgeItems.title}))`, keys.reading),
+        )
+      : null,
+  ].filter((c): c is NonNullable<typeof c> => c != null);
+
+  if (typeClauses.length === 0) return [];
+
+  const rows = await db
+    .select({
+      id: knowledgeItems.id,
+      type: knowledgeItems.type,
+      term: knowledgeItems.term,
+      title: knowledgeItems.title,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+        or(...typeClauses),
+      ),
+    );
+
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type as KnowledgeType,
+    term: r.term,
+    title: r.title,
+  }));
+}
+
 export async function insertKnowledgeItem(
   tx: Db,
   row: NewKnowledgeItemRow,

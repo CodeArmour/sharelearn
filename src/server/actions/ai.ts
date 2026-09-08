@@ -4,6 +4,10 @@ import { extractKnowledgeFromImages } from "@/ai/services/knowledge-extractor";
 import { structureKnowledge } from "@/ai/services/knowledge-processor";
 import { CAPTURE_BUCKET } from "@/lib/supabase/constants";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
+import {
+  duplicateKeyFromSuggestion,
+  findDuplicateKeys,
+} from "@/server/services/knowledge-service";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type { AiSuggestion } from "@/types";
 
@@ -47,7 +51,7 @@ export async function structureKnowledgeAction(
  */
 export async function extractFromPhotosAction(
   paths: unknown,
-): Promise<ActionResult<{ items: AiSuggestion[]; truncated: boolean }>> {
+): Promise<ActionResult<{ items: AiSuggestion[]; truncated: boolean; duplicates: number[] }>> {
   const parsed = capturePathsSchema.safeParse(paths);
   if (!parsed.success) {
     return { ok: false, code: "validation", message: "Invalid photo upload" };
@@ -76,8 +80,20 @@ export async function extractFromPhotosAction(
 
     const result = await extractKnowledgeFromImages(signed);
     switch (result.status) {
-      case "ok":
-        return { ok: true, data: { items: result.items, truncated: result.truncated } };
+      case "ok": {
+        const dupMap = await findDuplicateKeys(
+          result.items.map(duplicateKeyFromSuggestion),
+          ctx.activeGroup.id,
+        );
+        return {
+          ok: true,
+          data: {
+            items: result.items,
+            truncated: result.truncated,
+            duplicates: [...dupMap.keys()],
+          },
+        };
+      }
       case "unavailable":
         return { ok: false, code: "ai-unavailable", message: "AI capture is not available" };
       case "error":

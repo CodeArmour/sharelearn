@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -76,15 +77,21 @@ export function AddKnowledgeView({
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
 
+  // Set when a submit hit an existing item; the next submit passes
+  // `allowDuplicate` so the reviewer can add it anyway. Cleared on any edit.
+  const [dupPrompt, setDupPrompt] = useState<{ label: string; existingId: string } | null>(null);
+
   const set = (name: string, value: string) => {
     setValues((v) => ({ ...v, [name]: value }));
     setErrors((e) => (e[name] ? { ...e, [name]: "" } : e));
+    setDupPrompt(null);
   };
 
   const resetFields = () => {
     setValues({});
     setExamples([]);
     setErrors({});
+    setDupPrompt(null);
   };
 
   const changeType = (next: PickerType) => {
@@ -94,6 +101,7 @@ export function AddKnowledgeView({
 
   const runAi = async () => {
     setMode("processing");
+    setDupPrompt(null);
     try {
       const result = await structureKnowledgeAction(rawText);
       if (!result.ok) {
@@ -118,6 +126,7 @@ export function AddKnowledgeView({
   const runPhotoAi = async (files: File[]) => {
     if (!userId || files.length === 0) return;
     setMode("processing");
+    setDupPrompt(null);
     try {
       const supabase = createBrowserSupabaseClient();
       const bucket = supabase.storage.from(CAPTURE_BUCKET);
@@ -140,6 +149,14 @@ export function AddKnowledgeView({
         const draft = suggestionToDraft(s);
         return { id: crypto.randomUUID(), checked: true, ...draft };
       });
+      // Items already in the library: flagged and unchecked, but still editable
+      // and re-checkable — re-checking one is the per-row "add anyway".
+      for (const i of result.data.duplicates) {
+        if (rows[i]) {
+          rows[i].duplicate = true;
+          rows[i].checked = false;
+        }
+      }
       // rows missing a required field can't be checked until edited
       for (const row of rows) {
         if (missingRequired(row.type, row.values).length > 0) row.checked = false;
@@ -169,6 +186,7 @@ export function AddKnowledgeView({
     setValues(row.values);
     setExamples(row.examples);
     setErrors({});
+    setDupPrompt(null);
     setMode("review-edit");
   };
 
@@ -205,6 +223,7 @@ export function AddKnowledgeView({
     setValues({ noteBody: rawText, title: "" });
     setExamples([]);
     setErrors({});
+    setDupPrompt(null);
     setMode("manual");
   };
 
@@ -272,11 +291,16 @@ export function AddKnowledgeView({
     try {
       const result = isEditing
         ? await updateKnowledgeItemAction(existingItem.id, input)
-        : await createKnowledgeItemAction(input);
+        : await createKnowledgeItemAction(input, { allowDuplicate: dupPrompt != null });
       if (!result.ok) {
+        if (result.code === "duplicate" && result.existingId) {
+          setDupPrompt({ label: result.label ?? "", existingId: result.existingId });
+          return;
+        }
         setSaveError(t("errors.generic"));
         return;
       }
+      setDupPrompt(null);
       if (isEditing) {
         router.push(`/knowledge/${existingItem.id}`);
         return;
@@ -303,12 +327,37 @@ export function AddKnowledgeView({
     setTruncated(false);
     setEditingRowId(null);
     setBatchError(null);
+    setDupPrompt(null);
     setMode("manual");
   };
 
   // Hoisted out of the render ladder below: inside the final branch TypeScript
   // has already narrowed `mode` to "manual", so the comparison can't live there.
   const photosBusy = mode === "processing";
+
+  const duplicateNotice = dupPrompt ? (
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-sunken p-3">
+      <p className="text-body-sm text-fg-secondary">
+        {t("duplicate.prompt", { label: dupPrompt.label })}
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => formRef.current?.requestSubmit()}
+        >
+          {t("duplicate.addAnyway")}
+        </Button>
+        <Link
+          href={`/knowledge/${dupPrompt.existingId}`}
+          className="text-body-sm font-medium text-link hover:underline"
+        >
+          {t("duplicate.viewExisting")}
+        </Link>
+      </div>
+    </div>
+  ) : undefined;
 
   const form = (submitLabel: string, secondaryAction?: React.ReactNode) => (
     <KnowledgeForm
@@ -325,6 +374,7 @@ export function AddKnowledgeView({
       secondaryAction={secondaryAction}
       disabled={saving}
       error={saveError}
+      notice={duplicateNotice}
       typeLocked={isEditing}
     />
   );

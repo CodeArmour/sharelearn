@@ -71,4 +71,14 @@ describe("ReviewChecklist", () => {
       screen.getByText("Some items may be missing — upload a smaller section for the rest."),
     ).toBeInTheDocument();
   });
+
+  it("tags a row that is already in the library", () => {
+    setup({
+      rows: [
+        { id: "1", checked: false, duplicate: true, type: "vocabulary", values: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" }, examples: [] },
+        rows[2],
+      ],
+    });
+    expect(screen.getByText("Already in library")).toBeInTheDocument();
+  });
 });

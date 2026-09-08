@@ -7,6 +7,8 @@ import {
   createKnowledgeItem,
   createKnowledgeItems,
   deleteKnowledgeItem,
+  duplicateKeyFromInput,
+  findDuplicateKeys,
   getKnowledgeByIds,
   updateKnowledgeItem,
 } from "@/server/services/knowledge-service";
@@ -22,12 +24,25 @@ import {
 
 export async function createKnowledgeItemAction(
   input: unknown,
+  opts?: { allowDuplicate?: boolean },
 ): Promise<ActionResult<KnowledgeItem>> {
   const parsed = createKnowledgeItemSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, code: "validation", message: "Invalid knowledge item" };
   }
   try {
+    if (!opts?.allowDuplicate) {
+      const dup = (await findDuplicateKeys([duplicateKeyFromInput(parsed.data)])).get(0);
+      if (dup) {
+        return {
+          ok: false,
+          code: "duplicate",
+          message: `"${dup.label}" is already in this library`,
+          existingId: dup.existingId,
+          label: dup.label,
+        };
+      }
+    }
     const item = await createKnowledgeItem(parsed.data);
     revalidatePath("/today");
     revalidatePath("/library");

@@ -299,7 +299,8 @@
         "empty": "Nothing selected",
         "successCount": "{count} items added",
         "failed": "Couldn't save the items. Try again.",
-        "needsDetails": "Needs details"
+        "needsDetails": "Needs details",
+        "duplicate": "Already in library"
       }
     },
     "levelLabel": "Level",
@@ -311,6 +312,11 @@
     "required": "{field} is required",
     "errors": {
       "generic": "Something went wrong saving that. Try again."
+    },
+    "duplicate": {
+      "prompt": "“{label}” is already in your library.",
+      "addAnyway": "Add anyway",
+      "viewExisting": "View existing"
     },
     "field": {
       "term": "Dutch term",
