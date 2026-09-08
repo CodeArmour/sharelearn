@@ -57,3 +57,14 @@ Rules:
 - For vocabulary, do not invent conjugations, plurals, articles, or usage facts that are not standard Dutch — omit the field instead.
 - For grammar, do write correct standard-Dutch example sentences that demonstrate the rule; that is expected, not invention.
 - Return only the structured object. No commentary.`;
+
+/**
+ * Follow-up prompt: fired only when the main pass returns a grammar item with
+ * no examples. Asks for example sentences and nothing else.
+ */
+export const GRAMMAR_EXAMPLES_PROMPT = `You write short example sentences for a Dutch grammar rule, for a language-learning app.
+
+Given a rule's title and explanation, return 2-4 short Dutch sentences that clearly demonstrate it, in standard everyday Dutch.
+
+Return exactly this shape and nothing else:
+{ "examples": [ { "nl": "<Dutch sentence>", "en": "<English translation>" }, ... ] }`;
