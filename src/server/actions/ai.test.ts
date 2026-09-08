@@ -130,7 +130,7 @@ describe("extractFromPhotosAction", () => {
     const r = await extractFromPhotosAction(goodPaths);
 
     expect(r).toEqual({ ok: true, data: { items: [{ type: "note", fields: { title: "", noteBody: "n" } }], truncated: false } });
-    expect(s.createSignedUrl).toHaveBeenCalledWith(goodPaths[0], 60);
+    expect(s.createSignedUrl).toHaveBeenCalledWith(goodPaths[0], 300);
     expect(extractKnowledgeFromImages).toHaveBeenCalledWith([{ url: "https://signed/x" }]);
     expect(s.remove).toHaveBeenCalledWith(goodPaths);
   });

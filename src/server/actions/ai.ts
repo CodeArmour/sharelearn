@@ -68,7 +68,7 @@ export async function extractFromPhotosAction(
   try {
     const signed = await Promise.all(
       parsed.data.map(async (path) => {
-        const { data, error } = await bucket.createSignedUrl(path, 60);
+        const { data, error } = await bucket.createSignedUrl(path, 300);
         if (error || !data) throw new Error(error?.message ?? "could not sign upload");
         return { url: data.signedUrl };
       }),
@@ -87,6 +87,6 @@ export async function extractFromPhotosAction(
     console.error("[action:extractFromPhotos] failed", error);
     return { ok: false, code: "ai-error", message: "Could not read those photos — add items manually" };
   } finally {
-    void bucket.remove(parsed.data).catch(() => {});
+    await bucket.remove(parsed.data).catch(() => {});
   }
 }

@@ -1,12 +1,16 @@
 import "server-only";
 
+import { z } from "zod";
+
 import {
   EXTRACTION_PROMPT_VERSION,
   KNOWLEDGE_EXTRACTION_PROMPT,
 } from "@/ai/prompts/knowledge-extractor";
 import { getAiProvider } from "@/ai/providers";
 import {
+  type KnowledgeSuggestion,
   knowledgeExtractionSchema,
+  knowledgeSuggestionSchema,
   toAiSuggestion,
 } from "@/ai/schemas/knowledge-suggestion";
 import { ensureGrammarExamples } from "@/ai/services/grammar-examples";
@@ -46,16 +50,33 @@ export async function extractKnowledgeFromImages(
       images: imgs,
     });
 
-    const parsed = knowledgeExtractionSchema.safeParse(raw);
-    if (!parsed.success) {
+    const envelope = z.object({ items: z.array(z.unknown()) }).safeParse(raw);
+    if (!envelope.success) {
       console.error(
         `[ai:knowledge-extractor:${EXTRACTION_PROMPT_VERSION}] schema validation failed`,
-        parsed.error.issues,
+        envelope.error.issues,
       );
       return { status: "error" };
     }
 
-    const items = parsed.data.items.map(toAiSuggestion);
+    let dropped = 0;
+    const kept: KnowledgeSuggestion[] = [];
+    for (const entry of envelope.data.items) {
+      const one = knowledgeSuggestionSchema.safeParse(entry);
+      if (one.success) kept.push(one.data);
+      else dropped += 1;
+    }
+
+    if (dropped > 0) {
+      console.warn(
+        `[ai:knowledge-extractor:${EXTRACTION_PROMPT_VERSION}] dropped ${dropped} malformed item(s)`,
+      );
+    }
+
+    if (kept.length === 0) return { status: "error" };
+
+    const capped = kept.slice(0, MAX_ITEMS);
+    const items = capped.map(toAiSuggestion);
 
     let followups = 0;
     for (const item of items) {
@@ -66,7 +87,11 @@ export async function extractKnowledgeFromImages(
       }
     }
 
-    return { status: "ok", items, truncated: parsed.data.items.length >= MAX_ITEMS };
+    return {
+      status: "ok",
+      items,
+      truncated: kept.length >= MAX_ITEMS || dropped > 0,
+    };
   } catch (error) {
     console.error(`[ai:knowledge-extractor:${EXTRACTION_PROMPT_VERSION}] provider error`, error);
     return { status: "error" };

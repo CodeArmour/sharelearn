@@ -97,6 +97,30 @@ describe("extractKnowledgeFromImages", () => {
     expect(await extractKnowledgeFromImages(IMAGES)).toEqual({ status: "error" });
   });
 
+  it("drops a malformed item and keeps the valid ones", async () => {
+    generateStructured.mockResolvedValue({
+      items: [
+        { type: "vocabulary", term: "werken", meaning: "to work", partOfSpeech: "verb" },
+        { type: "vocabulary", term: "x" },
+      ],
+    });
+    const result = await extractKnowledgeFromImages(IMAGES);
+    expect(result).toMatchObject({ status: "ok" });
+    if (result.status !== "ok") throw new Error("unreachable");
+    expect(result.items).toHaveLength(1);
+    expect(result.truncated).toBe(true);
+  });
+
+  it("returns error only when every item is malformed", async () => {
+    generateStructured.mockResolvedValue({
+      items: [
+        { type: "vocabulary", term: "x" },
+        { type: "grammar", title: "T" },
+      ],
+    });
+    expect(await extractKnowledgeFromImages(IMAGES)).toEqual({ status: "error" });
+  });
+
   it("passes the extraction prompt and the images to the provider", async () => {
     generateStructured.mockResolvedValue({ items: [{ type: "note", body: "n" }] });
     await extractKnowledgeFromImages([{ url: "https://a" }, { url: "https://b" }]);

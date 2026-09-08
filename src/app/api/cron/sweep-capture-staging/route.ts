@@ -33,6 +33,17 @@ export async function GET(request: Request): Promise<Response> {
     .filter((o) => o.created_at != null && new Date(o.created_at).getTime() < cutoff)
     .map((o) => o.name);
 
+  if (data && data.length > 0 && stale.length === 0) {
+    console.warn(
+      `[cron:sweep-capture-staging] listed ${data.length} object(s) but none had an ageable created_at — bucket may be folder-nested; per-folder listing needed`,
+    );
+  }
+  if (data && data.length === 1000) {
+    console.warn(
+      `[cron:sweep-capture-staging] list("") returned 1000 objects — the unpaginated list hit its limit; some staged objects may be missed`,
+    );
+  }
+
   if (stale.length > 0) {
     await bucket.remove(stale);
   }

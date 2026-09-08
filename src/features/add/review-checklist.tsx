@@ -103,7 +103,7 @@ export function ReviewChecklist({
                   <Badge tone={row.type === "note" ? "neutral" : row.type} size="sm">
                     {tType(row.type)}
                   </Badge>
-                  <span className="truncate text-body-sm text-fg-primary">{preview(row)}</span>
+                  <span className="truncate text-body-sm text-fg">{preview(row)}</span>
                 </div>
                 {extras.length > 0 ? (
                   <span className="text-caption text-fg-muted">

@@ -27,10 +27,23 @@ No UPDATE policy. The hourly sweep uses the service-role key and bypasses RLS.
 
 - `CRON_SECRET` — set on Vercel (all environments). Any long random string.
   `/api/cron/sweep-capture-staging` returns 503 without it.
-- `vercel.json` already registers the hourly cron.
+- `vercel.json` already registers the hourly cron. Note: the Vercel **Hobby**
+  plan caps cron to once per day, so `0 * * * *` needs **Pro**. On Hobby, use a
+  daily schedule instead (e.g. `0 3 * * *`) in `vercel.json`.
 
 ## 4. Feature gate
 
 The whole AI-capture step (text and photos) stays hidden until `AI_API_KEY` is
 set, exactly as in Phase 4. The bucket and cron can be created ahead of that
 with no user-visible effect.
+
+## 5. Verify the sweep actually deletes
+
+Supabase `list("")` on a one-level-nested bucket *may* return folder entries
+(no `created_at`) rather than files — in which case the route returns
+`{ deleted: 0 }` forever. Do this positive check once: upload a photo via the
+Add screen and close the tab before "Structure with AI" (leaves one staged
+object), then either wait an hour or temporarily lower the route's age cutoff,
+then `curl` the route with the bearer secret and confirm it reports
+`deleted: 1` and the bucket empties. If it reports `deleted: 0` with an object
+present, the route needs per-folder `list()` iteration.
