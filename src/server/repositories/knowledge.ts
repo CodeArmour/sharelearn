@@ -11,7 +11,7 @@ import {
   type KnowledgeItemRow,
   type NewKnowledgeItemRow,
 } from "@/server/db/schema";
-import type { CEFRLevel, KnowledgeItem, KnowledgeType, UserSummary } from "@/types";
+import type { CEFRLevel, KnowledgeItem, KnowledgeType, ReadingQuiz, UserSummary } from "@/types";
 
 export interface KnowledgeListFilter {
   type?: KnowledgeType;
@@ -83,6 +83,7 @@ function mapRow(
         wordCount: row.wordCount ?? 0,
         summary: row.summary,
         vocabularyIds: row.vocabularyIds ?? [],
+        readingQuiz: row.readingQuiz ?? null,
       };
     case "note":
       return {
@@ -253,6 +254,25 @@ export async function updateKnowledgeItem(
   if (!updated) return null;
   const items = await selectWithAttribution(eq(knowledgeItems.id, updated.id), tx);
   return items[0] ?? null;
+}
+
+/** Overwrite the stored comprehension quiz for one reading. Scoped to the group
+ *  and to non-deleted rows; a no-op if the id doesn't match. */
+export async function setReadingQuiz(
+  groupId: string,
+  id: string,
+  quiz: ReadingQuiz,
+): Promise<void> {
+  await db
+    .update(knowledgeItems)
+    .set({ readingQuiz: quiz })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    );
 }
 
 export async function softDeleteKnowledgeItem(groupId: string, id: string): Promise<boolean> {

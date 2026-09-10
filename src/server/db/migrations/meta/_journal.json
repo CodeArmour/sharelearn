@@ -64,6 +64,13 @@
       "when": 1788680100000,
       "tag": "0008_personal_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789053122219,
+      "tag": "0009_slow_glorian",
+      "breakpoints": true
     }
   ]
 }

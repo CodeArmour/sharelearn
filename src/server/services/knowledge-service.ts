@@ -77,6 +77,7 @@ export function buildKnowledgeRow(
         type: "reading",
         wordCount: wordCount(input.body),
         vocabularyIds: [],
+        readingQuiz: null,
       };
     case "note":
       return { ...shared, ...input, type: "note" };

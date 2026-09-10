@@ -34,6 +34,8 @@ export function PracticeSession({
     meaningOf: t("instruction.meaningOf"),
     sayInDutch: t("instruction.sayInDutch"),
     whichRule: t("instruction.whichRule"),
+    readComprehension: t("instruction.readComprehension"),
+    trueOrFalse: t("instruction.trueOrFalse"),
   }[q.instructionKey];
 
   const next = () => {

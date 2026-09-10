@@ -22,7 +22,12 @@ export interface PracticeFilter {
 }
 
 /** Message key under `practice.instruction.*` for a question's one-line prompt. */
-export type PracticeInstructionKey = "meaningOf" | "sayInDutch" | "whichRule";
+export type PracticeInstructionKey =
+  | "meaningOf"
+  | "sayInDutch"
+  | "whichRule"
+  | "readComprehension"
+  | "trueOrFalse";
 
 /** One generated multiple-choice question. */
 export interface PracticeQuestion {
@@ -35,10 +40,13 @@ export interface PracticeQuestion {
   prompt: string;
   options: string[];
   correctIndex: number;
+  /** Set only on reading questions. The session renders it once per consecutive
+   *  run of questions that share a `passage.id`. */
+  passage?: { id: string; title: string; body: string };
 }
 
 export interface PracticeSetup {
-  /** "vocabulary" | "grammar" | "mixed" — Setup does not surface "reading". */
+  /** "vocabulary" | "grammar" | "reading" | "mixed". */
   mode: PracticeMode;
   scope: PracticeScope;
   /** Required when `scope === "level"`. */

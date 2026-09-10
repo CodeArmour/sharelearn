@@ -43,7 +43,7 @@ describe("knowledgeItems schema", () => {
         "term", "meaning", "part_of_speech", "example", "example_translation",
         "article", "plural", "past_tense", "perfect", "usage_note",
         "title", "summary", "explanation", "examples",
-        "body", "word_count", "vocabulary_ids",
+        "body", "word_count", "vocabulary_ids", "reading_quiz",
       ]),
     );
     expect(cfg.checks.length).toBeGreaterThanOrEqual(5);

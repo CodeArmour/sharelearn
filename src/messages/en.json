@@ -395,7 +395,9 @@
     "instruction": {
       "meaningOf": "What does this mean?",
       "sayInDutch": "How do you say this in Dutch?",
-      "whichRule": "Which rule is this an example of?"
+      "whichRule": "Which rule is this an example of?",
+      "readComprehension": "What does the text say?",
+      "trueOrFalse": "True or false?"
     },
     "feedback": {
       "correct": "Correct",
