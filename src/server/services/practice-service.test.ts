@@ -47,6 +47,41 @@ const sampleQuiz: ReadingQuiz = {
   ],
 };
 
+// A 10-question quiz. With two of these the OLD per-question sort key
+// (`hashString(q.id)`) genuinely interleaves the two passages; the committed
+// passage-keyed `sortKey` keeps each block contiguous.
+const tenQuestionQuiz = (): ReadingQuiz => ({
+  promptVersion: "v1",
+  generatedAt: "2026-09-09T00:00:00.000Z",
+  sourceHash: "hash",
+  questions: Array.from({ length: 10 }, (_, i) => ({
+    id: `q${i + 1}`,
+    kind: "mcq" as const,
+    prompt: `Vraag ${i + 1}?`,
+    options: ["A", "B", "C", "D"],
+    correctIndex: 0,
+  })),
+});
+
+function grammar(id: string, title: string, groupId: string) {
+  return {
+    id,
+    groupId,
+    type: "grammar" as const,
+    level: "B1" as const,
+    tags: [],
+    source: "manual" as const,
+    addedBy: user,
+    updatedBy: null,
+    createdAt: "2026-09-04T08:00:00.000Z",
+    updatedAt: "2026-09-04T08:00:00.000Z",
+    title,
+    summary: `Samenvatting van ${title}`,
+    explanation: "Uitleg",
+    examples: [{ nl: "Ik werk vandaag.", en: "I work today." }],
+  };
+}
+
 function reading(id: string, title: string, groupId: string, quiz: ReadingQuiz | null) {
   return {
     id,
@@ -156,18 +191,24 @@ describe("generatePracticeQuestions — reading", () => {
       reading("r1", "Op de markt", "g1", sampleQuiz),
       vocab("v1", "afspreken", "to arrange", "g1"),
       vocab("v2", "gezellig", "cozy", "g1"),
+      grammar("gr1", "Woordvolgorde", "g1"),
+      grammar("gr2", "Perfectum", "g1"),
     ] as never);
     const qs = await generatePracticeQuestions({ mode: "mixed", scope: "all", length: 0 });
     expect(qs.some((q) => q.knowledgeType === "reading")).toBe(true);
     expect(qs.some((q) => q.knowledgeType === "vocabulary")).toBe(true);
+    expect(qs.some((q) => q.knowledgeType === "grammar")).toBe(true);
   });
 
   it("keeps a passage's questions contiguous after the sort", async () => {
+    // Two 10-question passages: the old `hashString(q.id)` key interleaves these
+    // ids; the committed passage-keyed `sortKey` keeps each block whole.
     vi.mocked(listKnowledgeItems).mockResolvedValue([
-      reading("r1", "Eerste", "g1", sampleQuiz),
-      reading("r2", "Tweede", "g1", sampleQuiz),
+      reading("r1", "Eerste", "g1", tenQuestionQuiz()),
+      reading("r2", "Tweede", "g1", tenQuestionQuiz()),
     ] as never);
     const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 0 });
+    expect(qs).toHaveLength(20);
     const ids = qs.map((q) => q.passage!.id);
     // no interleaving: every run of one id is a single block
     const runs = ids.filter((id, i) => id !== ids[i - 1]);

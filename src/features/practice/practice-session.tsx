@@ -7,6 +7,7 @@ import { useFocusOnChange } from "@/lib/use-focus-on-change";
 import { Button } from "@/components/ui";
 
 import { OptionButton, type OptionState } from "@/components/shared/option-button";
+import { PassagePanel } from "@/components/shared";
 
 import { FeedbackPanel } from "./feedback-panel";
 
@@ -69,15 +70,7 @@ export function PracticeSession({
         </span>
       </div>
 
-      {showPassage && q.passage ? (
-        <div className="flex flex-col gap-2 rounded-card bg-surface-sunken p-4">
-          <span className="text-label text-fg-muted">{t("session.passageLabel")}</span>
-          <p className="font-display text-h3 text-fg">{q.passage.title}</p>
-          <div className="max-h-64 overflow-y-auto whitespace-pre-wrap text-body-sm text-fg-secondary">
-            {q.passage.body}
-          </div>
-        </div>
-      ) : null}
+      {showPassage && q.passage ? <PassagePanel passage={q.passage} /> : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-label text-fg-muted">{instruction}</span>

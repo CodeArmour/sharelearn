@@ -355,6 +355,9 @@ export async function listReadingsMissingQuiz(limit: number): Promise<
         isNull(knowledgeItems.readingQuiz),
       ),
     )
+    // Randomised so a row that keeps failing generation can't head-of-line-block
+    // the rest of the backlog run after run.
+    .orderBy(sql`random()`)
     .limit(limit);
 
   return rows.map((r) => ({

@@ -298,6 +298,63 @@ describe("updateKnowledgeItem", () => {
     );
   });
 
+  const readingItem = (over: Partial<Record<string, unknown>> = {}) => ({
+    id: "k1",
+    type: "reading" as const,
+    level: "B1" as const,
+    tags: [],
+    source: "manual" as const,
+    addedBy: user,
+    updatedBy: null,
+    createdAt: "2026-09-04T08:00:00.000Z",
+    updatedAt: "2026-09-04T08:00:00.000Z",
+    title: "Op de markt",
+    body: "Dit is de originele tekst over de markt op zaterdag.",
+    wordCount: 9,
+    summary: null,
+    vocabularyIds: [],
+    readingQuiz: {
+      promptVersion: "v1",
+      generatedAt: "2026-09-09T00:00:00.000Z",
+      sourceHash: "stale",
+      questions: [],
+    },
+    ...over,
+  });
+
+  const readingInput = (over: Partial<Record<string, unknown>> = {}) => ({
+    type: "reading" as const,
+    level: "B1" as const,
+    tags: [],
+    source: "manual" as const,
+    title: "Op de markt",
+    body: "Dit is de originele tekst over de markt op zaterdag.",
+    summary: null,
+    ...over,
+  });
+
+  it("nulls readingQuiz when a reading's body changes", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(readingItem({ addedBy: user }) as never);
+    vi.mocked(repo.updateKnowledgeItem).mockResolvedValue(readingItem() as never);
+
+    await updateKnowledgeItem("k1", readingInput({ body: "Een compleet nieuwe tekst met andere inhoud." }));
+
+    const fields = vi.mocked(repo.updateKnowledgeItem).mock.calls[0][4] as Record<string, unknown>;
+    expect(fields.readingQuiz).toBeNull();
+  });
+
+  it("leaves readingQuiz untouched when only a reading's title/level changes", async () => {
+    vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
+    vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(readingItem({ addedBy: user }) as never);
+    vi.mocked(repo.updateKnowledgeItem).mockResolvedValue(readingItem() as never);
+
+    await updateKnowledgeItem("k1", readingInput({ title: "Een nieuwe titel", level: "B2" }));
+
+    const fields = vi.mocked(repo.updateKnowledgeItem).mock.calls[0][4] as Record<string, unknown>;
+    expect("readingQuiz" in fields).toBe(false);
+  });
+
   it("rejects switching an item's type", async () => {
     vi.mocked(resolveActiveContext).mockResolvedValue(okCtxWithRole("member"));
     vi.mocked(repo.getKnowledgeItemById).mockResolvedValue(

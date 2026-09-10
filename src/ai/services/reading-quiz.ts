@@ -10,8 +10,10 @@ export type ReadingQuizResult =
   | { status: "unavailable" } // no AI_API_KEY
   | { status: "error" }; // provider threw, or output unusable
 
-/** Below this the questions are discarded (leave the column NULL for the
- *  backfill to retry). At or above MIN but below FLOOR we keep them but log. */
+/** Warn threshold only. Fewer than 3 questions never reaches here —
+ *  `readingQuizGenerationSchema.min(3)` fails the parse first and the result is
+ *  an `error`. 3–4 questions are kept and stored; we just log a `console.warn`
+ *  below `FLOOR` so short passages stay visible. */
 const FLOOR = 5;
 const MAX_BODY_CHARS = 12_000;
 

@@ -3,7 +3,7 @@ import { useTranslations } from "next-intl";
 
 import type { PracticeQuestion } from "@/types";
 import { Button } from "@/components/ui";
-import { OptionButton, type OptionState } from "@/components/shared";
+import { OptionButton, type OptionState, PassagePanel } from "@/components/shared";
 
 /**
  * The exam paper: every question on one scrollable page, no feedback until it
@@ -17,7 +17,6 @@ export function ExamSession({
   onSubmit: (answers: (number | null)[]) => void;
 }) {
   const t = useTranslations("exam.session");
-  const tShared = useTranslations("practice.session");
   const [answers, setAnswers] = useState<(number | null)[]>(
     () => Array(questions.length).fill(null) as null[],
   );
@@ -36,15 +35,7 @@ export function ExamSession({
           (qi === 0 || questions[qi - 1]?.passage?.id !== q.passage.id);
         return (
           <Fragment key={q.id}>
-            {showPassage && q.passage ? (
-              <div className="flex flex-col gap-2 rounded-card bg-surface-sunken p-4">
-                <span className="text-label text-fg-muted">{tShared("passageLabel")}</span>
-                <p className="font-display text-h3 text-fg">{q.passage.title}</p>
-                <div className="max-h-64 overflow-y-auto whitespace-pre-wrap text-body-sm text-fg-secondary">
-                  {q.passage.body}
-                </div>
-              </div>
-            ) : null}
+            {showPassage && q.passage ? <PassagePanel passage={q.passage} /> : null}
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-label text-fg-muted">

@@ -3,6 +3,7 @@ export { MODE_ACCENT } from "./mode-accent";
 export { KnowledgeTypeBadge } from "./knowledge-type-badge";
 export { MetaRow } from "./meta-row";
 export { OptionButton, type OptionState } from "./option-button";
+export { PassagePanel } from "./passage-panel";
 export { PlaceholderPage } from "./placeholder-page";
 export { QuestionReviewList } from "./question-review-list";
 export { SetupForm } from "./setup-form";

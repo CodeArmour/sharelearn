@@ -60,7 +60,12 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
       if (f.type && item.type !== f.type) return false;
       if (f.level && item.level !== f.level) return false;
       if (f.by && item.addedBy.id !== f.by) return false;
-      if (f.q && !JSON.stringify(item).toLowerCase().includes(f.q.toLowerCase())) return false;
+      if (f.q) {
+        // Search only the human-authored fields — never the AI-generated quiz,
+        // whose invented distractors would silently widen `custom`-scope matches.
+        const searchable = item.type === "reading" ? { ...item, readingQuiz: undefined } : item;
+        if (!JSON.stringify(searchable).toLowerCase().includes(f.q.toLowerCase())) return false;
+      }
       return true;
     }
     return true;

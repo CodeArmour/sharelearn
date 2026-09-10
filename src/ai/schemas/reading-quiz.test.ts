@@ -24,6 +24,13 @@ describe("readingQuizGenerationSchema", () => {
     expect(r.success).toBe(false);
   });
 
+  it("rejects an mcq with a duplicated option", () => {
+    const r = readingQuizGenerationSchema.safeParse({
+      questions: [{ ...mcq, options: ["Een markt", "Een markt", "Een station", "Een museum"] }, tf, mcq],
+    });
+    expect(r.success).toBe(false);
+  });
+
   it("rejects an mcq correctIndex out of range", () => {
     const r = readingQuizGenerationSchema.safeParse({
       questions: [{ ...mcq, correctIndex: 4 }, tf, mcq],

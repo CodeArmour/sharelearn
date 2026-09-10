@@ -5,7 +5,10 @@ import type { ReadingQuiz } from "@/types";
 const mcqItemSchema = z.object({
   kind: z.literal("mcq"),
   prompt: z.string().min(1),
-  options: z.array(z.string().min(1)).length(4),
+  options: z
+    .array(z.string().min(1))
+    .length(4)
+    .refine((opts) => new Set(opts).size === opts.length, "options must be unique"),
   correctIndex: z.number().int().min(0).max(3),
 });
 
