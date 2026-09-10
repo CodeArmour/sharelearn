@@ -30,6 +30,10 @@ export function PracticeSession({
   const answered = selected !== null;
   const isLast = index === questions.length - 1;
 
+  const showPassage =
+    q.passage != null &&
+    (index === 0 || questions[index - 1]?.passage?.id !== q.passage.id);
+
   const instruction = {
     meaningOf: t("instruction.meaningOf"),
     sayInDutch: t("instruction.sayInDutch"),
@@ -64,6 +68,16 @@ export function PracticeSession({
           {t("session.progress", { current: index + 1, total: questions.length })}
         </span>
       </div>
+
+      {showPassage && q.passage ? (
+        <div className="flex flex-col gap-2 rounded-card bg-surface-sunken p-4">
+          <span className="text-label text-fg-muted">{t("session.passageLabel")}</span>
+          <p className="font-display text-h3 text-fg">{q.passage.title}</p>
+          <div className="max-h-64 overflow-y-auto whitespace-pre-wrap text-body-sm text-fg-secondary">
+            {q.passage.body}
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-label text-fg-muted">{instruction}</span>
