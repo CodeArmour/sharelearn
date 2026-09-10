@@ -365,7 +365,7 @@
       "scopeLabel": "Scope",
       "lengthLabel": "Length",
       "levelLabel": "Level",
-      "mode": { "vocabulary": "Vocabulary", "grammar": "Grammar", "mixed": "Mixed" },
+      "mode": { "vocabulary": "Vocabulary", "grammar": "Grammar", "reading": "Reading", "mixed": "Mixed" },
       "scope": {
         "all": "Whole library",
         "today": "Added today",
@@ -390,12 +390,15 @@
     "session": {
       "progress": "{current} of {total}",
       "next": "Next",
-      "finish": "See results"
+      "finish": "See results",
+      "passageLabel": "Passage"
     },
     "instruction": {
       "meaningOf": "What does this mean?",
       "sayInDutch": "How do you say this in Dutch?",
-      "whichRule": "Which rule is this an example of?"
+      "whichRule": "Which rule is this an example of?",
+      "readComprehension": "Read the passage, then answer",
+      "trueOrFalse": "True or false?"
     },
     "feedback": {
       "correct": "Correct",

@@ -70,6 +70,30 @@ export interface GrammarItem extends KnowledgeItemBase {
   examples: GrammarExample[];
 }
 
+/** One stored comprehension question for a reading passage. */
+export interface ReadingQuizQuestion {
+  /** Stable within the quiz — "q1", "q2", … Used to build the PracticeQuestion id. */
+  id: string;
+  kind: "mcq" | "true-false";
+  /** The question, in Dutch. */
+  prompt: string;
+  /** MCQ: exactly 4. true-false: ["Waar", "Onwaar"]. */
+  options: string[];
+  correctIndex: number;
+}
+
+/** AI-generated comprehension questions for a ReadingItem. Regenerated when the
+ *  passage body changes (detected via `sourceHash`). Null until generated. */
+export interface ReadingQuiz {
+  /** READING_QUIZ_PROMPT_VERSION at generation time. */
+  promptVersion: string;
+  /** ISO 8601. */
+  generatedAt: string;
+  /** readingBodyHash() of the body these questions were generated from. */
+  sourceHash: string;
+  questions: ReadingQuizQuestion[];
+}
+
 export interface ReadingItem extends KnowledgeItemBase {
   type: "reading";
   title: string;
@@ -79,6 +103,8 @@ export interface ReadingItem extends KnowledgeItemBase {
   summary: string | null;
   /** Vocabulary term ids highlighted within this text. */
   vocabularyIds: string[];
+  /** AI-generated comprehension questions; null until generated. */
+  readingQuiz: ReadingQuiz | null;
 }
 
 export interface FileItem extends KnowledgeItemBase {

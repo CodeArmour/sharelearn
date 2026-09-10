@@ -11,6 +11,9 @@ vi.mock("@/server/actions/knowledge", () => ({
   createKnowledgeItemsAction: vi.fn(),
   updateKnowledgeItemAction: vi.fn(),
 }));
+vi.mock("@/server/actions/practice", () => ({
+  generateReadingQuizAction: vi.fn().mockResolvedValue({ ok: true }),
+}));
 vi.mock("./downscale-image", () => ({
   downscaleImage: vi.fn().mockResolvedValue(new Blob(["x"], { type: "image/jpeg" })),
   ImageDecodeError: class ImageDecodeError extends Error {},
@@ -38,7 +41,9 @@ import { extractFromPhotosAction, structureKnowledgeAction } from "@/server/acti
 import {
   createKnowledgeItemAction,
   createKnowledgeItemsAction,
+  updateKnowledgeItemAction,
 } from "@/server/actions/knowledge";
+import { generateReadingQuizAction } from "@/server/actions/practice";
 
 import { AddKnowledgeView } from "./add-knowledge-view";
 
@@ -122,6 +127,88 @@ describe("AddKnowledgeView", () => {
     fireEvent.click(save);
 
     await waitFor(() => expect(createKnowledgeItemsAction).toHaveBeenCalled());
+  });
+
+  it("fires reading-quiz generation after a reading is created", async () => {
+    vi.mocked(createKnowledgeItemAction).mockResolvedValue({
+      ok: true,
+      data: { id: "r-123", type: "reading", title: "Op de markt", body: "..." } as never,
+    });
+
+    render(<AddKnowledgeView aiEnabled={false} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "knowledge.type.reading" }));
+    // The required fields render their label with a trailing " *", so match loosely.
+    fireEvent.change(screen.getByLabelText(/add\.field\.title/), {
+      target: { value: "Op de markt" },
+    });
+    fireEvent.change(screen.getByLabelText(/add\.field\.readingBody/), {
+      target: { value: "Een tekst over de markt op zaterdag." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "add.submit" }));
+
+    await waitFor(() => expect(generateReadingQuizAction).toHaveBeenCalledWith("r-123"));
+  });
+
+  it("fires reading-quiz generation after an existing reading is edited", async () => {
+    vi.mocked(updateKnowledgeItemAction).mockResolvedValue({
+      ok: true,
+      data: { id: "r-9", type: "reading", title: "Op de markt", body: "..." } as never,
+    });
+
+    const existing = {
+      id: "r-9",
+      type: "reading",
+      level: null,
+      tags: [],
+      source: "manual",
+      addedBy: { id: "u1", name: "U", initials: "UU", accent: "blue", avatarUrl: null },
+      updatedBy: null,
+      createdAt: "2026-09-04T08:00:00.000Z",
+      updatedAt: "2026-09-04T08:00:00.000Z",
+      title: "Op de markt",
+      body: "Een tekst over de markt op zaterdag.",
+      wordCount: 7,
+      summary: null,
+      vocabularyIds: [],
+      readingQuiz: null,
+    } as never;
+
+    render(<AddKnowledgeView existingItem={existing} />);
+    fireEvent.click(screen.getByRole("button", { name: "add.saveChanges" }));
+
+    await waitFor(() => expect(generateReadingQuizAction).toHaveBeenCalledWith("r-9"));
+  });
+
+  it("fires reading-quiz generation once per id after a batch save", async () => {
+    vi.mocked(extractFromPhotosAction).mockResolvedValue({
+      ok: true,
+      data: {
+        truncated: false,
+        duplicates: [],
+        items: [
+          { type: "note", fields: { title: "", noteBody: "n1" } },
+          { type: "note", fields: { title: "", noteBody: "n2" } },
+        ],
+      },
+    });
+    vi.mocked(createKnowledgeItemsAction).mockResolvedValue({ ok: true, data: { ids: ["a", "b"] } });
+
+    render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.photos" }));
+    await userEvent.upload(
+      screen.getByLabelText("add.ai.photos.pick"),
+      new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));
+
+    const save = await screen.findByRole("button", { name: /add\.ai\.review\.submit/ });
+    fireEvent.click(save);
+
+    await waitFor(() => {
+      expect(generateReadingQuizAction).toHaveBeenCalledWith("a");
+      expect(generateReadingQuizAction).toHaveBeenCalledWith("b");
+    });
   });
 
   it("prompts before adding a duplicate, then adds it on confirm", async () => {

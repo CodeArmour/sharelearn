@@ -8,6 +8,7 @@ import type {
   KnowledgeItem,
   PracticeQuestion,
   PracticeSetup,
+  ReadingItem,
   VocabularyItem,
 } from "@/types";
 
@@ -59,7 +60,12 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
       if (f.type && item.type !== f.type) return false;
       if (f.level && item.level !== f.level) return false;
       if (f.by && item.addedBy.id !== f.by) return false;
-      if (f.q && !JSON.stringify(item).toLowerCase().includes(f.q.toLowerCase())) return false;
+      if (f.q) {
+        // Search only the human-authored fields — never the AI-generated quiz,
+        // whose invented distractors would silently widen `custom`-scope matches.
+        const searchable = item.type === "reading" ? { ...item, readingQuiz: undefined } : item;
+        if (!JSON.stringify(searchable).toLowerCase().includes(f.q.toLowerCase())) return false;
+      }
       return true;
     }
     return true;
@@ -73,6 +79,7 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
 
   const wantVocab = setup.mode === "vocabulary" || setup.mode === "mixed";
   const wantGrammar = setup.mode === "grammar" || setup.mode === "mixed";
+  const wantReading = setup.mode === "reading" || setup.mode === "mixed";
   const questions: PracticeQuestion[] = [];
 
   if (wantVocab) {
@@ -128,7 +135,30 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
       });
   }
 
-  questions.sort((a, b) => hashString(a.id) - hashString(b.id));
+  if (wantReading) {
+    inScope
+      .filter((i): i is ReadingItem => i.type === "reading")
+      .forEach((r) => {
+        const quiz = r.readingQuiz;
+        if (!quiz) return;
+        for (const qq of quiz.questions) {
+          questions.push({
+            id: `q_${r.id}_${qq.id}`,
+            knowledgeId: r.id,
+            knowledgeType: "reading",
+            instructionKey: qq.kind === "true-false" ? "trueOrFalse" : "readComprehension",
+            prompt: qq.prompt,
+            options: qq.options,
+            correctIndex: qq.correctIndex,
+            passage: { id: r.id, title: r.title, body: r.body },
+          });
+        }
+      });
+  }
+
+  const sortKey = (q: PracticeQuestion) =>
+    q.passage ? hashString(q.passage.id) : hashString(q.id);
+  questions.sort((a, b) => sortKey(a) - sortKey(b));
   return setup.length > 0 ? questions.slice(0, setup.length) : questions;
 }
 

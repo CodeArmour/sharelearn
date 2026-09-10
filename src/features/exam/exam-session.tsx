@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { PracticeQuestion } from "@/types";
 import { Button } from "@/components/ui";
-import { OptionButton, type OptionState } from "@/components/shared";
+import { OptionButton, type OptionState, PassagePanel } from "@/components/shared";
 
 /**
  * The exam paper: every question on one scrollable page, no feedback until it
@@ -29,24 +29,32 @@ export function ExamSession({
 
   return (
     <div className="mx-auto flex max-w-[42rem] flex-col gap-8">
-      {questions.map((q, qi) => (
-        <div key={q.id} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <span className="text-label text-fg-muted">
-              {t("questionNumber", { number: qi + 1 })}
-            </span>
-            <p className="font-display text-h3 text-fg">{q.prompt}</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            {q.options.map((opt, oi) => {
-              const state: OptionState = answers[qi] === oi ? "selected" : "idle";
-              return (
-                <OptionButton key={opt} label={opt} state={state} onClick={() => pick(qi, oi)} />
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      {questions.map((q, qi) => {
+        const showPassage =
+          q.passage != null &&
+          (qi === 0 || questions[qi - 1]?.passage?.id !== q.passage.id);
+        return (
+          <Fragment key={q.id}>
+            {showPassage && q.passage ? <PassagePanel passage={q.passage} /> : null}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-label text-fg-muted">
+                  {t("questionNumber", { number: qi + 1 })}
+                </span>
+                <p className="font-display text-h3 text-fg">{q.prompt}</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                {q.options.map((opt, oi) => {
+                  const state: OptionState = answers[qi] === oi ? "selected" : "idle";
+                  return (
+                    <OptionButton key={opt} label={opt} state={state} onClick={() => pick(qi, oi)} />
+                  );
+                })}
+              </div>
+            </div>
+          </Fragment>
+        );
+      })}
 
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border bg-background/95 px-5 py-3 backdrop-blur lg:bottom-0 lg:-mx-12 lg:px-12">
         <Button type="button" size="md" onClick={() => onSubmit(answers)}>

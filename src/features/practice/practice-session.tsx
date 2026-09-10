@@ -7,6 +7,7 @@ import { useFocusOnChange } from "@/lib/use-focus-on-change";
 import { Button } from "@/components/ui";
 
 import { OptionButton, type OptionState } from "@/components/shared/option-button";
+import { PassagePanel } from "@/components/shared";
 
 import { FeedbackPanel } from "./feedback-panel";
 
@@ -30,10 +31,16 @@ export function PracticeSession({
   const answered = selected !== null;
   const isLast = index === questions.length - 1;
 
+  const showPassage =
+    q.passage != null &&
+    (index === 0 || questions[index - 1]?.passage?.id !== q.passage.id);
+
   const instruction = {
     meaningOf: t("instruction.meaningOf"),
     sayInDutch: t("instruction.sayInDutch"),
     whichRule: t("instruction.whichRule"),
+    readComprehension: t("instruction.readComprehension"),
+    trueOrFalse: t("instruction.trueOrFalse"),
   }[q.instructionKey];
 
   const next = () => {
@@ -62,6 +69,8 @@ export function PracticeSession({
           {t("session.progress", { current: index + 1, total: questions.length })}
         </span>
       </div>
+
+      {showPassage && q.passage ? <PassagePanel passage={q.passage} /> : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-label text-fg-muted">{instruction}</span>

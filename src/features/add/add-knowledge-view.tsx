@@ -16,6 +16,7 @@ import {
   createKnowledgeItemsAction,
   updateKnowledgeItemAction,
 } from "@/server/actions/knowledge";
+import { generateReadingQuizAction } from "@/server/actions/practice";
 import type { KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
@@ -211,6 +212,11 @@ export function AddKnowledgeView({
         return;
       }
       setSavedTitle(t("ai.review.successCount", { count: result.data.ids.length }));
+      for (const id of result.data.ids)
+        // fire-and-forget: the quiz backfills on its own if this never lands
+        void generateReadingQuizAction(id).catch((e) =>
+          console.error("generateReadingQuizAction rejected", e),
+        );
     } catch {
       setBatchError(t("ai.review.failed"));
     } finally {
@@ -302,6 +308,11 @@ export function AddKnowledgeView({
       }
       setDupPrompt(null);
       if (isEditing) {
+        if (input.type === "reading")
+          // fire-and-forget: the quiz backfills on its own if this never lands
+          void generateReadingQuizAction(existingItem.id).catch((e) =>
+            console.error("generateReadingQuizAction rejected", e),
+          );
         router.push(`/knowledge/${existingItem.id}`);
         return;
       }
@@ -311,6 +322,11 @@ export function AddKnowledgeView({
       setSavedTitle(
         title || (result.data.type === "note" ? result.data.body.trim().slice(0, 50) : title),
       );
+      if (result.data.type === "reading")
+        // fire-and-forget: the quiz backfills on its own if this never lands
+        void generateReadingQuizAction(result.data.id).catch((e) =>
+          console.error("generateReadingQuizAction rejected", e),
+        );
     } catch {
       setSaveError(t("errors.generic"));
     } finally {

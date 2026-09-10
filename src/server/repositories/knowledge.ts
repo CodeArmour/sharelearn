@@ -11,7 +11,7 @@ import {
   type KnowledgeItemRow,
   type NewKnowledgeItemRow,
 } from "@/server/db/schema";
-import type { CEFRLevel, KnowledgeItem, KnowledgeType, UserSummary } from "@/types";
+import type { CEFRLevel, KnowledgeItem, KnowledgeType, ReadingQuiz, UserSummary } from "@/types";
 
 export interface KnowledgeListFilter {
   type?: KnowledgeType;
@@ -83,6 +83,7 @@ function mapRow(
         wordCount: row.wordCount ?? 0,
         summary: row.summary,
         vocabularyIds: row.vocabularyIds ?? [],
+        readingQuiz: row.readingQuiz ?? null,
       };
     case "note":
       return {
@@ -255,6 +256,25 @@ export async function updateKnowledgeItem(
   return items[0] ?? null;
 }
 
+/** Overwrite the stored comprehension quiz for one reading. Scoped to the group
+ *  and to non-deleted rows; a no-op if the id doesn't match. */
+export async function setReadingQuiz(
+  groupId: string,
+  id: string,
+  quiz: ReadingQuiz,
+): Promise<void> {
+  await db
+    .update(knowledgeItems)
+    .set({ readingQuiz: quiz })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    );
+}
+
 export async function softDeleteKnowledgeItem(groupId: string, id: string): Promise<boolean> {
   const [deleted] = await db
     .update(knowledgeItems)
@@ -304,6 +324,50 @@ export async function getKnowledgeStats(
     sql`SELECT type, COUNT(*)::int as count FROM public.knowledge_items WHERE group_id = ${groupId} AND deleted_at IS NULL GROUP BY type ORDER BY type`,
   );
   return result.map((r) => ({ type: r.type as KnowledgeType, count: r.count }));
+}
+
+/** Non-deleted reading rows that have no comprehension quiz yet. The backfill
+ *  cron's work list — the NULL column is the "needs generating" signal. */
+export async function listReadingsMissingQuiz(limit: number): Promise<
+  {
+    id: string;
+    groupId: string;
+    title: string;
+    body: string;
+    level: string | null;
+    readingQuiz: ReadingQuiz | null;
+  }[]
+> {
+  const rows = await db
+    .select({
+      id: knowledgeItems.id,
+      groupId: knowledgeItems.groupId,
+      title: knowledgeItems.title,
+      body: knowledgeItems.body,
+      level: knowledgeItems.level,
+      readingQuiz: knowledgeItems.readingQuiz,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.type, "reading"),
+        isNull(knowledgeItems.deletedAt),
+        isNull(knowledgeItems.readingQuiz),
+      ),
+    )
+    // Randomised so a row that keeps failing generation can't head-of-line-block
+    // the rest of the backlog run after run.
+    .orderBy(sql`random()`)
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    groupId: r.groupId,
+    title: r.title ?? "",
+    body: r.body ?? "",
+    level: r.level,
+    readingQuiz: r.readingQuiz ?? null,
+  }));
 }
 
 export async function getDistinctLevels(groupId: string): Promise<string[]> {

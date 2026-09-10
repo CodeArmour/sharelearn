@@ -14,6 +14,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { ReadingQuiz } from "@/types";
+
 /**
  * Backend Phase 1 schema — auth/groups/invitations only.
  * FKs reference Supabase's managed `auth.users`; that table is declared here
@@ -162,6 +164,7 @@ export const knowledgeItems = pgTable(
     body: text("body"),
     wordCount: integer("word_count"),
     vocabularyIds: uuid("vocabulary_ids").array(),
+    readingQuiz: jsonb("reading_quiz").$type<ReadingQuiz>(),
   },
   (t) => [
     index("knowledge_items_group_idx").on(t.groupId),

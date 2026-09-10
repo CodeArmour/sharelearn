@@ -7,6 +7,8 @@ vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.f
 import { listKnowledgeItems } from "@/server/repositories/knowledge";
 import { resolveActiveContext } from "@/server/services/session-service";
 
+import type { ReadingQuiz } from "@/types";
+
 import { generateExamQuestions, generatePracticeQuestions } from "./practice-service";
 
 const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
@@ -32,6 +34,72 @@ function vocab(id: string, term: string, meaning: string, groupId: string) {
     pastTense: null,
     perfect: null,
     usageNote: null,
+  };
+}
+
+const sampleQuiz: ReadingQuiz = {
+  promptVersion: "v1",
+  generatedAt: "2026-09-09T00:00:00.000Z",
+  sourceHash: "hash",
+  questions: [
+    { id: "q1", kind: "mcq", prompt: "Waarover gaat de tekst?", options: ["A", "B", "C", "D"], correctIndex: 0 },
+    { id: "q2", kind: "true-false", prompt: "De tekst is waar.", options: ["Waar", "Onwaar"], correctIndex: 0 },
+  ],
+};
+
+// A 10-question quiz. With two of these the OLD per-question sort key
+// (`hashString(q.id)`) genuinely interleaves the two passages; the committed
+// passage-keyed `sortKey` keeps each block contiguous.
+const tenQuestionQuiz = (): ReadingQuiz => ({
+  promptVersion: "v1",
+  generatedAt: "2026-09-09T00:00:00.000Z",
+  sourceHash: "hash",
+  questions: Array.from({ length: 10 }, (_, i) => ({
+    id: `q${i + 1}`,
+    kind: "mcq" as const,
+    prompt: `Vraag ${i + 1}?`,
+    options: ["A", "B", "C", "D"],
+    correctIndex: 0,
+  })),
+});
+
+function grammar(id: string, title: string, groupId: string) {
+  return {
+    id,
+    groupId,
+    type: "grammar" as const,
+    level: "B1" as const,
+    tags: [],
+    source: "manual" as const,
+    addedBy: user,
+    updatedBy: null,
+    createdAt: "2026-09-04T08:00:00.000Z",
+    updatedAt: "2026-09-04T08:00:00.000Z",
+    title,
+    summary: `Samenvatting van ${title}`,
+    explanation: "Uitleg",
+    examples: [{ nl: "Ik werk vandaag.", en: "I work today." }],
+  };
+}
+
+function reading(id: string, title: string, groupId: string, quiz: ReadingQuiz | null) {
+  return {
+    id,
+    groupId,
+    type: "reading" as const,
+    level: "B1" as const,
+    tags: [],
+    source: "manual" as const,
+    addedBy: user,
+    updatedBy: null,
+    createdAt: "2026-09-04T08:00:00.000Z",
+    updatedAt: "2026-09-04T08:00:00.000Z",
+    title,
+    body: `Body of ${title}`,
+    wordCount: 10,
+    summary: null,
+    vocabularyIds: [],
+    readingQuiz: quiz,
   };
 }
 
@@ -87,5 +155,71 @@ describe("generateExamQuestions", () => {
     ] as never);
     const qs = await generateExamQuestions({ mode: "vocabulary", scope: "all", length: 0 });
     expect(qs.length).toBeGreaterThan(0);
+  });
+});
+
+describe("generatePracticeQuestions — reading", () => {
+  it("emits one question per stored quiz question, with the passage attached", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      reading("r1", "Op de markt", "g1", sampleQuiz),
+      vocab("v1", "afspreken", "to arrange", "g1"),
+    ] as never);
+
+    const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 0 });
+
+    expect(qs).toHaveLength(2);
+    expect(qs.map((q) => q.id)).toEqual(["q_r1_q1", "q_r1_q2"]);
+    for (const q of qs) {
+      expect(q.knowledgeType).toBe("reading");
+      expect(q.knowledgeId).toBe("r1");
+      expect(q.passage).toEqual({ id: "r1", title: "Op de markt", body: "Body of Op de markt" });
+    }
+    expect(qs[0].instructionKey).toBe("readComprehension");
+    expect(qs[1].instructionKey).toBe("trueOrFalse");
+  });
+
+  it("skips readings that have no stored quiz", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      reading("r1", "Zonder quiz", "g1", null),
+    ] as never);
+    const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 0 });
+    expect(qs).toEqual([]);
+  });
+
+  it("mode 'mixed' draws vocab, grammar and reading", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      reading("r1", "Op de markt", "g1", sampleQuiz),
+      vocab("v1", "afspreken", "to arrange", "g1"),
+      vocab("v2", "gezellig", "cozy", "g1"),
+      grammar("gr1", "Woordvolgorde", "g1"),
+      grammar("gr2", "Perfectum", "g1"),
+    ] as never);
+    const qs = await generatePracticeQuestions({ mode: "mixed", scope: "all", length: 0 });
+    expect(qs.some((q) => q.knowledgeType === "reading")).toBe(true);
+    expect(qs.some((q) => q.knowledgeType === "vocabulary")).toBe(true);
+    expect(qs.some((q) => q.knowledgeType === "grammar")).toBe(true);
+  });
+
+  it("keeps a passage's questions contiguous after the sort", async () => {
+    // Two 10-question passages: the old `hashString(q.id)` key interleaves these
+    // ids; the committed passage-keyed `sortKey` keeps each block whole.
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      reading("r1", "Eerste", "g1", tenQuestionQuiz()),
+      reading("r2", "Tweede", "g1", tenQuestionQuiz()),
+    ] as never);
+    const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 0 });
+    expect(qs).toHaveLength(20);
+    const ids = qs.map((q) => q.passage!.id);
+    // no interleaving: every run of one id is a single block
+    const runs = ids.filter((id, i) => id !== ids[i - 1]);
+    expect(runs).toHaveLength(new Set(ids).size);
+  });
+
+  it("respects setup.length across the combined set", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      reading("r1", "Op de markt", "g1", sampleQuiz),
+    ] as never);
+    const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 1 });
+    expect(qs).toHaveLength(1);
   });
 });

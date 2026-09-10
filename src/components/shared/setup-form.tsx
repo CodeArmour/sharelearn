@@ -4,7 +4,7 @@ import type { PracticeScope, PracticeSetup } from "@/types";
 import { Button, Field, Select } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
-const MODES = ["vocabulary", "grammar", "mixed"] as const;
+const MODES = ["vocabulary", "grammar", "reading", "mixed"] as const;
 const LENGTHS = [
   { key: "ten", value: 10 },
   { key: "twenty", value: 20 },
@@ -50,6 +50,7 @@ export function SetupForm({
   const modeLabel = {
     vocabulary: t("mode.vocabulary"),
     grammar: t("mode.grammar"),
+    reading: t("mode.reading"),
     mixed: t("mode.mixed"),
   };
   const lengthLabel = {

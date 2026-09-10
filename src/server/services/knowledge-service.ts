@@ -13,6 +13,7 @@ import {
   updateKnowledgeItem as updateKnowledgeItemRow,
 } from "@/server/repositories/knowledge";
 import { listMembers } from "@/server/repositories/memberships";
+import { readingBodyHash } from "@/lib/reading-quiz-hash";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type {
   AiSuggestion,
@@ -77,6 +78,7 @@ export function buildKnowledgeRow(
         type: "reading",
         wordCount: wordCount(input.body),
         vocabularyIds: [],
+        readingQuiz: null,
       };
     case "note":
       return { ...shared, ...input, type: "note" };
@@ -204,13 +206,22 @@ export async function updateKnowledgeItem(
           ...preserved,
           type: "grammar",
         });
-      case "reading":
+      case "reading": {
+        // If the body changed, the stored quiz's sourceHash no longer matches.
+        // Null it so the NULL-sweep backfill picks it up (the Add view's edit
+        // path also fires an immediate regenerate on the happy path). An
+        // unchanged body leaves the quiz untouched.
+        const bodyChanged =
+          existing.type === "reading" &&
+          readingBodyHash(input.body) !== readingBodyHash(existing.body);
         return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
           ...input,
           ...preserved,
           type: "reading",
           wordCount: wordCount(input.body),
+          ...(bodyChanged ? { readingQuiz: null } : {}),
         });
+      }
       case "note":
         return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
           ...input,
