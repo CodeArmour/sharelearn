@@ -326,6 +326,47 @@ export async function getKnowledgeStats(
   return result.map((r) => ({ type: r.type as KnowledgeType, count: r.count }));
 }
 
+/** Non-deleted reading rows that have no comprehension quiz yet. The backfill
+ *  cron's work list — the NULL column is the "needs generating" signal. */
+export async function listReadingsMissingQuiz(limit: number): Promise<
+  {
+    id: string;
+    groupId: string;
+    title: string;
+    body: string;
+    level: string | null;
+    readingQuiz: ReadingQuiz | null;
+  }[]
+> {
+  const rows = await db
+    .select({
+      id: knowledgeItems.id,
+      groupId: knowledgeItems.groupId,
+      title: knowledgeItems.title,
+      body: knowledgeItems.body,
+      level: knowledgeItems.level,
+      readingQuiz: knowledgeItems.readingQuiz,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.type, "reading"),
+        isNull(knowledgeItems.deletedAt),
+        isNull(knowledgeItems.readingQuiz),
+      ),
+    )
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    groupId: r.groupId,
+    title: r.title ?? "",
+    body: r.body ?? "",
+    level: r.level,
+    readingQuiz: r.readingQuiz ?? null,
+  }));
+}
+
 export async function getDistinctLevels(groupId: string): Promise<string[]> {
   const rows = await db
     .selectDistinct({ level: knowledgeItems.level })
