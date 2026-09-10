@@ -16,6 +16,7 @@ import {
   createKnowledgeItemsAction,
   updateKnowledgeItemAction,
 } from "@/server/actions/knowledge";
+import { generateReadingQuizAction } from "@/server/actions/practice";
 import type { KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
@@ -211,6 +212,7 @@ export function AddKnowledgeView({
         return;
       }
       setSavedTitle(t("ai.review.successCount", { count: result.data.ids.length }));
+      for (const id of result.data.ids) void generateReadingQuizAction(id);
     } catch {
       setBatchError(t("ai.review.failed"));
     } finally {
@@ -302,6 +304,7 @@ export function AddKnowledgeView({
       }
       setDupPrompt(null);
       if (isEditing) {
+        if (input.type === "reading") void generateReadingQuizAction(existingItem.id);
         router.push(`/knowledge/${existingItem.id}`);
         return;
       }
@@ -311,6 +314,7 @@ export function AddKnowledgeView({
       setSavedTitle(
         title || (result.data.type === "note" ? result.data.body.trim().slice(0, 50) : title),
       );
+      if (result.data.type === "reading") void generateReadingQuizAction(result.data.id);
     } catch {
       setSaveError(t("errors.generic"));
     } finally {

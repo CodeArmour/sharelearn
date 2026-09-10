@@ -11,6 +11,7 @@ vi.mock("@/server/actions/knowledge", () => ({
   createKnowledgeItemsAction: vi.fn(),
   updateKnowledgeItemAction: vi.fn(),
 }));
+vi.mock("@/server/actions/practice", () => ({ generateReadingQuizAction: vi.fn() }));
 vi.mock("./downscale-image", () => ({
   downscaleImage: vi.fn().mockResolvedValue(new Blob(["x"], { type: "image/jpeg" })),
   ImageDecodeError: class ImageDecodeError extends Error {},
@@ -39,6 +40,7 @@ import {
   createKnowledgeItemAction,
   createKnowledgeItemsAction,
 } from "@/server/actions/knowledge";
+import { generateReadingQuizAction } from "@/server/actions/practice";
 
 import { AddKnowledgeView } from "./add-knowledge-view";
 
@@ -122,6 +124,27 @@ describe("AddKnowledgeView", () => {
     fireEvent.click(save);
 
     await waitFor(() => expect(createKnowledgeItemsAction).toHaveBeenCalled());
+  });
+
+  it("fires reading-quiz generation after a reading is created", async () => {
+    vi.mocked(createKnowledgeItemAction).mockResolvedValue({
+      ok: true,
+      data: { id: "r-123", type: "reading", title: "Op de markt", body: "..." } as never,
+    });
+
+    render(<AddKnowledgeView aiEnabled={false} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "knowledge.type.reading" }));
+    // The required fields render their label with a trailing " *", so match loosely.
+    fireEvent.change(screen.getByLabelText(/add\.field\.title/), {
+      target: { value: "Op de markt" },
+    });
+    fireEvent.change(screen.getByLabelText(/add\.field\.readingBody/), {
+      target: { value: "Een tekst over de markt op zaterdag." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "add.submit" }));
+
+    await waitFor(() => expect(generateReadingQuizAction).toHaveBeenCalledWith("r-123"));
   });
 
   it("prompts before adding a duplicate, then adds it on confirm", async () => {
