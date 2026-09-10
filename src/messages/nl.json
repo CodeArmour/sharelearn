@@ -365,7 +365,7 @@
       "scopeLabel": "Bereik",
       "lengthLabel": "Lengte",
       "levelLabel": "Niveau",
-      "mode": { "vocabulary": "Woordenschat", "grammar": "Grammatica", "mixed": "Gemengd" },
+      "mode": { "vocabulary": "Woordenschat", "grammar": "Grammatica", "reading": "Lezen", "mixed": "Gemengd" },
       "scope": {
         "all": "Hele bibliotheek",
         "today": "Vandaag toegevoegd",
@@ -390,14 +390,15 @@
     "session": {
       "progress": "{current} van {total}",
       "next": "Volgende",
-      "finish": "Bekijk resultaten"
+      "finish": "Bekijk resultaten",
+      "passageLabel": "Tekst"
     },
     "instruction": {
       "meaningOf": "Wat betekent dit?",
       "sayInDutch": "Hoe zeg je dit in het Nederlands?",
       "whichRule": "Van welke regel is dit een voorbeeld?",
-      "readComprehension": "Wat zegt de tekst?",
-      "trueOrFalse": "Waar of niet waar?"
+      "readComprehension": "Lees de tekst en beantwoord de vraag",
+      "trueOrFalse": "Waar of onwaar?"
     },
     "feedback": {
       "correct": "Correct",
