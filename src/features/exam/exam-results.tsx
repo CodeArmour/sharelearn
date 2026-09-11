@@ -5,9 +5,8 @@ import type { PracticeQuestion } from "@/types";
 import { Button, buttonVariants } from "@/components/ui";
 import { MODE_ACCENT, QuestionReviewList } from "@/components/shared";
 import type { SaveState } from "@/lib/study-run";
+import { EXAM_PASS_THRESHOLD } from "@/lib/exam-rules";
 import { cn } from "@/lib/utils/cn";
-
-const PASS_THRESHOLD = 55;
 
 export function ExamResults({
   questions,
@@ -26,7 +25,7 @@ export function ExamResults({
   const accent = MODE_ACCENT.exam;
   const correctCount = answers.filter((a, i) => a === questions[i].correctIndex).length;
   const percent = Math.round((correctCount / questions.length) * 100);
-  const passed = percent >= PASS_THRESHOLD;
+  const passed = percent >= EXAM_PASS_THRESHOLD;
 
   return (
     <div className="mx-auto flex max-w-[42rem] flex-col gap-6">
