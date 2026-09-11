@@ -5,6 +5,7 @@ export { MetaRow } from "./meta-row";
 export { OptionButton, type OptionState } from "./option-button";
 export { PassagePanel } from "./passage-panel";
 export { PlaceholderPage } from "./placeholder-page";
+export { useQuestionInstruction } from "./question-instruction";
 export { QuestionReviewList } from "./question-review-list";
 export { SetupForm } from "./setup-form";
 export { SetupModeNote } from "./setup-mode-note";

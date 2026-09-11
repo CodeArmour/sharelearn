@@ -1,8 +1,7 @@
-import { useTranslations } from "next-intl";
-
 import type { PracticeQuestion } from "@/types";
 
 import { OptionButton, type OptionState } from "@/components/shared/option-button";
+import { useQuestionInstruction } from "@/components/shared/question-instruction";
 
 import { FeedbackPanel } from "./feedback-panel";
 
@@ -22,16 +21,8 @@ export function QuestionCard({
   picked: number | null;
   onPick: (optionIndex: number) => void;
 }) {
-  const t = useTranslations("practice");
   const answered = picked !== null;
-
-  const instruction = {
-    meaningOf: t("instruction.meaningOf"),
-    sayInDutch: t("instruction.sayInDutch"),
-    whichRule: t("instruction.whichRule"),
-    readComprehension: t("instruction.readComprehension"),
-    trueOrFalse: t("instruction.trueOrFalse"),
-  }[question.instructionKey];
+  const instruction = useQuestionInstruction(question.instructionKey);
 
   return (
     <div className="flex flex-col gap-3">

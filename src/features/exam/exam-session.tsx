@@ -9,7 +9,12 @@ import { examDurationMs } from "@/lib/exam-rules";
 import { useCountdown } from "@/lib/use-countdown";
 import { useFocusOnChange } from "@/lib/use-focus-on-change";
 import { Button } from "@/components/ui";
-import { OptionButton, type OptionState, PassagePanel } from "@/components/shared";
+import {
+  OptionButton,
+  type OptionState,
+  PassagePanel,
+  useQuestionInstruction,
+} from "@/components/shared";
 import { cn } from "@/lib/utils/cn";
 
 import { ExamNavigator } from "./exam-navigator";
@@ -60,6 +65,7 @@ export function ExamSession({
   }, [expired]);
 
   const q = questions[index];
+  const instruction = useQuestionInstruction(q.instructionKey);
   const answeredCount = answers.filter((a) => a !== null).length;
   const flaggedCount = pinned.filter(Boolean).length;
 
@@ -143,7 +149,10 @@ export function ExamSession({
             <>
               {q.passage ? <PassagePanel passage={q.passage} /> : null}
               <div className="flex items-start justify-between gap-3">
-                <p className="font-display text-h3 text-fg">{q.prompt}</p>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-label text-fg-muted">{instruction}</span>
+                  <p className="font-display text-h3 text-fg">{q.prompt}</p>
+                </div>
                 <button
                   type="button"
                   aria-pressed={pinned[index]}
