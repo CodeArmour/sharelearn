@@ -24,8 +24,13 @@ import { ExamSession } from "./exam-session";
 
 type Phase =
   | { name: "setup" }
-  | { name: "session"; questions: PracticeQuestion[] }
-  | { name: "results"; questions: PracticeQuestion[]; answers: (number | null)[] };
+  | { name: "session"; questions: PracticeQuestion[]; startedAtMs: number }
+  | {
+      name: "results";
+      questions: PracticeQuestion[];
+      answers: (number | null)[];
+      startedAtMs: number;
+    };
 
 /** Exam as a three-phase client machine: setup → paper → results. In-memory only. */
 export function ExamView({
@@ -132,8 +137,9 @@ export function ExamView({
                 onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
                 onStart={() => {
                   if (preview.length > 0) {
-                    startedAtRef.current = new Date().toISOString();
-                    setPhase({ name: "session", questions: preview });
+                    const startedAtMs = Date.now();
+                    startedAtRef.current = new Date(startedAtMs).toISOString();
+                    setPhase({ name: "session", questions: preview, startedAtMs });
                   }
                 }}
               />
@@ -144,9 +150,16 @@ export function ExamView({
         {phase.name === "session" ? (
           <ExamSession
             questions={phase.questions}
+            startedAtMs={phase.startedAtMs}
+            length={setup.length}
             onSubmit={(answers) => {
               saveRun(answers, phase.questions);
-              setPhase({ name: "results", questions: phase.questions, answers });
+              setPhase({
+                name: "results",
+                questions: phase.questions,
+                answers,
+                startedAtMs: phase.startedAtMs,
+              });
             }}
           />
         ) : null}
