@@ -13,12 +13,12 @@ import { generateExamQuestions, generatePracticeQuestions } from "./practice-ser
 
 const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
 
-function vocab(id: string, term: string, meaning: string, groupId: string) {
+function vocab(id: string, term: string, meaning: string, groupId: string, level = "A2") {
   return {
     id,
     groupId,
     type: "vocabulary" as const,
-    level: "A2" as const,
+    level,
     tags: [],
     source: "manual" as const,
     addedBy: user,
@@ -147,17 +147,6 @@ describe("generatePracticeQuestions", () => {
   });
 });
 
-describe("generateExamQuestions", () => {
-  it("draws from the same pool as practice", async () => {
-    vi.mocked(listKnowledgeItems).mockResolvedValue([
-      vocab("v1", "afspreken", "to arrange", "g1"),
-      vocab("v2", "gezellig", "cozy", "g1"),
-    ] as never);
-    const qs = await generateExamQuestions({ mode: "vocabulary", scope: "all", length: 0 });
-    expect(qs.length).toBeGreaterThan(0);
-  });
-});
-
 describe("generatePracticeQuestions — reading", () => {
   it("emits one question per stored quiz question, with the passage attached", async () => {
     vi.mocked(listKnowledgeItems).mockResolvedValue([
@@ -221,5 +210,80 @@ describe("generatePracticeQuestions — reading", () => {
     ] as never);
     const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 1 });
     expect(qs).toHaveLength(1);
+  });
+});
+
+describe("generateExamQuestions — real exam", () => {
+  it("only draws items at the chosen level", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      vocab("v1", "aap", "monkey", "g1", "B1"),
+      vocab("v2", "boom", "tree", "g1", "A1"),
+    ] as never);
+
+    const qs = await generateExamQuestions({
+      mode: "mixed",
+      scope: "level",
+      level: "B1",
+      length: 0,
+    });
+
+    for (const q of qs) expect(q.knowledgeId).toBe("v1");
+  });
+
+  it("returns [] when no level is set", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      vocab("v1", "aap", "monkey", "g1", "B1"),
+    ] as never);
+    expect(
+      await generateExamQuestions({ mode: "mixed", scope: "level", length: 10 }),
+    ).toEqual([]);
+  });
+
+  it("balances a length-10 exam into 4 reading / 3 grammar / 3 vocab when the level is rich enough", async () => {
+    const items: unknown[] = [];
+    for (let i = 0; i < 8; i += 1) items.push(vocab(`v${i}`, `term${i}`, `mean${i}`, "g1", "B1"));
+    for (let i = 0; i < 8; i += 1) items.push(grammar(`g${i}`, `Rule ${i}`, "g1"));
+    for (let i = 0; i < 3; i += 1) {
+      items.push(reading(`r${i}`, `Text ${i}`, "g1", sampleQuiz));
+    }
+    vi.mocked(listKnowledgeItems).mockResolvedValue(items as never);
+
+    const qs = await generateExamQuestions({
+      mode: "mixed",
+      scope: "level",
+      level: "B1",
+      length: 10,
+    });
+
+    expect(qs).toHaveLength(10);
+    const t = {
+      reading: qs.filter((q) => q.knowledgeType === "reading").length,
+      grammar: qs.filter((q) => q.knowledgeType === "grammar").length,
+      vocabulary: qs.filter((q) => q.knowledgeType === "vocabulary").length,
+    };
+    expect(t).toEqual({ reading: 4, grammar: 3, vocabulary: 3 });
+  });
+
+  it("ignores setup.mode — always mixed", async () => {
+    const items: unknown[] = [];
+    for (let i = 0; i < 6; i += 1) items.push(vocab(`v${i}`, `t${i}`, `m${i}`, "g1", "B1"));
+    for (let i = 0; i < 6; i += 1) items.push(grammar(`g${i}`, `R${i}`, "g1"));
+    vi.mocked(listKnowledgeItems).mockResolvedValue(items as never);
+
+    const qs = await generateExamQuestions({
+      mode: "vocabulary",
+      scope: "level",
+      level: "B1",
+      length: 10,
+    });
+    expect(qs.some((q) => q.knowledgeType === "grammar")).toBe(true);
+  });
+
+  it("reads the library once", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      vocab("v1", "aap", "monkey", "g1", "B1"),
+    ] as never);
+    await generateExamQuestions({ mode: "mixed", scope: "level", level: "B1", length: 10 });
+    expect(vi.mocked(listKnowledgeItems)).toHaveBeenCalledTimes(1);
   });
 });
