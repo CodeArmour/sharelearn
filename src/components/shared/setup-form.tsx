@@ -113,7 +113,7 @@ export function SetupForm({
           </Select>
         </Field>
 
-        {setup.scope === "level" || isExam ? (
+        {(setup.scope === "level" || isExam) && levels.length > 0 ? (
           <Field label={t("levelLabel")} htmlFor="setup-level">
             <Select
               id="setup-level"

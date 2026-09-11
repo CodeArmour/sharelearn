@@ -195,7 +195,6 @@
     "loadMore": "Meer laden",
     "empty": "Niets gevonden. Pas je zoekopdracht of filters aan.",
     "practiseThese": "Oefen deze",
-    "examThese": "Examen over deze",
     "filter": {
       "all": "Alles",
       "vocabulary": "Woordenschat",
@@ -439,7 +438,6 @@
     },
     "session": {
       "answered": "{answered} van {total} beantwoord",
-      "unanswered": "{count, plural, one {# niet beantwoord} other {# niet beantwoord}}",
       "handIn": "Inleveren",
       "questionNumber": "Vraag {number}",
       "timeLeft": "Resterende tijd",

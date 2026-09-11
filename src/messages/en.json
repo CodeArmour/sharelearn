@@ -195,7 +195,6 @@
     "loadMore": "Load more",
     "empty": "Nothing found. Adjust your search or filters.",
     "practiseThese": "Practise these",
-    "examThese": "Exam these",
     "filter": {
       "all": "All",
       "vocabulary": "Vocabulary",
@@ -439,7 +438,6 @@
     },
     "session": {
       "answered": "{answered} of {total} answered",
-      "unanswered": "{count, plural, one {# unanswered} other {# unanswered}}",
       "handIn": "Hand in",
       "questionNumber": "Question {number}",
       "timeLeft": "Time left",
