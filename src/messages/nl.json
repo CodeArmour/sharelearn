@@ -431,9 +431,9 @@
       "about": {
         "title": "Examenmodus",
         "points": [
-          "Alle vragen op één pagina, geen tussentijdse feedback",
-          "Je fouten zie je pas nadat je hebt ingeleverd",
-          "Toont een score wanneer je klaar bent"
+          "Gemengde vragen — een derde lezen, grammatica en woordenschat",
+          "Met tijdslimiet: 30 min voor 10 vragen, 1 uur voor 20, 1½ uur voor alle",
+          "Eén vraag per pagina; markeer vragen om terug te komen; geen feedback tot je inlevert"
         ]
       }
     },
@@ -441,7 +441,27 @@
       "answered": "{answered} van {total} beantwoord",
       "unanswered": "{count, plural, one {# niet beantwoord} other {# niet beantwoord}}",
       "handIn": "Inleveren",
-      "questionNumber": "Vraag {number}"
+      "questionNumber": "Vraag {number}",
+      "timeLeft": "Resterende tijd",
+      "pin": "Markeer om terug te komen",
+      "unpin": "Verwijder markering",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "navigatorTitle": "Vragen",
+      "navigatorAnswered": "Beantwoord",
+      "navigatorUnanswered": "Niet beantwoord",
+      "navigatorFlagged": "Gemarkeerd",
+      "timeUp": {
+        "title": "De tijd is om",
+        "body": "Je examen is ingeleverd.",
+        "viewResults": "Bekijk resultaten"
+      },
+      "handInConfirm": {
+        "title": "Nu inleveren?",
+        "body": "{unanswered} onbeantwoord, {flagged} gemarkeerd. Na inleveren kun je niets meer wijzigen.",
+        "confirm": "Inleveren",
+        "cancel": "Doorgaan"
+      }
     },
     "results": {
       "title": "Examenresultaten",

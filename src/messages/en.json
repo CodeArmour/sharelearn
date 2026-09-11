@@ -431,9 +431,9 @@
       "about": {
         "title": "Exam mode",
         "points": [
-          "Every question on one page, no feedback as you go",
-          "You only see your mistakes after you hand in",
-          "Shows a score once you're done"
+          "Mixed questions — one third reading, grammar, and vocabulary",
+          "Timed: 30 min for 10 questions, 1 h for 20, 1½ h for all",
+          "One question per page; flag any to revisit; no feedback until you hand in"
         ]
       }
     },
@@ -441,7 +441,27 @@
       "answered": "{answered} of {total} answered",
       "unanswered": "{count, plural, one {# unanswered} other {# unanswered}}",
       "handIn": "Hand in",
-      "questionNumber": "Question {number}"
+      "questionNumber": "Question {number}",
+      "timeLeft": "Time left",
+      "pin": "Flag for review",
+      "unpin": "Remove flag",
+      "prev": "Previous",
+      "next": "Next",
+      "navigatorTitle": "Questions",
+      "navigatorAnswered": "Answered",
+      "navigatorUnanswered": "Not answered",
+      "navigatorFlagged": "Flagged",
+      "timeUp": {
+        "title": "Time is up",
+        "body": "Your exam has been handed in.",
+        "viewResults": "See results"
+      },
+      "handInConfirm": {
+        "title": "Hand in now?",
+        "body": "{unanswered} unanswered, {flagged} flagged. You can't change anything after handing in.",
+        "confirm": "Hand in",
+        "cancel": "Keep working"
+      }
     },
     "results": {
       "title": "Exam results",
