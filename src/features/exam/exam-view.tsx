@@ -6,15 +6,8 @@ import { useTranslations } from "next-intl";
 
 import { generateExamQuestionsAction } from "@/server/actions/practice";
 import { recordStudyRunAction } from "@/server/actions/personal";
-import type {
-  PracticeFilter,
-  PracticeQuestion,
-  PracticeScope,
-  PracticeSetup,
-  StudyRunInput,
-} from "@/types";
+import type { PracticeQuestion, PracticeSetup, StudyRunInput } from "@/types";
 import { buildStudyRunInput, type SaveState } from "@/lib/study-run";
-import { useReviewMarks } from "@/lib/review-marks";
 import { useFocusOnChange } from "@/lib/use-focus-on-change";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { SetupForm, SetupModeNote } from "@/components/shared";
@@ -24,33 +17,27 @@ import { ExamSession } from "./exam-session";
 
 type Phase =
   | { name: "setup" }
-  | { name: "session"; questions: PracticeQuestion[] }
-  | { name: "results"; questions: PracticeQuestion[]; answers: (number | null)[] };
+  | { name: "session"; questions: PracticeQuestion[]; startedAtMs: number }
+  | {
+      name: "results";
+      questions: PracticeQuestion[];
+      answers: (number | null)[];
+      startedAtMs: number;
+    };
 
 /** Exam as a three-phase client machine: setup → paper → results. In-memory only. */
-export function ExamView({
-  initialScope = "all",
-  initialFilter,
-  filterSummary,
-  levels,
-}: {
-  initialScope?: PracticeScope;
-  initialFilter?: PracticeFilter;
-  filterSummary?: string;
-  levels: string[];
-}) {
+export function ExamView({ levels }: { levels: string[] }) {
   const tPage = useTranslations("pages.exam");
   const tExamSetup = useTranslations("exam.setup");
 
   const [setup, setSetup] = useState<PracticeSetup>({
     mode: "mixed",
-    scope: initialScope,
-    filter: initialFilter,
+    scope: "level",
+    level: levels[0],
     length: 20,
   });
   const [preview, setPreview] = useState<PracticeQuestion[]>([]);
   const [phase, setPhase] = useState<Phase>({ name: "setup" });
-  const [reviewMarks] = useReviewMarks();
 
   const startedAtRef = useRef<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState | null>(null);
@@ -59,11 +46,9 @@ export function ExamView({
   const regionRef = useRef<HTMLDivElement>(null);
   useFocusOnChange(regionRef, phase.name);
 
-  const resolved: PracticeSetup = { ...setup, reviewIds: Array.from(reviewMarks) };
-
   useEffect(() => {
     let alive = true;
-    generateExamQuestionsAction(resolved)
+    generateExamQuestionsAction(setup)
       .then((result) => {
         if (!alive) return;
         if (result.ok) {
@@ -78,8 +63,16 @@ export function ExamView({
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setup, reviewMarks]);
+  }, [setup]);
+
+  useEffect(() => {
+    if (phase.name !== "session") return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [phase.name]);
 
   const saveRun = (answers: (number | null)[], questions: PracticeQuestion[]) => {
     const input = buildStudyRunInput({
@@ -128,12 +121,13 @@ export function ExamView({
                 count={preview.length}
                 startLabel={tExamSetup("start")}
                 accent="warning"
-                filterSummary={filterSummary}
+                variant="exam"
                 onChange={(patch) => setSetup((s) => ({ ...s, ...patch }))}
                 onStart={() => {
                   if (preview.length > 0) {
-                    startedAtRef.current = new Date().toISOString();
-                    setPhase({ name: "session", questions: preview });
+                    const startedAtMs = Date.now();
+                    startedAtRef.current = new Date(startedAtMs).toISOString();
+                    setPhase({ name: "session", questions: preview, startedAtMs });
                   }
                 }}
               />
@@ -144,9 +138,16 @@ export function ExamView({
         {phase.name === "session" ? (
           <ExamSession
             questions={phase.questions}
+            startedAtMs={phase.startedAtMs}
+            length={setup.length}
             onSubmit={(answers) => {
               saveRun(answers, phase.questions);
-              setPhase({ name: "results", questions: phase.questions, answers });
+              setPhase({
+                name: "results",
+                questions: phase.questions,
+                answers,
+                startedAtMs: phase.startedAtMs,
+              });
             }}
           />
         ) : null}

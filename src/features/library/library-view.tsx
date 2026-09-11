@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Target } from "lucide-react";
+import { Target } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import type { CEFRLevel, GroupMemberSummary, KnowledgeType, VocabularyItem } from "@/types";
@@ -97,13 +97,6 @@ export async function LibraryView({
                   >
                     <Target className="-ml-0.5 size-4" strokeWidth={1.75} aria-hidden />
                     {t("library.practiseThese")}
-                  </Link>
-                  <Link
-                    href={drillHref("/exam", query)}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    <ClipboardList className="-ml-0.5 size-4" strokeWidth={1.75} aria-hidden />
-                    {t("library.examThese")}
                   </Link>
                 </div>
               )}
