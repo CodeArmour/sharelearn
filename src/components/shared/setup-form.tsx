@@ -30,6 +30,7 @@ export function SetupForm({
   startLabel,
   accent,
   filterSummary,
+  variant = "practice",
   onChange,
   onStart,
 }: {
@@ -41,11 +42,14 @@ export function SetupForm({
   accent?: "warning";
   /** One-line description of a carried Library filter; enables the "custom" scope. */
   filterSummary?: string;
+  /** "exam" hides the mode buttons and locks scope to level. */
+  variant?: "practice" | "exam";
   onChange: (patch: Partial<PracticeSetup>) => void;
   onStart: () => void;
 }) {
   const t = useTranslations("practice.setup");
   const isCustom = setup.scope === "custom";
+  const isExam = variant === "exam";
 
   const modeLabel = {
     vocabulary: t("mode.vocabulary"),
@@ -61,7 +65,7 @@ export function SetupForm({
 
   return (
     <div className="flex flex-col gap-6">
-      {isCustom ? null : (
+      {isExam || isCustom ? null : (
         <div className="flex flex-col gap-2">
           <span className="text-label font-medium text-fg-secondary">{t("modeLabel")}</span>
           <div
@@ -89,20 +93,27 @@ export function SetupForm({
           <Select
             id="setup-scope"
             value={setup.scope}
+            disabled={isExam && levels.length === 0}
             onChange={(e) => {
               const scope = e.target.value as PracticeScope;
               onChange(scope === "level" ? { scope, level: setup.level ?? levels[0] } : { scope });
             }}
           >
-            {filterSummary ? <option value="custom">{t("scope.custom")}</option> : null}
-            <option value="all">{t("scope.all")}</option>
-            <option value="today">{t("scope.today")}</option>
-            <option value="review">{t("scope.review")}</option>
-            {levels.length > 0 ? <option value="level">{t("scope.level")}</option> : null}
+            {isExam ? (
+              <option value="level">{t("scope.level")}</option>
+            ) : (
+              <>
+                {filterSummary ? <option value="custom">{t("scope.custom")}</option> : null}
+                <option value="all">{t("scope.all")}</option>
+                <option value="today">{t("scope.today")}</option>
+                <option value="review">{t("scope.review")}</option>
+                {levels.length > 0 ? <option value="level">{t("scope.level")}</option> : null}
+              </>
+            )}
           </Select>
         </Field>
 
-        {setup.scope === "level" ? (
+        {setup.scope === "level" || isExam ? (
           <Field label={t("levelLabel")} htmlFor="setup-level">
             <Select
               id="setup-level"
