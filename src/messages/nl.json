@@ -250,8 +250,6 @@
     "ai": {
       "captureLabel": "Plak tekst om met AI te structureren",
       "capturePlaceholder": "Plak een woordenlijst, een zin van je docent, een alinea…",
-      "attachPhoto": "Foto",
-      "attachFile": "Bestand",
       "removeAttachment": "Bijlage verwijderen",
       "submit": "Structureren met AI",
       "disclaimer": "AI stelt een structuur voor — jij controleert en bevestigt voordat er iets wordt opgeslagen.",

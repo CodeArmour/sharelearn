@@ -250,8 +250,6 @@
     "ai": {
       "captureLabel": "Paste text to structure with AI",
       "capturePlaceholder": "Paste a word list, a sentence from your teacher, a paragraph…",
-      "attachPhoto": "Photo",
-      "attachFile": "File",
       "removeAttachment": "Remove attachment",
       "submit": "Structure with AI",
       "disclaimer": "AI proposes a structure — you review and confirm before anything is saved.",
