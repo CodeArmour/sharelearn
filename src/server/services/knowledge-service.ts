@@ -14,6 +14,7 @@ import {
 } from "@/server/repositories/knowledge";
 import { listMembers } from "@/server/repositories/memberships";
 import { readingBodyHash } from "@/lib/reading-quiz-hash";
+import { grammarSourceHash } from "@/lib/grammar-quiz-hash";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type {
   AiSuggestion,
@@ -200,12 +201,21 @@ export async function updateKnowledgeItem(
           ...preserved,
           type: "vocabulary",
         });
-      case "grammar":
+      case "grammar": {
+        // If the rule's content changed, the stored quiz's sourceHash no
+        // longer matches. Null it so the NULL-sweep backfill picks it up
+        // (the Add view's edit path also fires an immediate regenerate on
+        // the happy path). Unchanged content leaves the quiz untouched.
+        const sourceChanged =
+          existing.type === "grammar" &&
+          grammarSourceHash(input) !== grammarSourceHash(existing);
         return updateKnowledgeItemRow(dbtx, groupId, id, userId, {
           ...input,
           ...preserved,
           type: "grammar",
+          ...(sourceChanged ? { grammarQuiz: null } : {}),
         });
+      }
       case "reading": {
         // If the body changed, the stored quiz's sourceHash no longer matches.
         // Null it so the NULL-sweep backfill picks it up (the Add view's edit
