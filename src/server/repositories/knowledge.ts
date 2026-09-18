@@ -11,7 +11,14 @@ import {
   type KnowledgeItemRow,
   type NewKnowledgeItemRow,
 } from "@/server/db/schema";
-import type { CEFRLevel, KnowledgeItem, KnowledgeType, ReadingQuiz, UserSummary } from "@/types";
+import type {
+  CEFRLevel,
+  GrammarQuiz,
+  KnowledgeItem,
+  KnowledgeType,
+  ReadingQuiz,
+  UserSummary,
+} from "@/types";
 
 export interface KnowledgeListFilter {
   type?: KnowledgeType;
@@ -73,6 +80,7 @@ function mapRow(
         summary: row.summary!,
         explanation: row.explanation!,
         examples: row.examples ?? [],
+        grammarQuiz: row.grammarQuiz ?? null,
       };
     case "reading":
       return {
@@ -266,6 +274,25 @@ export async function setReadingQuiz(
   await db
     .update(knowledgeItems)
     .set({ readingQuiz: quiz })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    );
+}
+
+/** Overwrite the stored grammar quiz for one grammar item. Scoped to the group
+ *  and to non-deleted rows; a no-op if the id doesn't match. */
+export async function setGrammarQuiz(
+  groupId: string,
+  id: string,
+  quiz: GrammarQuiz,
+): Promise<void> {
+  await db
+    .update(knowledgeItems)
+    .set({ grammarQuiz: quiz })
     .where(
       and(
         eq(knowledgeItems.id, id),

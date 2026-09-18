@@ -70,7 +70,7 @@ export function buildKnowledgeRow(
     case "vocabulary":
       return { ...shared, ...input, type: "vocabulary" };
     case "grammar":
-      return { ...shared, ...input, type: "grammar" };
+      return { ...shared, ...input, type: "grammar", grammarQuiz: null };
     case "reading":
       return {
         ...shared,

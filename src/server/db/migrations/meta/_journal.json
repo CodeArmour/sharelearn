@@ -71,6 +71,13 @@
       "when": 1789053122219,
       "tag": "0009_slow_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789769215360,
+      "tag": "0010_spooky_rogue",
+      "breakpoints": true
     }
   ]
 }
