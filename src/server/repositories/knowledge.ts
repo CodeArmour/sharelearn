@@ -11,7 +11,15 @@ import {
   type KnowledgeItemRow,
   type NewKnowledgeItemRow,
 } from "@/server/db/schema";
-import type { CEFRLevel, KnowledgeItem, KnowledgeType, ReadingQuiz, UserSummary } from "@/types";
+import type {
+  CEFRLevel,
+  GrammarExample,
+  GrammarQuiz,
+  KnowledgeItem,
+  KnowledgeType,
+  ReadingQuiz,
+  UserSummary,
+} from "@/types";
 
 export interface KnowledgeListFilter {
   type?: KnowledgeType;
@@ -73,6 +81,7 @@ function mapRow(
         summary: row.summary!,
         explanation: row.explanation!,
         examples: row.examples ?? [],
+        grammarQuiz: row.grammarQuiz ?? null,
       };
     case "reading":
       return {
@@ -275,6 +284,25 @@ export async function setReadingQuiz(
     );
 }
 
+/** Overwrite the stored grammar quiz for one grammar item. Scoped to the group
+ *  and to non-deleted rows; a no-op if the id doesn't match. */
+export async function setGrammarQuiz(
+  groupId: string,
+  id: string,
+  quiz: GrammarQuiz,
+): Promise<void> {
+  await db
+    .update(knowledgeItems)
+    .set({ grammarQuiz: quiz })
+    .where(
+      and(
+        eq(knowledgeItems.id, id),
+        eq(knowledgeItems.groupId, groupId),
+        isNull(knowledgeItems.deletedAt),
+      ),
+    );
+}
+
 export async function softDeleteKnowledgeItem(groupId: string, id: string): Promise<boolean> {
   const [deleted] = await db
     .update(knowledgeItems)
@@ -367,6 +395,56 @@ export async function listReadingsMissingQuiz(limit: number): Promise<
     body: r.body ?? "",
     level: r.level,
     readingQuiz: r.readingQuiz ?? null,
+  }));
+}
+
+/** Non-deleted grammar rows that have no stored quiz yet. The backfill
+ *  cron's work list — the NULL column is the "needs generating" signal. */
+export async function listGrammarMissingQuiz(limit: number): Promise<
+  {
+    id: string;
+    groupId: string;
+    title: string;
+    summary: string;
+    explanation: string;
+    examples: GrammarExample[];
+    level: string | null;
+    grammarQuiz: GrammarQuiz | null;
+  }[]
+> {
+  const rows = await db
+    .select({
+      id: knowledgeItems.id,
+      groupId: knowledgeItems.groupId,
+      title: knowledgeItems.title,
+      summary: knowledgeItems.summary,
+      explanation: knowledgeItems.explanation,
+      examples: knowledgeItems.examples,
+      level: knowledgeItems.level,
+      grammarQuiz: knowledgeItems.grammarQuiz,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.type, "grammar"),
+        isNull(knowledgeItems.deletedAt),
+        isNull(knowledgeItems.grammarQuiz),
+      ),
+    )
+    // Randomised so a row that keeps failing generation can't head-of-line-block
+    // the rest of the backlog run after run.
+    .orderBy(sql`random()`)
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    groupId: r.groupId,
+    title: r.title ?? "",
+    summary: r.summary ?? "",
+    explanation: r.explanation ?? "",
+    examples: r.examples ?? [],
+    level: r.level,
+    grammarQuiz: r.grammarQuiz ?? null,
   }));
 }
 

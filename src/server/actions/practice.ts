@@ -4,6 +4,7 @@ import { generateExamQuestions, generatePracticeQuestions } from "@/server/servi
 import type { PracticeQuestion } from "@/types";
 
 import { getKnowledgeItemById } from "@/server/repositories/knowledge";
+import { ensureGrammarQuiz } from "@/server/services/grammar-quiz-service";
 import { ensureReadingQuiz } from "@/server/services/reading-quiz-service";
 import { resolveActiveContext } from "@/server/services/session-service";
 import {
@@ -64,6 +65,42 @@ export async function generateReadingQuizAction(
       body: item.body,
       level: item.level,
       readingQuiz: item.readingQuiz,
+    });
+    return { ok: true, data: result };
+  } catch (e) {
+    return { ok: false, ...toActionError(e) };
+  }
+}
+
+/**
+ * Ensure a grammar item has up-to-date questions. Fired fire-and-forget by
+ * the Add / edit views after a grammar item is saved. Gated on an active
+ * group so an unauthenticated caller can't reach the model. A non-grammar or
+ * missing id is a no-op, not an error — callers fire without knowing types.
+ */
+export async function generateGrammarQuizAction(
+  itemId: unknown,
+): Promise<ActionResult<{ generated: boolean }>> {
+  const parsed = knowledgeItemIdSchema.safeParse(itemId);
+  if (!parsed.success) return { ok: false, code: "validation", message: "Invalid id" };
+
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") {
+    return { ok: false, code: "unauthorized", message: "Sign in to generate grammar questions" };
+  }
+
+  try {
+    const item = await getKnowledgeItemById(ctx.activeGroup.id, parsed.data);
+    if (!item || item.type !== "grammar") return { ok: true, data: { generated: false } };
+    const result = await ensureGrammarQuiz({
+      id: item.id,
+      groupId: ctx.activeGroup.id,
+      title: item.title,
+      summary: item.summary,
+      explanation: item.explanation,
+      examples: item.examples,
+      level: item.level,
+      grammarQuiz: item.grammarQuiz,
     });
     return { ok: true, data: result };
   } catch (e) {

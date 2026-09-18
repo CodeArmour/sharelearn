@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/sweep-capture-staging", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/backfill-reading-quiz", "schedule": "0 4 * * *" }
+    { "path": "/api/cron/backfill-reading-quiz", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/backfill-grammar-quiz", "schedule": "0 5 * * *" }
   ]
 }

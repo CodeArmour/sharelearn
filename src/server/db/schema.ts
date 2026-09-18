@@ -14,7 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import type { ReadingQuiz } from "@/types";
+import type { GrammarQuiz, ReadingQuiz } from "@/types";
 
 /**
  * Backend Phase 1 schema — auth/groups/invitations only.
@@ -160,6 +160,7 @@ export const knowledgeItems = pgTable(
     summary: text("summary"),
     explanation: text("explanation"),
     examples: jsonb("examples").$type<{ nl: string; en: string | null }[]>(),
+    grammarQuiz: jsonb("grammar_quiz").$type<GrammarQuiz>(),
     // reading / note
     body: text("body"),
     wordCount: integer("word_count"),

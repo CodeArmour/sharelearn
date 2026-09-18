@@ -393,7 +393,7 @@
     "instruction": {
       "meaningOf": "Wat betekent dit?",
       "sayInDutch": "Hoe zeg je dit in het Nederlands?",
-      "whichRule": "Van welke regel is dit een voorbeeld?",
+      "fillBlank": "Vul het juiste woord in",
       "readComprehension": "Lees de tekst en beantwoord de vraag",
       "trueOrFalse": "Waar of onwaar?"
     },

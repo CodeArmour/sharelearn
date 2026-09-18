@@ -16,7 +16,7 @@ import {
   createKnowledgeItemsAction,
   updateKnowledgeItemAction,
 } from "@/server/actions/knowledge";
-import { generateReadingQuizAction } from "@/server/actions/practice";
+import { generateGrammarQuizAction, generateReadingQuizAction } from "@/server/actions/practice";
 import type { KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
@@ -212,11 +212,15 @@ export function AddKnowledgeView({
         return;
       }
       setSavedTitle(t("ai.review.successCount", { count: result.data.ids.length }));
-      for (const id of result.data.ids)
+      for (const id of result.data.ids) {
         // fire-and-forget: the quiz backfills on its own if this never lands
         void generateReadingQuizAction(id).catch((e) =>
           console.error("generateReadingQuizAction rejected", e),
         );
+        void generateGrammarQuizAction(id).catch((e) =>
+          console.error("generateGrammarQuizAction rejected", e),
+        );
+      }
     } catch {
       setBatchError(t("ai.review.failed"));
     } finally {
@@ -313,6 +317,11 @@ export function AddKnowledgeView({
           void generateReadingQuizAction(existingItem.id).catch((e) =>
             console.error("generateReadingQuizAction rejected", e),
           );
+        if (input.type === "grammar")
+          // fire-and-forget: the quiz backfills on its own if this never lands
+          void generateGrammarQuizAction(existingItem.id).catch((e) =>
+            console.error("generateGrammarQuizAction rejected", e),
+          );
         router.push(`/knowledge/${existingItem.id}`);
         return;
       }
@@ -326,6 +335,11 @@ export function AddKnowledgeView({
         // fire-and-forget: the quiz backfills on its own if this never lands
         void generateReadingQuizAction(result.data.id).catch((e) =>
           console.error("generateReadingQuizAction rejected", e),
+        );
+      if (result.data.type === "grammar")
+        // fire-and-forget: the quiz backfills on its own if this never lands
+        void generateGrammarQuizAction(result.data.id).catch((e) =>
+          console.error("generateGrammarQuizAction rejected", e),
         );
     } catch {
       setSaveError(t("errors.generic"));

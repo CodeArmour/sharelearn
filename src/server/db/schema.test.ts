@@ -42,7 +42,7 @@ describe("knowledgeItems schema", () => {
         "created_at", "updated_at",
         "term", "meaning", "part_of_speech", "example", "example_translation",
         "article", "plural", "past_tense", "perfect", "usage_note",
-        "title", "summary", "explanation", "examples",
+        "title", "summary", "explanation", "examples", "grammar_quiz",
         "body", "word_count", "vocabulary_ids", "reading_quiz",
       ]),
     );

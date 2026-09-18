@@ -320,18 +320,21 @@ export function grammarSourceHash(rule: {
   explanation: string;
   examples: GrammarExample[];
 }): string {
+  const normalize = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
   const parts = [
-    rule.title,
-    rule.summary,
-    rule.explanation,
-    ...rule.examples.map((ex) => `${ex.nl} :: ${ex.en ?? ""}`),
+    normalize(rule.title),
+    normalize(rule.summary),
+    normalize(rule.explanation),
+    ...rule.examples.map((ex) => normalize(`${ex.nl} :: ${ex.en ?? ""}`)),
   ];
+  // Normalize each field BEFORE joining, not after: a whitespace run inside
+  // one field only collapses to a single space under a post-join regex (it
+  // never fully strips a field's leading/trailing whitespace, since that
+  // whitespace isn't at the edge of the whole joined string) — that made
+  // "  Foo  " and "Foo" hash differently. Per-field normalization avoids it.
   // JSON.stringify (not a plain join) so the array boundary itself can never
   // be confused with content — no separator string to collide with.
-  const normalized = JSON.stringify(parts)
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
+  const normalized = JSON.stringify(parts);
 
   let h1 = 0xdeadbeef ^ normalized.length;
   let h2 = 0x41c6ce57 ^ normalized.length;

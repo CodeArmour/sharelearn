@@ -60,6 +60,31 @@ export interface GrammarExample {
   en: string | null;
 }
 
+/** One stored grammar question. */
+export interface GrammarQuizQuestion {
+  /** Stable within the quiz — "q1", "q2", … Used to build the PracticeQuestion id. */
+  id: string;
+  kind: "fill-blank" | "true-false";
+  /** fill-blank: a Dutch sentence with exactly one blank marked "___".
+   *  true-false: a Dutch statement to judge. */
+  prompt: string;
+  /** fill-blank: exactly 4 Dutch options. true-false: ["Waar", "Onwaar"]. */
+  options: string[];
+  correctIndex: number;
+}
+
+/** AI-generated grammar questions for a GrammarItem. Regenerated when the
+ *  rule's content changes (detected via `sourceHash`). Null until generated. */
+export interface GrammarQuiz {
+  /** GRAMMAR_QUIZ_PROMPT_VERSION at generation time. */
+  promptVersion: string;
+  /** ISO 8601. */
+  generatedAt: string;
+  /** grammarSourceHash() of the content these questions were generated from. */
+  sourceHash: string;
+  questions: GrammarQuizQuestion[];
+}
+
 export interface GrammarItem extends KnowledgeItemBase {
   type: "grammar";
   title: string;
@@ -68,6 +93,8 @@ export interface GrammarItem extends KnowledgeItemBase {
   /** Longer explanation (plain text / lightweight markdown). */
   explanation: string;
   examples: GrammarExample[];
+  /** AI-generated fill-in-the-blank / true-false questions; null until generated. */
+  grammarQuiz: GrammarQuiz | null;
 }
 
 /** One stored comprehension question for a reading passage. */
