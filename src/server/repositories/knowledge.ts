@@ -13,6 +13,7 @@ import {
 } from "@/server/db/schema";
 import type {
   CEFRLevel,
+  GrammarExample,
   GrammarQuiz,
   KnowledgeItem,
   KnowledgeType,
@@ -394,6 +395,56 @@ export async function listReadingsMissingQuiz(limit: number): Promise<
     body: r.body ?? "",
     level: r.level,
     readingQuiz: r.readingQuiz ?? null,
+  }));
+}
+
+/** Non-deleted grammar rows that have no stored quiz yet. The backfill
+ *  cron's work list — the NULL column is the "needs generating" signal. */
+export async function listGrammarMissingQuiz(limit: number): Promise<
+  {
+    id: string;
+    groupId: string;
+    title: string;
+    summary: string;
+    explanation: string;
+    examples: GrammarExample[];
+    level: string | null;
+    grammarQuiz: GrammarQuiz | null;
+  }[]
+> {
+  const rows = await db
+    .select({
+      id: knowledgeItems.id,
+      groupId: knowledgeItems.groupId,
+      title: knowledgeItems.title,
+      summary: knowledgeItems.summary,
+      explanation: knowledgeItems.explanation,
+      examples: knowledgeItems.examples,
+      level: knowledgeItems.level,
+      grammarQuiz: knowledgeItems.grammarQuiz,
+    })
+    .from(knowledgeItems)
+    .where(
+      and(
+        eq(knowledgeItems.type, "grammar"),
+        isNull(knowledgeItems.deletedAt),
+        isNull(knowledgeItems.grammarQuiz),
+      ),
+    )
+    // Randomised so a row that keeps failing generation can't head-of-line-block
+    // the rest of the backlog run after run.
+    .orderBy(sql`random()`)
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    groupId: r.groupId,
+    title: r.title ?? "",
+    summary: r.summary ?? "",
+    explanation: r.explanation ?? "",
+    examples: r.examples ?? [],
+    level: r.level,
+    grammarQuiz: r.grammarQuiz ?? null,
   }));
 }
 
