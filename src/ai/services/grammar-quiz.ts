@@ -15,6 +15,9 @@ export type GrammarQuizResult =
  *  is an `error`. 2–3 questions are kept and stored; we just log a
  *  `console.warn` below `FLOOR` so thin rules stay visible. */
 const FLOOR = 4;
+/** Grammar explanations are far shorter than reading passages, but clamp
+ *  each interpolated field anyway — mirrors reading-quiz's MAX_BODY_CHARS. */
+const MAX_INPUT_CHARS = 4_000;
 
 /**
  * Generate grammar questions for one rule. Never throws: `unavailable` = no
@@ -37,11 +40,13 @@ export async function generateGrammarQuiz(rule: {
       `Title: ${rule.title}`,
       `CEFR level: ${rule.level ?? "unknown"}`,
       `<rule>`,
-      `Summary: ${rule.summary}`,
-      `Explanation: ${rule.explanation}`,
-      ...rule.examples.map(
-        (ex, i) => `Example ${i + 1}: ${ex.nl}${ex.en ? ` (${ex.en})` : ""}`,
-      ),
+      `Summary: ${rule.summary.slice(0, MAX_INPUT_CHARS)}`,
+      `Explanation: ${rule.explanation.slice(0, MAX_INPUT_CHARS)}`,
+      ...rule.examples.map((ex, i) => {
+        const nl = ex.nl.slice(0, MAX_INPUT_CHARS);
+        const en = ex.en ? ex.en.slice(0, MAX_INPUT_CHARS) : "";
+        return `Example ${i + 1}: ${nl}${en ? ` (${en})` : ""}`;
+      }),
       `</rule>`,
     ].join("\n");
 

@@ -84,4 +84,22 @@ describe("generateGrammarQuiz", () => {
     expect(arg.user).toContain("A2");
     expect(arg.user).toContain("Ik werk vandaag.");
   });
+
+  it("truncates oversized fields before interpolating them into the prompt", async () => {
+    generateStructured.mockResolvedValue({ questions: [fillBlank(1), tf(2), fillBlank(3), tf(4)] });
+    const oversized = {
+      ...rule,
+      summary: "s".repeat(5_000),
+      explanation: "e".repeat(5_000),
+      examples: [{ nl: "n".repeat(5_000), en: "n".repeat(5_000) }],
+    };
+    await generateGrammarQuiz(oversized);
+    const arg = generateStructured.mock.calls[0][0];
+    expect(arg.user).not.toContain("s".repeat(5_000));
+    expect(arg.user).not.toContain("e".repeat(5_000));
+    expect(arg.user).not.toContain("n".repeat(5_000));
+    expect(arg.user).toContain("s".repeat(4_000));
+    expect(arg.user).toContain("e".repeat(4_000));
+    expect(arg.user).toContain("n".repeat(4_000));
+  });
 });

@@ -78,6 +78,19 @@ const sampleGrammarQuiz: GrammarQuiz = {
   ],
 };
 
+// A 3-question quiz, to prove the loop emits one PracticeQuestion per stored
+// quiz question rather than the old one-question-per-item behavior.
+const threeQuestionGrammarQuiz = (): GrammarQuiz => ({
+  promptVersion: "v1",
+  generatedAt: "2026-09-18T00:00:00.000Z",
+  sourceHash: "hash",
+  questions: [
+    { id: "q1", kind: "fill-blank", prompt: "Vraag 1?", options: ["a", "b", "c", "d"], correctIndex: 0 },
+    { id: "q2", kind: "fill-blank", prompt: "Vraag 2?", options: ["a", "b", "c", "d"], correctIndex: 1 },
+    { id: "q3", kind: "true-false", prompt: "Vraag 3?", options: ["Waar", "Onwaar"], correctIndex: 0 },
+  ],
+});
+
 function grammar(id: string, title: string, groupId: string, quiz: GrammarQuiz | null = sampleGrammarQuiz) {
   return {
     id,
@@ -267,6 +280,53 @@ describe("generatePracticeQuestions — grammar", () => {
       grammar("g1", "Zonder quiz", "g1", null),
     ] as never);
     const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
+    expect(qs).toEqual([]);
+  });
+
+  it("emits one question per stored quiz question for a multi-question quiz", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      grammar("g1", "Woordvolgorde", "g1", threeQuestionGrammarQuiz()),
+    ] as never);
+
+    const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
+
+    expect(qs).toHaveLength(3);
+    expect(qs.map((q) => q.id)).toEqual(["q_g1_q1", "q_g1_q2", "q_g1_q3"]);
+    for (const q of qs) {
+      expect(q.knowledgeType).toBe("grammar");
+      expect(q.knowledgeId).toBe("g1");
+      expect(q.passage).toBeUndefined();
+    }
+  });
+});
+
+describe("generatePracticeQuestions — custom scope search", () => {
+  it("does not match text that only appears inside a grammar item's AI-generated quiz", async () => {
+    const quiz: GrammarQuiz = {
+      promptVersion: "v1",
+      generatedAt: "2026-09-18T00:00:00.000Z",
+      sourceHash: "hash",
+      questions: [
+        {
+          id: "q1",
+          kind: "fill-blank",
+          prompt: "Ik ___ elke dag naar school.",
+          options: ["loop", "loopt", "lopen", "kwispelboom"],
+          correctIndex: 0,
+        },
+      ],
+    };
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      grammar("g1", "Woordvolgorde", "g1", quiz),
+    ] as never);
+
+    const qs = await generatePracticeQuestions({
+      mode: "grammar",
+      scope: "custom",
+      filter: { q: "kwispelboom" },
+      length: 0,
+    });
+
     expect(qs).toEqual([]);
   });
 });

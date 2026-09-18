@@ -112,6 +112,7 @@ describe("generateGrammarQuizAction", () => {
     resolveActiveContext.mockResolvedValue({ status: "no-group" });
     const r = await generateGrammarQuizAction(UUID);
     expect(r).toMatchObject({ ok: false, code: "unauthorized" });
+    expect(ensureGrammarQuiz).not.toHaveBeenCalled();
   });
 
   it("no-ops for a missing item", async () => {
