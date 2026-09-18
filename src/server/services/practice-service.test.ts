@@ -7,7 +7,7 @@ vi.mock("@/server/services/session-service", () => ({ resolveActiveContext: vi.f
 import { listKnowledgeItems } from "@/server/repositories/knowledge";
 import { resolveActiveContext } from "@/server/services/session-service";
 
-import type { ReadingQuiz } from "@/types";
+import type { GrammarQuiz, ReadingQuiz } from "@/types";
 
 import { generateExamQuestions, generatePracticeQuestions } from "./practice-service";
 
@@ -63,7 +63,22 @@ const tenQuestionQuiz = (): ReadingQuiz => ({
   })),
 });
 
-function grammar(id: string, title: string, groupId: string) {
+const sampleGrammarQuiz: GrammarQuiz = {
+  promptVersion: "v1",
+  generatedAt: "2026-09-18T00:00:00.000Z",
+  sourceHash: "hash",
+  questions: [
+    {
+      id: "q1",
+      kind: "fill-blank",
+      prompt: "Ik ___ elke dag naar school.",
+      options: ["loop", "loopt", "lopen", "gelopen"],
+      correctIndex: 0,
+    },
+  ],
+};
+
+function grammar(id: string, title: string, groupId: string, quiz: GrammarQuiz | null = sampleGrammarQuiz) {
   return {
     id,
     groupId,
@@ -79,6 +94,7 @@ function grammar(id: string, title: string, groupId: string) {
     summary: `Samenvatting van ${title}`,
     explanation: "Uitleg",
     examples: [{ nl: "Ik werk vandaag.", en: "I work today." }],
+    grammarQuiz: quiz,
   };
 }
 
@@ -210,6 +226,48 @@ describe("generatePracticeQuestions — reading", () => {
     ] as never);
     const qs = await generatePracticeQuestions({ mode: "reading", scope: "all", length: 1 });
     expect(qs).toHaveLength(1);
+  });
+});
+
+describe("generatePracticeQuestions — grammar", () => {
+  it("emits one question per stored quiz question, with no passage", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      grammar("g1", "Woordvolgorde", "g1"),
+    ] as never);
+
+    const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
+
+    expect(qs).toHaveLength(1);
+    expect(qs[0].id).toBe("q_g1_q1");
+    expect(qs[0].knowledgeType).toBe("grammar");
+    expect(qs[0].knowledgeId).toBe("g1");
+    expect(qs[0].instructionKey).toBe("fillBlank");
+    expect(qs[0].passage).toBeUndefined();
+  });
+
+  it("uses the trueOrFalse instruction for true-false questions", async () => {
+    const quiz: GrammarQuiz = {
+      promptVersion: "v1",
+      generatedAt: "2026-09-18T00:00:00.000Z",
+      sourceHash: "hash",
+      questions: [
+        { id: "q1", kind: "true-false", prompt: "Hij hebben een hond.", options: ["Waar", "Onwaar"], correctIndex: 1 },
+      ],
+    };
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      grammar("g1", "Werkwoordvervoeging", "g1", quiz),
+    ] as never);
+
+    const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
+    expect(qs[0].instructionKey).toBe("trueOrFalse");
+  });
+
+  it("skips grammar items that have no stored quiz", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      grammar("g1", "Zonder quiz", "g1", null),
+    ] as never);
+    const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
+    expect(qs).toEqual([]);
   });
 });
 

@@ -25,7 +25,6 @@ export interface PracticeFilter {
 export type PracticeInstructionKey =
   | "meaningOf"
   | "sayInDutch"
-  | "whichRule"
   | "fillBlank"
   | "readComprehension"
   | "trueOrFalse";

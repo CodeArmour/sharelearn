@@ -83,19 +83,20 @@ function buildVocabQuestions(
   return out;
 }
 
-function buildGrammarQuestions(items: GrammarItem[], allTitles: string[]): PracticeQuestion[] {
+function buildGrammarQuestions(items: GrammarItem[]): PracticeQuestion[] {
   const out: PracticeQuestion[] = [];
   items.forEach((g) => {
-    const { options, correctIndex } = buildOptions(g.title, allTitles, `g:${g.id}`);
-    if (options.length >= 2) {
+    const quiz = g.grammarQuiz;
+    if (!quiz) return; // not generated / AI disabled → contributes nothing
+    for (const qq of quiz.questions) {
       out.push({
-        id: `q_${g.id}`,
+        id: `q_${g.id}_${qq.id}`,
         knowledgeId: g.id,
         knowledgeType: "grammar",
-        instructionKey: "whichRule",
-        prompt: g.examples[0]?.nl ?? g.summary,
-        options,
-        correctIndex,
+        instructionKey: qq.kind === "true-false" ? "trueOrFalse" : "fillBlank",
+        prompt: qq.prompt,
+        options: qq.options,
+        correctIndex: qq.correctIndex,
       });
     }
   });
@@ -151,10 +152,8 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   });
 
   const vocabPool = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
-  const grammarPool = groupItems.filter((i): i is GrammarItem => i.type === "grammar");
   const allMeanings = vocabPool.map((v) => v.meaning);
   const allTerms = vocabPool.map((v) => v.term);
-  const allTitles = grammarPool.map((g) => g.title);
 
   const wantVocab = setup.mode === "vocabulary" || setup.mode === "mixed";
   const wantGrammar = setup.mode === "grammar" || setup.mode === "mixed";
@@ -166,7 +165,7 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
 
   const questions: PracticeQuestion[] = [
     ...(wantVocab ? buildVocabQuestions(inScopeVocab, allTerms, allMeanings) : []),
-    ...(wantGrammar ? buildGrammarQuestions(inScopeGrammar, allTitles) : []),
+    ...(wantGrammar ? buildGrammarQuestions(inScopeGrammar) : []),
     ...(wantReading ? buildReadingQuestions(inScopeReading) : []),
   ];
 
@@ -185,9 +184,6 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
   const vocabAll = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
   const allTerms = vocabAll.map((v) => v.term);
   const allMeanings = vocabAll.map((v) => v.meaning);
-  const allTitles = groupItems
-    .filter((i): i is GrammarItem => i.type === "grammar")
-    .map((g) => g.title);
 
   const sortKey = (q: PracticeQuestion) =>
     q.passage ? hashString(q.passage.id) : hashString(q.id);
@@ -198,10 +194,7 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
       buildReadingQuestions(levelItems.filter((i): i is ReadingItem => i.type === "reading")),
     ),
     grammar: ordered(
-      buildGrammarQuestions(
-        levelItems.filter((i): i is GrammarItem => i.type === "grammar"),
-        allTitles,
-      ),
+      buildGrammarQuestions(levelItems.filter((i): i is GrammarItem => i.type === "grammar")),
     ),
     vocabulary: ordered(
       buildVocabQuestions(
