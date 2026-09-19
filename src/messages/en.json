@@ -476,6 +476,9 @@
   "profile": {
     "memberSince": "Member since {date}",
     "role": { "owner": "Owner", "member": "Member" },
+    "edit": {
+      "editButton": "Edit profile"
+    },
     "preferences": { "title": "Preferences", "language": "Language" },
     "progress": {
       "title": "Progress",

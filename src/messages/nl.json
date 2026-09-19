@@ -476,6 +476,9 @@
   "profile": {
     "memberSince": "Lid sinds {date}",
     "role": { "owner": "Eigenaar", "member": "Lid" },
+    "edit": {
+      "editButton": "Profiel bewerken"
+    },
     "preferences": { "title": "Voorkeuren", "language": "Taal" },
     "progress": {
       "title": "Voortgang",
