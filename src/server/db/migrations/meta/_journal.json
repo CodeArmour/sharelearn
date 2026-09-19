@@ -78,6 +78,20 @@
       "when": 1789769215360,
       "tag": "0010_spooky_rogue",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789846189480,
+      "tag": "0011_even_ikaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789846210949,
+      "tag": "0012_polite_supreme_intelligence",
+      "breakpoints": true
     }
   ]
 }
