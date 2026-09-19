@@ -561,6 +561,21 @@
       "hairColor": "Haar",
       "shirtColor": "Shirt",
       "backgroundColor": "Achtergrond"
-    }
+    },
+    "fullNameLabel": "Volledige naam",
+    "nicknameLabel": "Bijnaam",
+    "cefrLabel": "Nederlands niveau",
+    "cefrNone": "Liever niet zeggen",
+    "learningGoalLabel": "Waarom leer je Nederlands?",
+    "learningGoalNone": "Liever niet zeggen",
+    "learningGoalOptions": {
+      "relocating": "Verhuizen naar Nederland",
+      "work_study": "Werk of studie",
+      "family": "Familie",
+      "curious": "Gewoon nieuwsgierig"
+    },
+    "submit": "Doorgaan",
+    "save": "Wijzigingen opslaan",
+    "saved": "Opgeslagen"
   }
 }

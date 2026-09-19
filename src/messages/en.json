@@ -561,6 +561,21 @@
       "hairColor": "Hair",
       "shirtColor": "Shirt",
       "backgroundColor": "Background"
-    }
+    },
+    "fullNameLabel": "Full name",
+    "nicknameLabel": "Nickname",
+    "cefrLabel": "Dutch level",
+    "cefrNone": "Prefer not to say",
+    "learningGoalLabel": "Why are you learning Dutch?",
+    "learningGoalNone": "Prefer not to say",
+    "learningGoalOptions": {
+      "relocating": "Moving to the Netherlands",
+      "work_study": "Work or study",
+      "family": "Family",
+      "curious": "Just curious"
+    },
+    "submit": "Continue",
+    "save": "Save changes",
+    "saved": "Saved"
   }
 }
