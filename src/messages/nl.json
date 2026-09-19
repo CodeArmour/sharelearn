@@ -555,6 +555,8 @@
     }
   },
   "onboarding": {
+    "title": "Welkom! Laten we je profiel instellen",
+    "subtitle": "Kies een naam en maak je avatar — je kunt dit later altijd aanpassen via je profiel.",
     "avatar": {
       "character": "Personage",
       "skinColor": "Huid",

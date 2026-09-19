@@ -555,6 +555,8 @@
     }
   },
   "onboarding": {
+    "title": "Welcome! Let's set up your profile",
+    "subtitle": "Pick a name and build your avatar — you can change any of this later from your profile.",
     "avatar": {
       "character": "Character",
       "skinColor": "Skin",
