@@ -553,5 +553,14 @@
       "body": "You're not in any group yet. Ask an owner to invite you.",
       "signOut": "Sign out"
     }
+  },
+  "onboarding": {
+    "avatar": {
+      "character": "Character",
+      "skinColor": "Skin",
+      "hairColor": "Hair",
+      "shirtColor": "Shirt",
+      "backgroundColor": "Background"
+    }
   }
 }

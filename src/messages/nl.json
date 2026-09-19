@@ -553,5 +553,14 @@
       "body": "Je zit nog in geen enkele groep. Vraag een eigenaar om je uit te nodigen.",
       "signOut": "Uitloggen"
     }
+  },
+  "onboarding": {
+    "avatar": {
+      "character": "Personage",
+      "skinColor": "Huid",
+      "hairColor": "Haar",
+      "shirtColor": "Shirt",
+      "backgroundColor": "Achtergrond"
+    }
   }
 }
