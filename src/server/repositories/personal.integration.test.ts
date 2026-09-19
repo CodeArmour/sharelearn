@@ -34,8 +34,8 @@ async function seedOne(tx: Db) {
     insert into group_memberships (group_id, user_id, role) values (${groupId}, ${userId}, 'owner')
   `);
   await tx.execute(sql`
-    insert into profiles (id, display_name, initials, accent)
-    values (${userId}, 'P3', 'P3', 'vocabulary')
+    insert into profiles (id, full_name, nickname)
+    values (${userId}, 'P3', 'P3')
   `);
   const [item] = await tx.execute(sql`
     insert into knowledge_items (group_id, type, source, added_by, term, meaning, part_of_speech)
