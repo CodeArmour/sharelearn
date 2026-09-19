@@ -2,7 +2,16 @@ import { z } from "zod";
 
 import { isUuid } from "@/lib/is-uuid";
 import { InviteError, isAppError } from "@/server/errors";
-import { CEFR_LEVELS, KNOWLEDGE_TYPES } from "@/types";
+import {
+  AVATAR_CHARACTERS,
+  BACKGROUND_COLORS,
+  CEFR_LEVELS,
+  HAIR_COLORS,
+  KNOWLEDGE_TYPES,
+  LEARNING_GOALS,
+  SHIRT_COLORS,
+  SKIN_COLORS,
+} from "@/types";
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }
@@ -151,3 +160,20 @@ export const studyRunInputSchema = z
     message: "practice runs require a mode; exams must not carry one",
     path: ["mode"],
   });
+
+export const avatarConfigSchema = z.object({
+  character: z.enum(AVATAR_CHARACTERS),
+  skinColor: z.enum(SKIN_COLORS),
+  hairColor: z.enum(HAIR_COLORS),
+  shirtColor: z.enum(SHIRT_COLORS),
+  backgroundColor: z.enum(BACKGROUND_COLORS),
+});
+
+export const profileFieldsSchema = z.object({
+  fullName: z.string().trim().min(1, "Enter your name"),
+  nickname: z.string().trim().min(1, "Enter a nickname"),
+  avatar: avatarConfigSchema,
+  cefrLevel: z.enum(CEFR_LEVELS).nullable().default(null),
+  learningGoal: z.enum(LEARNING_GOALS).nullable().default(null),
+});
+export type ProfileFieldsInput = z.infer<typeof profileFieldsSchema>;
