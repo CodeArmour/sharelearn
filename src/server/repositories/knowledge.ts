@@ -12,6 +12,7 @@ import {
   type NewKnowledgeItemRow,
 } from "@/server/db/schema";
 import type {
+  AvatarConfig,
   CEFRLevel,
   GrammarExample,
   GrammarQuiz,
@@ -106,15 +107,13 @@ function mapRow(
 
 function toUserSummary(p: {
   id: string;
-  displayName: string;
-  initials: string;
-  accent: string;
+  nickname: string;
+  avatar: AvatarConfig | null;
 }): UserSummary {
   return {
     id: p.id,
-    name: p.displayName,
-    initials: p.initials,
-    accent: p.accent as UserSummary["accent"],
+    name: p.nickname,
+    avatar: p.avatar,
     avatarUrl: null,
   };
 }
@@ -146,15 +145,13 @@ async function selectWithAttribution(
       item: knowledgeItems,
       profile: {
         id: profiles.id,
-        displayName: profiles.displayName,
-        initials: profiles.initials,
-        accent: profiles.accent,
+        nickname: profiles.nickname,
+        avatar: profiles.avatar,
       },
       updatedByProfile: {
         id: updatedByProfiles.id,
-        displayName: updatedByProfiles.displayName,
-        initials: updatedByProfiles.initials,
-        accent: updatedByProfiles.accent,
+        nickname: updatedByProfiles.nickname,
+        avatar: updatedByProfiles.avatar,
       },
     })
     .from(knowledgeItems)
@@ -232,9 +229,8 @@ export async function insertKnowledgeItem(
   const [profile] = await tx
     .select({
       id: profiles.id,
-      displayName: profiles.displayName,
-      initials: profiles.initials,
-      accent: profiles.accent,
+      nickname: profiles.nickname,
+      avatar: profiles.avatar,
     })
     .from(profiles)
     .where(eq(profiles.id, inserted.addedBy))

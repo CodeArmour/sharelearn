@@ -27,7 +27,7 @@ import {
 
 const okCtx = {
   status: "ok" as const,
-  user: { id: "u1", name: "U", initials: "UU", avatarUrl: null },
+  user: { id: "u1", name: "U", avatar: null, avatarUrl: null },
   activeGroup: { id: "g1", name: "G", slug: "g" },
   membership: { groupId: "g1", userId: "u1", role: "member" as const },
 };

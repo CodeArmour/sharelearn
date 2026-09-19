@@ -49,7 +49,7 @@ export async function getGroupSettings(): Promise<GroupSettingsView> {
           id: r.id,
           email: r.email,
           role: r.role,
-          invitedByName: inviter?.displayName ?? "—",
+          invitedByName: inviter?.nickname ?? "—",
           expiresAt: r.expiresAt.toISOString(),
           createdAt: r.createdAt.toISOString(),
         };

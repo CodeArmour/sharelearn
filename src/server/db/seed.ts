@@ -3,7 +3,6 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { createClient } from "@supabase/supabase-js";
 
-import { deriveAccent, deriveInitials } from "@/server/auth/identity";
 import * as schema from "@/server/db/schema";
 
 const { groupMemberships, groups, knowledgeItems, profiles, reviewMarks, studyRuns } = schema;
@@ -267,9 +266,8 @@ async function main() {
     .insert(profiles)
     .values({
       id: userId,
-      displayName: email!.split("@")[0],
-      initials: deriveInitials(email!),
-      accent: deriveAccent(userId),
+      fullName: email!.split("@")[0],
+      nickname: email!.split("@")[0],
     })
     .onConflictDoNothing();
 

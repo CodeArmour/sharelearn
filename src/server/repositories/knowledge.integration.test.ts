@@ -33,9 +33,8 @@ run("knowledge repository (integration)", () => {
     await seedAuthUser(owner);
     await profilesRepo.upsertProfile(testDb!, {
       userId: owner,
-      displayName: "Owner",
-      initials: "OW",
-      accent: "vocabulary",
+      fullName: "Owner",
+      nickname: "Owner",
     });
   });
 

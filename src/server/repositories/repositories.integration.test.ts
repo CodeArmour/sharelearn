@@ -66,9 +66,8 @@ run("repositories (integration)", () => {
 
     await profilesRepo.upsertProfile(testDb!, {
       userId: owner,
-      displayName: "Owner",
-      initials: "OW",
-      accent: "vocabulary",
+      fullName: "Owner",
+      nickname: "Owner",
     });
     await membershipsRepo.createMembership(testDb!, {
       groupId: group.id,

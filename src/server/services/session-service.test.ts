@@ -19,7 +19,7 @@ import { listGroupsForUser } from "@/server/repositories/groups";
 
 import { resolveActiveContext } from "./session-service";
 
-const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
+const user = { id: "u1", name: "U", avatar: null, avatarUrl: null };
 const g1 = { id: "g1", name: "One", slug: "one", role: "owner" as const };
 const g2 = { id: "g2", name: "Two", slug: "two", role: "member" as const };
 

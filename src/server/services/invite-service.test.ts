@@ -86,7 +86,7 @@ beforeEach(() => {
   vi.mocked(getCurrentUser).mockResolvedValue({
     id: OWNER,
     name: "O",
-    initials: "OO",
+    avatar: null,
     avatarUrl: null,
   });
 });
@@ -94,7 +94,7 @@ beforeEach(() => {
 describe("inviteMember", () => {
   const okCtx = (role: "owner" | "member") => ({
     status: "ok" as const,
-    user: { id: OWNER, name: "O", initials: "OO", avatarUrl: null },
+    user: { id: OWNER, name: "O", avatar: null, avatarUrl: null },
     activeGroup: { id: GROUP, name: "G", slug: "g" },
     membership: { groupId: GROUP, userId: OWNER, role },
   });
@@ -185,7 +185,7 @@ describe("acceptInvitation", () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
       id: INVITEE,
       name: "I",
-      initials: "II",
+      avatar: null,
       avatarUrl: null,
     });
     // getCurrentUser doesn't carry email; the service re-reads it from supabase.

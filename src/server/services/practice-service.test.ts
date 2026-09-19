@@ -11,7 +11,7 @@ import type { GrammarQuiz, ReadingQuiz } from "@/types";
 
 import { generateExamQuestions, generatePracticeQuestions } from "./practice-service";
 
-const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
+const user = { id: "u1", name: "U", avatar: null, avatarUrl: null };
 
 function vocab(id: string, term: string, meaning: string, groupId: string, level = "A2") {
   return {

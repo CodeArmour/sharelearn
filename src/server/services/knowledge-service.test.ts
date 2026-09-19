@@ -38,7 +38,7 @@ import {
   updateKnowledgeItem,
 } from "./knowledge-service";
 
-const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
+const user = { id: "u1", name: "U", avatar: null, avatarUrl: null };
 const okCtx = {
   status: "ok" as const,
   user,

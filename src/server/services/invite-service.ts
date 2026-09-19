@@ -3,7 +3,6 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 
 import { writeActiveGroupId } from "@/server/active-group";
-import { deriveAccent, deriveInitials } from "@/server/auth/identity";
 import { getCurrentUser } from "@/server/auth/session";
 import { createAdminSupabaseClient, createServerSupabaseClient } from "@/server/auth/supabase";
 import { db, type Db } from "@/server/db/client";
@@ -140,9 +139,8 @@ export async function acceptInvitation(input: { token: string }): Promise<{ grou
     await markAccepted(dbtx, invite.id);
     await upsertProfile(dbtx, {
       userId: authUser.id,
-      displayName: sessionEmail.split("@")[0],
-      initials: deriveInitials(sessionEmail),
-      accent: deriveAccent(authUser.id),
+      fullName: sessionEmail.split("@")[0],
+      nickname: sessionEmail.split("@")[0],
     });
   });
 
