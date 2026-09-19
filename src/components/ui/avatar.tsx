@@ -1,63 +1,77 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ComponentPropsWithRef } from "react";
+import { User } from "lucide-react";
+import type { ComponentPropsWithRef, CSSProperties } from "react";
 
+import { AVATAR_CHARACTER_COMPONENTS } from "@/components/ui/avatar-characters";
+import {
+  BACKGROUND_COLOR_HEX,
+  HAIR_COLOR_HEX,
+  SHIRT_COLOR_HEX,
+  SKIN_COLOR_HEX,
+} from "@/lib/avatar-palette";
 import { cn } from "@/lib/utils/cn";
+import type { AvatarConfig } from "@/types";
 
 /**
- * Avatar — initials in a tinted circle. Maps to the Figma `Avatar` component
- * (Size xs/sm/md/lg). The tint uses a knowledge-type accent so the small group
- * stays visually distinguishable; falls back to neutral.
+ * Avatar — the user's chosen illustrated character, recolored via CSS custom
+ * properties. Maps to the Figma `Avatar` component (Size xs/sm/md/lg). Falls
+ * back to a neutral placeholder icon when `avatar` is null (a groupmate who
+ * hasn't finished onboarding yet).
  *
  * Decorative by default (`aria-hidden`): the person's name is expected to sit
  * next to it. Pass an `aria-label` if the avatar stands alone.
  */
 const avatarVariants = cva(
-  "inline-grid shrink-0 place-items-center rounded-pill font-sans font-semibold uppercase select-none",
+  "inline-grid shrink-0 place-items-center overflow-hidden rounded-pill select-none",
   {
     variants: {
       size: {
-        xs: "size-6 text-[0.6875rem] leading-4",
-        sm: "size-8 text-caption",
-        md: "size-10 text-body-sm",
-        lg: "size-12 text-body",
+        xs: "size-6",
+        sm: "size-8",
+        md: "size-10",
+        lg: "size-12",
       },
     },
     defaultVariants: { size: "xs" },
   },
 );
 
-const ACCENT = {
-  vocabulary: "bg-knowledge-vocabulary-subtle text-knowledge-vocabulary-strong",
-  grammar: "bg-knowledge-grammar-subtle text-knowledge-grammar-strong",
-  reading: "bg-knowledge-reading-subtle text-knowledge-reading-strong",
-  file: "bg-knowledge-file-subtle text-knowledge-file-strong",
-  neutral: "bg-surface-sunken text-fg-secondary",
-} as const;
-
-export type AvatarAccent = keyof typeof ACCENT;
-
 export interface AvatarProps
   extends Omit<ComponentPropsWithRef<"span">, "children">, VariantProps<typeof avatarVariants> {
-  initials: string;
-  accent?: AvatarAccent;
+  avatar: AvatarConfig | null;
 }
 
-export function Avatar({
-  initials,
-  accent = "neutral",
-  size,
-  className,
-  "aria-label": ariaLabel,
-  ...props
-}: AvatarProps) {
+export function Avatar({ avatar, size, className, "aria-label": ariaLabel, ...props }: AvatarProps) {
+  if (!avatar) {
+    return (
+      <span
+        className={cn(avatarVariants({ size }), "bg-surface-sunken text-fg-secondary", className)}
+        aria-label={ariaLabel}
+        aria-hidden={ariaLabel ? undefined : true}
+        {...props}
+      >
+        <User className="size-[60%]" strokeWidth={1.75} aria-hidden />
+      </span>
+    );
+  }
+
+  const Character = AVATAR_CHARACTER_COMPONENTS[avatar.character];
+  const style = {
+    "--avatar-bg": BACKGROUND_COLOR_HEX[avatar.backgroundColor],
+    "--avatar-hair": HAIR_COLOR_HEX[avatar.hairColor],
+    "--avatar-shirt": SHIRT_COLOR_HEX[avatar.shirtColor],
+    "--avatar-skin": SKIN_COLOR_HEX[avatar.skinColor],
+  } as CSSProperties;
+
   return (
     <span
-      className={cn(avatarVariants({ size }), ACCENT[accent], className)}
+      className={cn(avatarVariants({ size }), className)}
+      style={style}
       aria-label={ariaLabel}
       aria-hidden={ariaLabel ? undefined : true}
       {...props}
     >
-      {initials.slice(0, 2)}
+      <Character className="size-full" />
     </span>
   );
 }

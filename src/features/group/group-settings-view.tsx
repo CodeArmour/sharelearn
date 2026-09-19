@@ -40,7 +40,7 @@ export async function GroupSettingsView({ settings }: { settings: GroupSettingsV
                 m.role === "owner" ? "border-border-default" : "border-border",
               )}
             >
-              <Avatar initials={m.initials} accent={m.accent} size="md" />
+              <Avatar avatar={m.avatar} size="md" />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate font-medium text-fg">{m.name}</span>
                 <span className="truncate text-body-sm text-fg-muted">

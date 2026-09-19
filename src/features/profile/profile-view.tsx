@@ -36,7 +36,7 @@ export async function ProfileView({
 
       <div className="mx-auto flex w-full max-w-[42rem] flex-col gap-8">
         <div className="flex items-center gap-4 rounded-card border border-border bg-surface p-5">
-          <Avatar initials={user.initials} accent={user.accent} size="lg" />
+          <Avatar avatar={user.avatar} size="lg" />
           <div className="flex flex-col gap-0.5">
             <span className="font-display text-h3 text-fg">{user.name}</span>
             {member ? (
