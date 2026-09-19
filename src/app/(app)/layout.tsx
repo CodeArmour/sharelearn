@@ -12,6 +12,7 @@ import { resolveActiveContext } from "@/server/services/session-service";
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const ctx = await resolveActiveContext();
   if (ctx.status === "needs-login") redirect("/login");
+  if (ctx.status === "needs-onboarding") redirect("/onboarding");
   if (ctx.status === "needs-group" || ctx.status === "no-access") redirect("/groups");
 
   const stats = await getLibraryStats();

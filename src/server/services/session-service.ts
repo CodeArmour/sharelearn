@@ -5,6 +5,7 @@ import { cache } from "react";
 import { clearActiveGroupId, readActiveGroupId, writeActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
 import { listGroupsForUser } from "@/server/repositories/groups";
+import { getProfile } from "@/server/repositories/profiles";
 import type { ActiveContext } from "@/types";
 
 /** Memoized per-request via React's `cache()` (App Router semantics): every
@@ -13,6 +14,9 @@ import type { ActiveContext } from "@/types";
 export const resolveActiveContext = cache(async (): Promise<ActiveContext> => {
   const user = await getCurrentUser();
   if (!user) return { status: "needs-login" };
+
+  const profile = await getProfile(user.id);
+  if (profile && !profile.onboardedAt) return { status: "needs-onboarding" };
 
   const groups = await listGroupsForUser(user.id);
   if (groups.length === 0) return { status: "no-access" };

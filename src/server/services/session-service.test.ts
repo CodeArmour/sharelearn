@@ -7,6 +7,9 @@ vi.mock("@/server/auth/session", () => ({
 vi.mock("@/server/repositories/groups", () => ({
   listGroupsForUser: vi.fn(),
 }));
+vi.mock("@/server/repositories/profiles", () => ({
+  getProfile: vi.fn(),
+}));
 vi.mock("@/server/active-group", () => ({
   readActiveGroupId: vi.fn(),
   writeActiveGroupId: vi.fn(),
@@ -16,6 +19,7 @@ vi.mock("@/server/active-group", () => ({
 import { readActiveGroupId, writeActiveGroupId, clearActiveGroupId } from "@/server/active-group";
 import { getCurrentUser } from "@/server/auth/session";
 import { listGroupsForUser } from "@/server/repositories/groups";
+import { getProfile } from "@/server/repositories/profiles";
 
 import { resolveActiveContext } from "./session-service";
 
@@ -25,6 +29,7 @@ const g2 = { id: "g2", name: "Two", slug: "two", role: "member" as const };
 
 beforeEach(() => {
   vi.mocked(getCurrentUser).mockResolvedValue(user);
+  vi.mocked(getProfile).mockResolvedValue({ onboardedAt: new Date() } as never);
   vi.mocked(readActiveGroupId).mockResolvedValue(null);
   vi.mocked(listGroupsForUser).mockResolvedValue([]);
 });
@@ -37,6 +42,12 @@ describe("resolveActiveContext", () => {
 
   it("no-access when the user has zero memberships", async () => {
     expect(await resolveActiveContext()).toEqual({ status: "no-access" });
+  });
+
+  it("needs-onboarding when the profile exists but hasn't been onboarded", async () => {
+    vi.mocked(getProfile).mockResolvedValue({ onboardedAt: null } as never);
+    expect(await resolveActiveContext()).toEqual({ status: "needs-onboarding" });
+    expect(listGroupsForUser).not.toHaveBeenCalled();
   });
 
   it("auto-selects the only membership when no cookie is set", async () => {
