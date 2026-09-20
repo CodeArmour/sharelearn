@@ -22,7 +22,11 @@ describe("defaultAvatarFor", () => {
 
   it("varies between users", () => {
     const distinct = new Set(
-      Array.from({ length: 20 }, (_, i) => JSON.stringify(defaultAvatarFor(`user-${i}`))),
+      Array.from({ length: 20 }, (_, i) => {
+        // The seed is the user id, so it is always distinct; drop it to test
+        // only the hash-driven palette picks.
+        return JSON.stringify({ ...defaultAvatarFor(`user-${i}`), seed: undefined });
+      }),
     );
     expect(distinct.size).toBeGreaterThan(10);
   });

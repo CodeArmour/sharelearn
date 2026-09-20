@@ -185,7 +185,7 @@ export function AvatarBuilder({
         >
           Micah Lanier
         </a>
-        {" · "}
+        <span aria-hidden>{" · "}</span>
         <a
           href="https://creativecommons.org/licenses/by/4.0/"
           target="_blank"
@@ -194,7 +194,7 @@ export function AvatarBuilder({
         >
           CC BY 4.0
         </a>
-        {" · "}
+        <span aria-hidden>{" · "}</span>
         <a
           href="https://www.dicebear.com"
           target="_blank"

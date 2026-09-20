@@ -112,15 +112,18 @@ interface AvatarConfig {
   choices (mini avatars in the currently selected colors, so what you see is
   what you get); optional rows include a "None" tile. **Skin**, **Hair color**,
   **Shirt**, **Background** as color circles with i18n color names.
-- Each row is a `role="radiogroup"` (labelled) of visually-hidden native radio
-  inputs inside `<label>`s: arrow-key navigation, tab stop and form semantics
-  come from the platform. Selected = ring + check; hover = subtle lift/ring;
-  `has-[:focus-visible]` ring for keyboard focus.
+- Each row is a labelled `<fieldset>`/`<legend>` group (accessibility role
+  `group`) of visually-hidden native radio inputs inside `<label>`s: arrow-key
+  navigation, tab stop and form semantics come from the platform. Selected =
+  ring + check; hover = subtle lift/ring; `has-[:focus-visible]` ring for
+  keyboard focus.
 - Motion (hover lift, press scale) is wrapped in `motion-safe:`; nothing animates
   under `prefers-reduced-motion`.
-- Responsive: single column on mobile with ≥40px targets; larger thumbnail/color
-  grids on `md+`. Verified with the same-origin iframe harness at mobile and
-  desktop widths.
+- Responsive: single column on mobile with ≥36px targets (swatches are 36px on
+  mobile, 40px from `sm`; tiles are 56px; 36px clears WCAG 2.2 AA's 24px minimum
+  and lets the six skin/background swatches fit one row in the 261px mobile form
+  width); larger thumbnail/color grids on `md+`. Verified with the same-origin
+  iframe harness at mobile and desktop widths.
 - i18n: `onboarding.avatar.*` in `en.json` and `nl.json` (row labels, hair style
   names, color names, "None", "Surprise me", the CC BY credit line).
 - Attribution: a small "Avatars: Micah Lanier, CC BY 4.0" credit line with links
