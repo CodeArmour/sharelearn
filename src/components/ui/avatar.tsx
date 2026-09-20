@@ -42,7 +42,9 @@ export interface AvatarProps
 }
 
 export function Avatar({ avatar, size, className, "aria-label": ariaLabel, ...props }: AvatarProps) {
-  if (!avatar) {
+  const Character = avatar ? AVATAR_CHARACTER_COMPONENTS[avatar.character] : undefined;
+
+  if (!avatar || !Character) {
     return (
       <span
         className={cn(avatarVariants({ size }), "bg-surface-sunken text-fg-secondary", className)}
@@ -55,7 +57,6 @@ export function Avatar({ avatar, size, className, "aria-label": ariaLabel, ...pr
     );
   }
 
-  const Character = AVATAR_CHARACTER_COMPONENTS[avatar.character];
   const style = {
     "--avatar-bg": BACKGROUND_COLOR_HEX[avatar.backgroundColor],
     "--avatar-hair": HAIR_COLOR_HEX[avatar.hairColor],

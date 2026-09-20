@@ -68,7 +68,7 @@ export function AvatarBuilder({
   onChange: (next: AvatarConfig) => void;
 }) {
   const t = useTranslations("onboarding.avatar");
-  const Character = AVATAR_CHARACTER_COMPONENTS[value.character];
+  const Character = AVATAR_CHARACTER_COMPONENTS[value.character] ?? AVATAR_CHARACTER_COMPONENTS[AVATAR_CHARACTERS[0]];
   const previewStyle = {
     "--avatar-bg": BACKGROUND_COLOR_HEX[value.backgroundColor],
     "--avatar-hair": HAIR_COLOR_HEX[value.hairColor],

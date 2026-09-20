@@ -28,7 +28,7 @@ export async function upsertProfile(
   return row;
 }
 
-export async function updateProfile(userId: string, fields: ProfileFields): Promise<Profile> {
+export async function updateProfile(userId: string, fields: ProfileFields): Promise<Profile | undefined> {
   const [row] = await db
     .update(profiles)
     .set({

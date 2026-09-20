@@ -39,4 +39,13 @@ describe("Avatar", () => {
     expect(svg?.getAttribute("viewBox")).not.toBe("0 0 48 48");
     expect(container.querySelector('[aria-label="Jamie"]')).toBeInTheDocument();
   });
+
+  it("renders the same neutral placeholder when the avatar's character id is unknown", () => {
+    const { container } = render(
+      <Avatar avatar={{ ...config, character: "not-a-real-id" as never }} aria-label="Jamie" />,
+    );
+    const svg = container.querySelector("svg");
+    expect(svg?.getAttribute("viewBox")).not.toBe("0 0 48 48");
+    expect(container.querySelector('[aria-label="Jamie"]')).toBeInTheDocument();
+  });
 });

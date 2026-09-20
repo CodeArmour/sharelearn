@@ -16,6 +16,11 @@ export const resolveActiveContext = cache(async (): Promise<ActiveContext> => {
   if (!user) return { status: "needs-login" };
 
   const profile = await getProfile(user.id);
+  // A profile-less authed user (the same "pre-accept edge case" getCurrentUser()
+  // already handles) falls through to the group-resolution logic below rather
+  // than being routed to onboarding — there's nothing to mark onboarded yet.
+  // In today's app this path is unreachable: acceptInvitation() always creates
+  // the profile row and the group membership together, in one transaction.
   if (profile && !profile.onboardedAt) return { status: "needs-onboarding" };
 
   const groups = await listGroupsForUser(user.id);
