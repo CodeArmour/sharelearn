@@ -23,4 +23,11 @@ describe("avatar palette hex maps", () => {
     for (const id of SHIRT_COLORS) expect(SHIRT_COLOR_HEX[id]).toMatch(HEX_RE);
     for (const id of BACKGROUND_COLORS) expect(BACKGROUND_COLOR_HEX[id]).toMatch(HEX_RE);
   });
+
+  it("never reuses a hex value across palettes (Micah colors carry notEqualTo rules)", () => {
+    const all = [SKIN_COLOR_HEX, HAIR_COLOR_HEX, SHIRT_COLOR_HEX, BACKGROUND_COLOR_HEX].flatMap(
+      (map) => Object.values(map).map((hex) => hex.toLowerCase()),
+    );
+    expect(new Set(all).size).toBe(all.length);
+  });
 });

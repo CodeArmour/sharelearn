@@ -1,19 +1,30 @@
-/** Illustrated avatar characters and the curated color palettes a user can
- * recolor them with. Ids are stored (not hex) so the palette can be re-tuned
- * later without a migration — see AvatarConfig. */
-export const AVATAR_CHARACTERS = [
-  "girl-1",
-  "girl-2",
-  "girl-3",
-  "girl-4",
-  "girl-5",
-  "boy-1",
-  "boy-2",
-  "boy-3",
-  "boy-4",
-  "boy-5",
+/** DiceBear "Micah" avatar configuration and the curated palettes a user picks
+ * from. Colors are stored as palette ids (not hex) so the palettes can be
+ * re-tuned later without a data migration — see src/lib/avatar-palette.ts for
+ * the id → hex maps and src/lib/avatar/micah.ts for how a config is rendered.
+ *
+ * The variant lists below mirror the installed @dicebear/styles Micah
+ * definition; src/lib/avatar/micah.test.ts fails if a DiceBear upgrade drifts. */
+export const HAIR_STYLES = [
+  "full",
+  "pixie",
+  "fonze",
+  "dougFunny",
+  "dannyPhantom",
+  "mrT",
+  "mrClean",
+  "turban",
 ] as const;
-export type AvatarCharacterId = (typeof AVATAR_CHARACTERS)[number];
+export type HairStyle = (typeof HAIR_STYLES)[number];
+
+export const GLASSES_VARIANTS = ["round", "square"] as const;
+export type GlassesVariant = (typeof GLASSES_VARIANTS)[number];
+
+export const EARRINGS_VARIANTS = ["hoop", "stud"] as const;
+export type EarringsVariant = (typeof EARRINGS_VARIANTS)[number];
+
+export const FACIAL_HAIR_VARIANTS = ["beard", "scruff"] as const;
+export type FacialHairVariant = (typeof FACIAL_HAIR_VARIANTS)[number];
 
 export const SKIN_COLORS = ["porcelain", "ivory", "tan", "almond", "brown", "deep"] as const;
 export type SkinColorId = (typeof SKIN_COLORS)[number];
@@ -46,19 +57,18 @@ export const BACKGROUND_COLORS = ["cream", "blush", "mint", "sky", "lilac", "san
 export type BackgroundColorId = (typeof BACKGROUND_COLORS)[number];
 
 export interface AvatarConfig {
-  character: AvatarCharacterId;
-  skinColor: SkinColorId;
+  provider: "dicebear";
+  style: "micah";
+  version: 1;
+  /** Drives the features the user can't edit (eyes, brows, mouth, nose, ears, clothes). */
+  seed: string;
+  hair: HairStyle;
   hairColor: HairColorId;
+  skinColor: SkinColorId;
   shirtColor: ShirtColorId;
   backgroundColor: BackgroundColorId;
+  /** Absent means "none" for each of the three accessories. */
+  glasses?: GlassesVariant;
+  earrings?: EarringsVariant;
+  facialHair?: FacialHairVariant;
 }
-
-/** A always-valid starting point for the avatar builder and for any profile
- * that predates having a real avatar chosen. */
-export const DEFAULT_AVATAR: AvatarConfig = {
-  character: AVATAR_CHARACTERS[0],
-  skinColor: SKIN_COLORS[0],
-  hairColor: HAIR_COLORS[0],
-  shirtColor: SHIRT_COLORS[0],
-  backgroundColor: BACKGROUND_COLORS[0],
-};

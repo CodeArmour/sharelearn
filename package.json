@@ -18,6 +18,8 @@
     "auth:link": "dotenv -e .env.local -- tsx scripts/auth-link.ts"
   },
   "dependencies": {
+    "@dicebear/core": "^10.7.0",
+    "@dicebear/styles": "^10.6.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.115.0",
     "class-variance-authority": "^0.7.1",
