@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { OnboardingView } from "@/features/onboarding";
+import { defaultAvatarFor } from "@/lib/avatar/generate";
 import { titleMetadata } from "@/lib/page-metadata";
 import { getCurrentUser } from "@/server/auth/session";
 import { getProfile } from "@/server/repositories/profiles";
@@ -14,5 +15,5 @@ export default async function OnboardingPage() {
   const profile = await getProfile(user.id);
   if (profile?.onboardedAt) redirect("/today");
 
-  return <OnboardingView />;
+  return <OnboardingView avatar={user.avatar ?? defaultAvatarFor(user.id)} />;
 }

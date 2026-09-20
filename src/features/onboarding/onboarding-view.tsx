@@ -1,16 +1,16 @@
 import { getTranslations } from "next-intl/server";
 
-import { DEFAULT_AVATAR, type ProfileFields } from "@/types";
+import type { AvatarConfig, ProfileFields } from "@/types";
 
 import { ProfileForm } from "./profile-form";
 
-export async function OnboardingView() {
+export async function OnboardingView({ avatar }: { avatar: AvatarConfig }) {
   const t = await getTranslations("onboarding");
 
   const initial: ProfileFields = {
     fullName: "",
     nickname: "",
-    avatar: DEFAULT_AVATAR,
+    avatar,
     cefrLevel: null,
     learningGoal: null,
   };

@@ -32,11 +32,7 @@ export function ProfileForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
-      <input type="hidden" name="character" value={avatar.character} />
-      <input type="hidden" name="skinColor" value={avatar.skinColor} />
-      <input type="hidden" name="hairColor" value={avatar.hairColor} />
-      <input type="hidden" name="shirtColor" value={avatar.shirtColor} />
-      <input type="hidden" name="backgroundColor" value={avatar.backgroundColor} />
+      <input type="hidden" name="avatar" value={JSON.stringify(avatar)} />
 
       <AvatarBuilder value={avatar} onChange={setAvatar} />
 
