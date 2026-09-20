@@ -13,6 +13,7 @@ vi.mock("@/server/services/profile-service", () => ({
 }));
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { defaultAvatarFor } from "@/lib/avatar/generate";
 import { completeOnboarding, updateProfileDetails } from "@/server/services/profile-service";
@@ -53,6 +54,12 @@ describe("updateProfileAction", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/profile");
   });
 
+  it("returns a validation error instead of calling the service when the nickname is blank", async () => {
+    const result = await updateProfileAction(undefined, form({ nickname: "" }));
+    expect(result).toMatchObject({ ok: false, code: "validation" });
+    expect(updateProfileDetails).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["missing", null],
     ["not JSON", "not json"],
@@ -72,6 +79,13 @@ describe("completeOnboardingAction", () => {
   it("saves the avatar, then redirects to /today", async () => {
     await expect(completeOnboardingAction(undefined, form())).rejects.toThrow("NEXT_REDIRECT");
     expect(completeOnboarding).toHaveBeenCalledWith(saved);
+    expect(redirect).toHaveBeenCalledWith("/today");
+  });
+
+  it("returns a validation error instead of calling the service when the nickname is blank", async () => {
+    const result = await completeOnboardingAction(undefined, form({ nickname: "" }));
+    expect(result).toMatchObject({ ok: false, code: "validation" });
+    expect(completeOnboarding).not.toHaveBeenCalled();
   });
 
   it("does not save an invalid avatar", async () => {
