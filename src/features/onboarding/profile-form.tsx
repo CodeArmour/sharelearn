@@ -34,7 +34,15 @@ export function ProfileForm({
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="avatar" value={JSON.stringify(avatar)} />
 
-      <AvatarBuilder value={avatar} onChange={setAvatar} />
+      <AvatarBuilder
+        value={avatar}
+        onChange={setAvatar}
+        stickyTop={
+          // In edit mode the app's MobileTopBar (h-14 + border + safe-area inset)
+          // is itself sticky, so the preview must stick beneath it.
+          mode === "edit" ? "top-[calc(3.5rem+1px+env(safe-area-inset-top))]" : "top-0"
+        }
+      />
 
       <Field label={t("fullNameLabel")} htmlFor="profile-full-name" required>
         <Input id="profile-full-name" name="fullName" defaultValue={initial.fullName} required />

@@ -44,7 +44,7 @@ export function AvatarOptionGroup<Id extends string>({
         {options.map((option) => {
           const checked = option.id === value;
           return (
-            <label key={option.id} className="relative cursor-pointer">
+            <label key={option.id} title={option.label} className="relative cursor-pointer">
               <input
                 type="radio"
                 name={name}
@@ -60,7 +60,7 @@ export function AvatarOptionGroup<Id extends string>({
                   "hover:shadow-card motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-95",
                   "peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary/25",
                   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-border-focus",
-                  variant === "tile" ? "size-14 sm:size-16" : "size-9 sm:size-10",
+                  variant === "tile" ? "size-14" : "size-9 sm:size-10",
                 )}
                 style={option.color ? { backgroundColor: option.color } : undefined}
               >

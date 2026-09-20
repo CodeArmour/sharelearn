@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Avatar, Button } from "@/components/ui";
 import { randomAvatar } from "@/lib/avatar/generate";
+import { cn } from "@/lib/utils/cn";
 import {
   BACKGROUND_COLOR_HEX,
   HAIR_COLOR_HEX,
@@ -28,6 +29,19 @@ import { AvatarOptionGroup, type AvatarOption } from "./avatar-option-group";
 type AccessoryKey = "glasses" | "earrings" | "facialHair";
 const NONE = "none";
 
+/** Accessory thumbnails are zoomed so the relevant part of the face fills the
+ * tile (at 56px the whole head makes glasses / earrings / facial hair nearly
+ * invisible). The tile's `overflow-hidden rounded-pill` does the cropping. Each
+ * scale + origin was tuned by rendering the variants offline at tile size: glasses
+ * at eye level, earrings at the left ear and lobe, facial hair at mouth and jaw.
+ * Thumbnails only — the preview and the saved avatar are never zoomed. Class
+ * strings are complete literals so Tailwind can see them. */
+const THUMB_ZOOM: Record<AccessoryKey, string> = {
+  glasses: "scale-[2] origin-[46%_26%]",
+  earrings: "scale-[2.4] origin-[17%_59%]",
+  facialHair: "scale-[1.9] origin-[54%_75%]",
+};
+
 /** Sets an accessory, or removes the key entirely for "none" so the saved JSON
  * only ever contains accessories the user actually picked. */
 function withAccessory<K extends AccessoryKey>(
@@ -44,16 +58,20 @@ function withAccessory<K extends AccessoryKey>(
 export function AvatarBuilder({
   value,
   onChange,
+  stickyTop = "top-0",
 }: {
   value: AvatarConfig;
   onChange: (next: AvatarConfig) => void;
+  /** Tailwind `top-*` class for the sticky preview bar (below `md`). Pass a
+   * complete literal so Tailwind sees it; lets the bar clear an app header. */
+  stickyTop?: string;
 }) {
   const t = useTranslations("onboarding.avatar");
 
   /** A thumbnail is the current avatar with one field swapped, so what you see
    * on the tile is what you get. */
-  const thumb = (patch: Partial<AvatarConfig>) => (
-    <Avatar avatar={{ ...value, ...patch }} className="size-full" />
+  const thumb = (patch: Partial<AvatarConfig>, zoom?: string) => (
+    <Avatar avatar={{ ...value, ...patch }} className={cn("size-full", zoom)} />
   );
   const noneTile = <Ban className="size-1/2 text-fg-muted" strokeWidth={1.75} aria-hidden />;
 
@@ -71,7 +89,7 @@ export function AvatarBuilder({
     ...variants.map((variant) => ({
       id: variant,
       label: t(`${key}.${variant}` as Parameters<typeof t>[0]),
-      content: thumb({ [key]: variant }),
+      content: thumb({ [key]: variant }, THUMB_ZOOM[key]),
     })),
   ];
 
@@ -87,7 +105,12 @@ export function AvatarBuilder({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="sticky top-0 z-10 flex items-center justify-center gap-4 bg-surface py-3 md:static md:flex-col md:py-0">
+      <div
+        className={cn(
+          "sticky z-10 flex items-center justify-center gap-4 bg-surface py-3 md:static md:flex-col md:py-0",
+          stickyTop,
+        )}
+      >
         <Avatar avatar={value} size="xl" aria-label={t("preview")} />
         <Button type="button" variant="outline" size="sm" onClick={() => onChange(randomAvatar())}>
           <Dices className="size-4" aria-hidden />

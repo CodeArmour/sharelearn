@@ -45,4 +45,17 @@ describe("ProfileForm", () => {
     expect(avatarConfigSchema.safeParse(next).success).toBe(true);
     expect(next).not.toEqual(initial.avatar);
   });
+
+  it("keeps the sticky preview below the app header in edit mode", () => {
+    const { container } = render(<ProfileForm mode="edit" initial={initial} />);
+    const bar = container.querySelector(".sticky")!;
+    expect(bar).toHaveClass("top-[calc(3.5rem+1px+env(safe-area-inset-top))]");
+    expect(bar).not.toHaveClass("top-0");
+  });
+
+  it("pins the sticky preview at top-0 in onboarding (no header)", () => {
+    const { container } = render(<ProfileForm mode="onboarding" initial={initial} />);
+    const bar = container.querySelector(".sticky")!;
+    expect(bar).toHaveClass("top-0");
+  });
 });
