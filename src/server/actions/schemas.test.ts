@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
+import { defaultAvatarFor } from "@/lib/avatar/generate";
 import { InviteError, ForbiddenError } from "@/server/errors";
 
 import {
@@ -202,13 +203,7 @@ describe("rawKnowledgeTextSchema", () => {
 });
 
 describe("profileFieldsSchema", () => {
-  const avatar = {
-    character: "girl-1",
-    skinColor: "tan",
-    hairColor: "black",
-    shirtColor: "teal",
-    backgroundColor: "cream",
-  };
+  const avatar = defaultAvatarFor("user-1");
 
   it("accepts a complete set of fields", () => {
     const result = profileFieldsSchema.safeParse({
@@ -217,6 +212,15 @@ describe("profileFieldsSchema", () => {
       avatar,
       cefrLevel: "A2",
       learningGoal: "relocating",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts an avatar with accessories", () => {
+    const result = profileFieldsSchema.safeParse({
+      fullName: "Jamie Vos",
+      nickname: "Jamie",
+      avatar: { ...avatar, glasses: "round", earrings: "stud", facialHair: "beard" },
     });
     expect(result.success).toBe(true);
   });
@@ -235,11 +239,17 @@ describe("profileFieldsSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects an avatar with an unknown character id", () => {
+  it.each([
+    ["an unknown hair style", { ...avatar, hair: "robot" }],
+    ["an off-palette color id", { ...avatar, shirtColor: "#ff00ff" }],
+    ["an unknown accessory", { ...avatar, glasses: "monocle" }],
+    ["an unsupported version", { ...avatar, version: 2 }],
+    ["the legacy character shape", { character: "girl-1", skinColor: "tan", hairColor: "black", shirtColor: "teal", backgroundColor: "cream" }],
+  ])("rejects %s", (_name, badAvatar) => {
     const result = profileFieldsSchema.safeParse({
       fullName: "Jamie Vos",
       nickname: "Jamie",
-      avatar: { ...avatar, character: "robot-1" },
+      avatar: badAvatar,
     });
     expect(result.success).toBe(false);
   });

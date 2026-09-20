@@ -8,19 +8,25 @@ import type { ProfileFields } from "@/types";
 
 import { profileFieldsSchema, toActionError, type ActionResult } from "./schemas";
 
+/** The avatar travels as one JSON field. Anything unparseable becomes
+ * `undefined`, which the schema then rejects as a normal validation error. */
+function avatarFromFormData(formData: FormData): unknown {
+  const raw = formData.get("avatar");
+  if (typeof raw !== "string") return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 function profileFieldsFromFormData(formData: FormData): unknown {
   const cefrLevel = formData.get("cefrLevel");
   const learningGoal = formData.get("learningGoal");
   return {
     fullName: formData.get("fullName"),
     nickname: formData.get("nickname"),
-    avatar: {
-      character: formData.get("character"),
-      skinColor: formData.get("skinColor"),
-      hairColor: formData.get("hairColor"),
-      shirtColor: formData.get("shirtColor"),
-      backgroundColor: formData.get("backgroundColor"),
-    },
+    avatar: avatarFromFormData(formData),
     cefrLevel: cefrLevel ? cefrLevel : null,
     learningGoal: learningGoal ? learningGoal : null,
   };

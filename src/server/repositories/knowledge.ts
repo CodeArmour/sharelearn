@@ -3,6 +3,7 @@ import "server-only";
 import { and, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { resolveAvatar } from "@/lib/avatar/resolve";
 import { isUuid } from "@/lib/is-uuid";
 import { db, type Db } from "@/server/db/client";
 import {
@@ -113,7 +114,7 @@ function toUserSummary(p: {
   return {
     id: p.id,
     name: p.nickname,
-    avatar: p.avatar,
+    avatar: resolveAvatar(p.avatar, p.id),
     avatarUrl: null,
   };
 }

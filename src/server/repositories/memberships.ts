@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, eq } from "drizzle-orm";
 
+import { resolveAvatar } from "@/lib/avatar/resolve";
 import { db, type Db } from "@/server/db/client";
 import {
   groupMemberships,
@@ -34,7 +35,7 @@ export async function listMembers(groupId: string): Promise<GroupMemberSummary[]
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
-    avatar: r.avatar,
+    avatar: resolveAvatar(r.avatar, r.id),
     avatarUrl: null,
     role: r.role,
     joinedAt: r.joinedAt.toISOString(),

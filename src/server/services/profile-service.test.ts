@@ -8,17 +8,18 @@ vi.mock("@/server/repositories/profiles", () => ({
   markOnboarded: vi.fn(),
 }));
 
+import { defaultAvatarFor } from "@/lib/avatar/generate";
 import { getCurrentUser } from "@/server/auth/session";
 import { ForbiddenError } from "@/server/errors";
 import { getProfile, markOnboarded, updateProfile } from "@/server/repositories/profiles";
-import { DEFAULT_AVATAR, type ProfileFields } from "@/types";
+import type { ProfileFields } from "@/types";
 
 import { completeOnboarding, getProfileDetails, updateProfileDetails } from "./profile-service";
 
 const fields: ProfileFields = {
   fullName: "Jamie Vos",
   nickname: "Jamie",
-  avatar: DEFAULT_AVATAR,
+  avatar: defaultAvatarFor("u1"),
   cefrLevel: "A2",
   learningGoal: "relocating",
 };
@@ -50,18 +51,36 @@ describe("updateProfileDetails", () => {
 });
 
 describe("getProfileDetails", () => {
-  it("falls back to the default avatar when none is set", async () => {
+  const row = {
+    id: "u1",
+    fullName: "Jamie Vos",
+    nickname: "Jamie",
+    avatar: null as unknown,
+    cefrLevel: null,
+    learningGoal: null,
+    onboardedAt: new Date(),
+    createdAt: new Date(),
+  };
+
+  it("falls back to the deterministic default avatar when none is stored", async () => {
+    vi.mocked(getProfile).mockResolvedValue(row as never);
+    const details = await getProfileDetails();
+    expect(details.avatar).toEqual(defaultAvatarFor("u1"));
+  });
+
+  it("falls back for a legacy avatar shape instead of breaking", async () => {
     vi.mocked(getProfile).mockResolvedValue({
-      id: "u1",
-      fullName: "Jamie Vos",
-      nickname: "Jamie",
-      avatar: null,
-      cefrLevel: null,
-      learningGoal: null,
-      onboardedAt: new Date(),
-      createdAt: new Date(),
+      ...row,
+      avatar: { character: "girl-1", skinColor: "tan", hairColor: "black", shirtColor: "teal", backgroundColor: "cream" },
     } as never);
     const details = await getProfileDetails();
-    expect(details.avatar).toEqual(DEFAULT_AVATAR);
+    expect(details.avatar).toEqual(defaultAvatarFor("u1"));
+  });
+
+  it("returns a valid stored avatar as saved", async () => {
+    const stored = { ...defaultAvatarFor("someone-else"), glasses: "square" as const };
+    vi.mocked(getProfile).mockResolvedValue({ ...row, avatar: stored } as never);
+    const details = await getProfileDetails();
+    expect(details.avatar).toEqual(stored);
   });
 });

@@ -1,9 +1,10 @@
 import "server-only";
 
+import { resolveAvatar } from "@/lib/avatar/resolve";
 import { getCurrentUser } from "@/server/auth/session";
 import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { getProfile, markOnboarded, updateProfile } from "@/server/repositories/profiles";
-import { DEFAULT_AVATAR, type CEFRLevel, type LearningGoal, type ProfileFields } from "@/types";
+import type { CEFRLevel, LearningGoal, ProfileFields } from "@/types";
 
 async function requireUserId(): Promise<string> {
   const user = await getCurrentUser();
@@ -18,7 +19,7 @@ export async function getProfileDetails(): Promise<ProfileFields> {
   return {
     fullName: profile.fullName,
     nickname: profile.nickname,
-    avatar: profile.avatar ?? DEFAULT_AVATAR,
+    avatar: resolveAvatar(profile.avatar, userId),
     cefrLevel: profile.cefrLevel as CEFRLevel | null,
     learningGoal: profile.learningGoal as LearningGoal | null,
   };

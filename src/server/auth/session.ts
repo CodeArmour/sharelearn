@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Session } from "@supabase/supabase-js";
 
+import { resolveAvatar } from "@/lib/avatar/resolve";
 import { getProfile } from "@/server/repositories/profiles";
 import type { UserSummary } from "@/types";
 
@@ -25,7 +26,7 @@ export async function getCurrentUser(): Promise<UserSummary | null> {
     return {
       id: authUser.id,
       name: profile.nickname,
-      avatar: profile.avatar,
+      avatar: resolveAvatar(profile.avatar, authUser.id),
       avatarUrl: null,
     };
   }
