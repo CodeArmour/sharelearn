@@ -14,7 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import type { GrammarQuiz, ReadingQuiz } from "@/types";
+import type { AvatarConfig, GrammarQuiz, ReadingQuiz } from "@/types";
 
 /**
  * Backend Phase 1 schema — auth/groups/invitations only.
@@ -34,16 +34,38 @@ export const invitationStatus = pgEnum("invitation_status", [
   "accepted",
   "revoked",
 ]);
+// Kept in sync with LEARNING_GOALS in src/types/profile.ts.
+export const learningGoal = pgEnum("learning_goal", [
+  "relocating",
+  "work_study",
+  "family",
+  "curious",
+]);
 
-export const profiles = pgTable("profiles", {
-  id: uuid("id")
-    .primaryKey()
-    .references(() => authUsers.id, { onDelete: "cascade" }),
-  displayName: text("display_name").notNull(),
-  initials: text("initials").notNull(),
-  accent: text("accent").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const profiles = pgTable(
+  "profiles",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    fullName: text("full_name").notNull(),
+    nickname: text("nickname").notNull(),
+    avatar: jsonb("avatar").$type<AvatarConfig>(),
+    // Free text + CHECK rather than an enum, same reasoning as `level` on
+    // knowledge_items: CEFR_LEVELS shouldn't force an enum migration.
+    cefrLevel: text("cefr_level"),
+    learningGoal: learningGoal("learning_goal"),
+    // Gate signal for onboarding: null means the user hasn't completed it.
+    onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "profiles_cefr_level_values",
+      sql`${t.cefrLevel} IS NULL OR ${t.cefrLevel} IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
+    ),
+  ],
+);
 
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),

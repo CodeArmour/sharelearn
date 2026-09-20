@@ -31,7 +31,7 @@ export async function MetaRow({
     >
       {/* Keep name · date together; on a narrow row the source chip wraps below. */}
       <span className="flex min-w-0 items-center gap-2">
-        <Avatar initials={addedBy.initials} accent={addedBy.accent} size="xs" />
+        <Avatar avatar={addedBy.avatar} size="xs" />
         <span className="truncate font-medium text-fg-secondary">
           {t("addedBy", { name: addedBy.name })}
         </span>

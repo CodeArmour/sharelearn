@@ -17,7 +17,7 @@ describe("useActiveGroup", () => {
     render(
       <ActiveGroupProvider
         value={{
-          user: { id: "u", name: "U", initials: "UU", avatarUrl: null },
+          user: { id: "u", name: "U", avatar: null, avatarUrl: null },
           group: { id: "g", name: "Team", slug: "team" },
           membership: { groupId: "g", userId: "u", role: "owner" },
         }}

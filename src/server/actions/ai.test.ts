@@ -36,7 +36,7 @@ beforeEach(() => {
   resolveActiveContext.mockReset();
   resolveActiveContext.mockResolvedValue({
     status: "ok",
-    user: { id: "u1", name: "U", initials: "UU", avatarUrl: null },
+    user: { id: "u1", name: "U", avatar: null, avatarUrl: null },
     activeGroup: { id: "g1", name: "G", slug: "g" },
     membership: { groupId: "g1", userId: "u1", role: "member" },
   });
@@ -103,7 +103,7 @@ describe("extractFromPhotosAction", () => {
     findDuplicateKeys.mockResolvedValue(new Map());
     resolveActiveContext.mockResolvedValue({
       status: "ok",
-      user: { id: "11111111-1111-1111-1111-111111111111", name: "U", initials: "UU", avatarUrl: null },
+      user: { id: "11111111-1111-1111-1111-111111111111", name: "U", avatar: null, avatarUrl: null },
       activeGroup: { id: "g1", name: "G", slug: "g" },
       membership: { groupId: "g1", userId: "11111111-1111-1111-1111-111111111111", role: "member" },
     });

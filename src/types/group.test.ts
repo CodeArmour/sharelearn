@@ -8,7 +8,7 @@ describe("group types", () => {
     const a: ActiveContext = { status: "needs-login" };
     const b: ActiveContext = {
       status: "ok",
-      user: { id: "u", name: "N", initials: "NN" },
+      user: { id: "u", name: "N", avatar: null, avatarUrl: null },
       activeGroup: { id: "g", name: "G", slug: "g" },
       membership: { groupId: "g", userId: "u", role: "owner" },
     };

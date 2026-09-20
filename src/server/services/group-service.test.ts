@@ -28,7 +28,7 @@ import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { resolveActiveContext } from "@/server/services/session-service";
 import { getGroupSettings, getGroupsForPicker, switchActiveGroup } from "./group-service";
 
-const user = { id: "u1", name: "U", initials: "UU", avatarUrl: null };
+const user = { id: "u1", name: "U", avatar: null, avatarUrl: null };
 
 beforeEach(() => {
   vi.mocked(getCurrentUser).mockResolvedValue(user);

@@ -476,6 +476,9 @@
   "profile": {
     "memberSince": "Member since {date}",
     "role": { "owner": "Owner", "member": "Member" },
+    "edit": {
+      "editButton": "Edit profile"
+    },
     "preferences": { "title": "Preferences", "language": "Language" },
     "progress": {
       "title": "Progress",
@@ -553,5 +556,31 @@
       "body": "You're not in any group yet. Ask an owner to invite you.",
       "signOut": "Sign out"
     }
+  },
+  "onboarding": {
+    "title": "Welcome! Let's set up your profile",
+    "subtitle": "Pick a name and build your avatar — you can change any of this later from your profile.",
+    "avatar": {
+      "character": "Character",
+      "skinColor": "Skin",
+      "hairColor": "Hair",
+      "shirtColor": "Shirt",
+      "backgroundColor": "Background"
+    },
+    "fullNameLabel": "Full name",
+    "nicknameLabel": "Nickname",
+    "cefrLabel": "Dutch level",
+    "cefrNone": "Prefer not to say",
+    "learningGoalLabel": "Why are you learning Dutch?",
+    "learningGoalNone": "Prefer not to say",
+    "learningGoalOptions": {
+      "relocating": "Moving to the Netherlands",
+      "work_study": "Work or study",
+      "family": "Family",
+      "curious": "Just curious"
+    },
+    "submit": "Continue",
+    "save": "Save changes",
+    "saved": "Saved"
   }
 }

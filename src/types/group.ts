@@ -22,6 +22,7 @@ export interface Membership {
 export type ActiveContext =
   | { status: "ok"; user: UserSummary; activeGroup: ActiveGroup; membership: Membership }
   | { status: "needs-login" }
+  | { status: "needs-onboarding" }
   | { status: "needs-group" }
   | { status: "no-access" };
 

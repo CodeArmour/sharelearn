@@ -5,7 +5,6 @@ import type { Session } from "@supabase/supabase-js";
 import { getProfile } from "@/server/repositories/profiles";
 import type { UserSummary } from "@/types";
 
-import { deriveAccent, deriveInitials } from "./identity";
 import { createServerSupabaseClient } from "./supabase";
 
 export async function getSession(): Promise<Session | null> {
@@ -25,9 +24,8 @@ export async function getCurrentUser(): Promise<UserSummary | null> {
   if (profile) {
     return {
       id: authUser.id,
-      name: profile.displayName,
-      initials: profile.initials,
-      accent: profile.accent as UserSummary["accent"],
+      name: profile.nickname,
+      avatar: profile.avatar,
       avatarUrl: null,
     };
   }
@@ -36,8 +34,7 @@ export async function getCurrentUser(): Promise<UserSummary | null> {
   return {
     id: authUser.id,
     name: email.split("@")[0],
-    initials: deriveInitials(email),
-    accent: deriveAccent(authUser.id),
+    avatar: null,
     avatarUrl: null,
   };
 }

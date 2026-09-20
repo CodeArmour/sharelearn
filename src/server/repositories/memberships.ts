@@ -24,9 +24,8 @@ export async function listMembers(groupId: string): Promise<GroupMemberSummary[]
       id: groupMemberships.userId,
       role: groupMemberships.role,
       joinedAt: groupMemberships.createdAt,
-      name: profiles.displayName,
-      initials: profiles.initials,
-      accent: profiles.accent,
+      name: profiles.nickname,
+      avatar: profiles.avatar,
     })
     .from(groupMemberships)
     .innerJoin(profiles, eq(profiles.id, groupMemberships.userId))
@@ -35,8 +34,7 @@ export async function listMembers(groupId: string): Promise<GroupMemberSummary[]
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
-    initials: r.initials,
-    accent: r.accent as GroupMemberSummary["accent"],
+    avatar: r.avatar,
     avatarUrl: null,
     role: r.role,
     joinedAt: r.joinedAt.toISOString(),

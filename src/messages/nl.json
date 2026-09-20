@@ -476,6 +476,9 @@
   "profile": {
     "memberSince": "Lid sinds {date}",
     "role": { "owner": "Eigenaar", "member": "Lid" },
+    "edit": {
+      "editButton": "Profiel bewerken"
+    },
     "preferences": { "title": "Voorkeuren", "language": "Taal" },
     "progress": {
       "title": "Voortgang",
@@ -553,5 +556,31 @@
       "body": "Je zit nog in geen enkele groep. Vraag een eigenaar om je uit te nodigen.",
       "signOut": "Uitloggen"
     }
+  },
+  "onboarding": {
+    "title": "Welkom! Laten we je profiel instellen",
+    "subtitle": "Kies een naam en maak je avatar — je kunt dit later altijd aanpassen via je profiel.",
+    "avatar": {
+      "character": "Personage",
+      "skinColor": "Huid",
+      "hairColor": "Haar",
+      "shirtColor": "Shirt",
+      "backgroundColor": "Achtergrond"
+    },
+    "fullNameLabel": "Volledige naam",
+    "nicknameLabel": "Bijnaam",
+    "cefrLabel": "Nederlands niveau",
+    "cefrNone": "Liever niet zeggen",
+    "learningGoalLabel": "Waarom leer je Nederlands?",
+    "learningGoalNone": "Liever niet zeggen",
+    "learningGoalOptions": {
+      "relocating": "Verhuizen naar Nederland",
+      "work_study": "Werk of studie",
+      "family": "Familie",
+      "curious": "Gewoon nieuwsgierig"
+    },
+    "submit": "Doorgaan",
+    "save": "Wijzigingen opslaan",
+    "saved": "Opgeslagen"
   }
 }

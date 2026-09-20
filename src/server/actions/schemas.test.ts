@@ -11,6 +11,7 @@ import {
   knowledgeItemIdSchema,
   otpCodeSchema,
   practiceSetupSchema,
+  profileFieldsSchema,
   rawKnowledgeTextSchema,
   studyRunInputSchema,
   toActionError,
@@ -197,5 +198,49 @@ describe("rawKnowledgeTextSchema", () => {
   });
   it("accepts and trims a normal paste", () => {
     expect(rawKnowledgeTextSchema.parse("  de hond — the dog  ")).toBe("de hond — the dog");
+  });
+});
+
+describe("profileFieldsSchema", () => {
+  const avatar = {
+    character: "girl-1",
+    skinColor: "tan",
+    hairColor: "black",
+    shirtColor: "teal",
+    backgroundColor: "cream",
+  };
+
+  it("accepts a complete set of fields", () => {
+    const result = profileFieldsSchema.safeParse({
+      fullName: "Jamie Vos",
+      nickname: "Jamie",
+      avatar,
+      cefrLevel: "A2",
+      learningGoal: "relocating",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("defaults cefrLevel and learningGoal to null when omitted", () => {
+    const result = profileFieldsSchema.safeParse({
+      fullName: "Jamie Vos",
+      nickname: "Jamie",
+      avatar,
+    });
+    expect(result).toMatchObject({ success: true, data: { cefrLevel: null, learningGoal: null } });
+  });
+
+  it("rejects a blank nickname", () => {
+    const result = profileFieldsSchema.safeParse({ fullName: "Jamie Vos", nickname: "  ", avatar });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an avatar with an unknown character id", () => {
+    const result = profileFieldsSchema.safeParse({
+      fullName: "Jamie Vos",
+      nickname: "Jamie",
+      avatar: { ...avatar, character: "robot-1" },
+    });
+    expect(result.success).toBe(false);
   });
 });
