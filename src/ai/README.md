@@ -22,7 +22,7 @@ Server Action  →  ai/services  →  ai/providers  (one structured model call)
 The knowledge processor also makes a focused follow-up call when a grammar
 result comes back without examples.
 
-The knowledge processor and the photo extractor share `ensureGrammarExamples`
+The knowledge processor and the file extractor share `ensureGrammarExamples`
 (`ai/services/grammar-examples.ts`) for the grammar-examples follow-up call.
 
 ## Rules
@@ -40,3 +40,6 @@ The knowledge processor and the photo extractor share `ensureGrammarExamples`
 action returns `ai-unavailable`, and the Add screen shows the manual form only.
 `AI_MODEL` (default `gpt-5.6-luna`) and `OPENAI_FALLBACK_MODEL` (default
 `gpt-5.6-terra`, retried once on a failed primary call) override the models.
+
+The extractor sends temporary signed URLs for up to three photos, PDFs, or
+Excel workbooks to the provider, then returns reviewable knowledge suggestions.

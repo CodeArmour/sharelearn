@@ -4,31 +4,31 @@ import { useTranslations } from "next-intl";
 
 import { Button, Field, Textarea } from "@/components/ui";
 
-import { PhotoCapturePanel } from "./photo-capture-panel";
+import { FileCapturePanel } from "./file-capture-panel";
 
 /** Hand raw study material to the AI structuring step: paste text, or (when
- *  `photosEnabled`) switch to a photo mode that uploads 1–3 images instead. */
+ *  `filesEnabled`) switch to a file mode that uploads 1–3 files instead. */
 export function AiCaptureBox({
   value,
   onChange,
   autoFocus,
   onSubmit,
-  photosEnabled = false,
-  onStructurePhotos,
-  photosBusy = false,
+  filesEnabled = false,
+  onStructureFiles,
+  filesBusy = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   /** Scroll into view + focus on mount (arriving from Today's "add" shortcut). */
   autoFocus?: boolean;
   onSubmit: () => void;
-  photosEnabled?: boolean;
-  onStructurePhotos?: (files: File[]) => void;
-  photosBusy?: boolean;
+  filesEnabled?: boolean;
+  onStructureFiles?: (files: File[]) => void;
+  filesBusy?: boolean;
 }) {
   const t = useTranslations("add.ai");
   const boxRef = useRef<HTMLDivElement>(null);
-  const [tab, setTab] = useState<"text" | "photos">("text");
+  const [tab, setTab] = useState<"text" | "files">("text");
 
   useEffect(() => {
     if (autoFocus) boxRef.current?.scrollIntoView({ block: "center" });
@@ -59,7 +59,7 @@ export function AiCaptureBox({
     </div>
   );
 
-  if (!photosEnabled || !onStructurePhotos) return textPanel;
+  if (!filesEnabled || !onStructureFiles) return textPanel;
 
   return (
     <div className="flex flex-col gap-3">
@@ -67,6 +67,8 @@ export function AiCaptureBox({
         <button
           type="button"
           onClick={() => setTab("text")}
+          aria-pressed={tab === "text"}
+          disabled={filesBusy}
           className={
             tab === "text"
               ? "rounded-pill bg-surface px-3 py-1 font-medium"
@@ -77,20 +79,22 @@ export function AiCaptureBox({
         </button>
         <button
           type="button"
-          onClick={() => setTab("photos")}
+          onClick={() => setTab("files")}
+          aria-pressed={tab === "files"}
+          disabled={filesBusy}
           className={
-            tab === "photos"
+            tab === "files"
               ? "rounded-pill bg-surface px-3 py-1 font-medium"
               : "px-3 py-1 text-fg-muted"
           }
         >
-          {t("mode.photos")}
+          {t("mode.files")}
         </button>
       </div>
       {tab === "text" ? (
         textPanel
       ) : (
-        <PhotoCapturePanel onStructure={onStructurePhotos} busy={photosBusy} />
+        <FileCapturePanel onStructure={onStructureFiles} busy={filesBusy} />
       )}
     </div>
   );

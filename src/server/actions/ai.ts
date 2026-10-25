@@ -1,30 +1,30 @@
 "use server";
 
-import { extractKnowledgeFromImages } from "@/ai/services/knowledge-extractor";
+import { extractKnowledgeFromFiles } from "@/ai/services/knowledge-extractor";
 import { structureKnowledge } from "@/ai/services/knowledge-processor";
 import { CAPTURE_BUCKET } from "@/lib/supabase/constants";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
-import {
-  duplicateKeyFromSuggestion,
-  findDuplicateKeys,
-} from "@/server/services/knowledge-service";
+import { duplicateKeyFromSuggestion, findDuplicateKeys } from "@/server/services/knowledge-service";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type { AiSuggestion } from "@/types";
 
-import { type ActionResult, capturePathsSchema, rawKnowledgeTextSchema } from "./schemas";
+import { type ActionResult, captureFilePathsSchema, rawKnowledgeTextSchema } from "./schemas";
 
 /**
- * Structure pasted study text into a reviewable `AiSuggestion`. Nothing is
- * persisted — the reviewer confirms in the Add form, which then calls
- * `createKnowledgeItemAction`. Requires an active group context so an
- * unauthenticated caller can't reach the model.
+ * Structure pasted study text into a reviewable suggestion. Nothing is
+ * persisted until the reviewer confirms it in the Add form. An active group
+ * context is required before the model is called.
  */
 export async function structureKnowledgeAction(
   rawText: unknown,
 ): Promise<ActionResult<AiSuggestion>> {
   const parsed = rawKnowledgeTextSchema.safeParse(rawText);
   if (!parsed.success) {
-    return { ok: false, code: "validation", message: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      ok: false,
+      code: "validation",
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
 
   const ctx = await resolveActiveContext();
@@ -39,22 +39,21 @@ export async function structureKnowledgeAction(
     case "unavailable":
       return { ok: false, code: "ai-unavailable", message: "AI structuring is not available" };
     case "error":
-      return { ok: false, code: "ai-error", message: "Could not structure that — add it manually" };
+      return { ok: false, code: "ai-error", message: "Could not structure that. Add it manually." };
   }
 }
 
 /**
- * Read 1–3 already-uploaded staging photos into a reviewable set of
- * `AiSuggestion`s. Nothing is persisted — the reviewer confirms the set on the
- * checklist, which then calls `createKnowledgeItemsAction`. The staged objects
- * are deleted on every exit path; the daily sweep is the backstop.
+ * Read one to three already-uploaded staging files into a reviewable set of
+ * suggestions. The reviewer must confirm them before they persist. Staged
+ * objects are deleted on every exit path; the daily sweep is the backstop.
  */
-export async function extractFromPhotosAction(
+export async function extractFromFilesAction(
   paths: unknown,
 ): Promise<ActionResult<{ items: AiSuggestion[]; truncated: boolean; duplicates: number[] }>> {
-  const parsed = capturePathsSchema.safeParse(paths);
+  const parsed = captureFilePathsSchema.safeParse(paths);
   if (!parsed.success) {
-    return { ok: false, code: "validation", message: "Invalid photo upload" };
+    return { ok: false, code: "validation", message: "Invalid file upload" };
   }
 
   const ctx = await resolveActiveContext();
@@ -62,26 +61,30 @@ export async function extractFromPhotosAction(
     return { ok: false, code: "unauthorized", message: "Sign in to use AI capture" };
   }
 
-  if (parsed.data.some((p) => !p.startsWith(`${ctx.user.id}/`))) {
-    return { ok: false, code: "validation", message: "Invalid photo upload" };
+  if (parsed.data.some((path) => !path.startsWith(ctx.user.id + "/"))) {
+    return { ok: false, code: "validation", message: "Invalid file upload" };
   }
 
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(CAPTURE_BUCKET);
 
   try {
-    const signed = await Promise.all(
+    const attachments = await Promise.all(
       parsed.data.map(async (path) => {
         const { data, error } = await bucket.createSignedUrl(path, 300);
         if (error || !data) throw new Error(error?.message ?? "could not sign upload");
-        return { url: data.signedUrl };
+
+        const filename = path.slice(path.lastIndexOf("/") + 1);
+        return path.endsWith(".jpg")
+          ? ({ kind: "image", url: data.signedUrl } as const)
+          : ({ kind: "file", url: data.signedUrl, filename } as const);
       }),
     );
 
-    const result = await extractKnowledgeFromImages(signed);
+    const result = await extractKnowledgeFromFiles(attachments);
     switch (result.status) {
       case "ok": {
-        const dupMap = await findDuplicateKeys(
+        const duplicateMap = await findDuplicateKeys(
           result.items.map(duplicateKeyFromSuggestion),
           ctx.activeGroup.id,
         );
@@ -90,18 +93,26 @@ export async function extractFromPhotosAction(
           data: {
             items: result.items,
             truncated: result.truncated,
-            duplicates: [...dupMap.keys()],
+            duplicates: [...duplicateMap.keys()],
           },
         };
       }
       case "unavailable":
         return { ok: false, code: "ai-unavailable", message: "AI capture is not available" };
       case "error":
-        return { ok: false, code: "ai-error", message: "Could not read those photos — add items manually" };
+        return {
+          ok: false,
+          code: "ai-error",
+          message: "Could not read those files. Add items manually.",
+        };
     }
   } catch (error) {
-    console.error("[action:extractFromPhotos] failed", error);
-    return { ok: false, code: "ai-error", message: "Could not read those photos — add items manually" };
+    console.error("[action:extractFromFiles] failed", error);
+    return {
+      ok: false,
+      code: "ai-error",
+      message: "Could not read those files. Add items manually.",
+    };
   } finally {
     await bucket.remove(parsed.data).catch(() => {});
   }

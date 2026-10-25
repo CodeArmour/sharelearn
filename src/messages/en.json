@@ -272,16 +272,15 @@
       },
       "mode": {
         "text": "Paste text",
-        "photos": "Upload photos"
+        "files": "Upload files"
       },
-      "photos": {
-        "pick": "Choose photos (up to 3)",
-        "hint": "A worksheet, textbook page, or your notes. JPEG or PNG.",
-        "preparing": "Preparing photos…",
-        "analysing": "Reading your photos…",
-        "rejectedFormat": "Couldn't read that image. Try a JPEG or PNG.",
-        "rejectedSize": "That image is over 10 MB.",
-        "tooMany": "Up to 3 photos at a time.",
+      "files": {
+        "pick": "Choose files (up to 3)",
+        "selected": "Selected files",
+        "hint": "Photos, PDFs, XLS, or XLSX files — up to 5 MB each.",
+        "rejectedFormat": "Choose a photo, PDF, XLS, or XLSX file.",
+        "rejectedSize": "That file is over 5 MB.",
+        "tooMany": "Up to 3 files at a time.",
         "truncated": "Some items may be missing — upload a smaller section for the rest."
       },
       "review": {
@@ -362,7 +361,12 @@
       "scopeLabel": "Scope",
       "lengthLabel": "Length",
       "levelLabel": "Level",
-      "mode": { "vocabulary": "Vocabulary", "grammar": "Grammar", "reading": "Reading", "mixed": "Mixed" },
+      "mode": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "reading": "Reading",
+        "mixed": "Mixed"
+      },
       "scope": {
         "all": "Whole library",
         "today": "Added today",

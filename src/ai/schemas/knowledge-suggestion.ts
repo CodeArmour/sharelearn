@@ -171,7 +171,7 @@ export function toAiSuggestion(parsed: KnowledgeSuggestion): AiSuggestion {
 }
 
 /**
- * What the photo extractor returns — the whole item set from one vision call.
+ * What the file extractor returns — the whole item set from one AI call.
  * No summary: the output is just the items. Each entry is the same union member
  * the paste-text path uses, so `toAiSuggestion` maps it unchanged.
  */

@@ -53,7 +53,7 @@ export function ReviewChecklist({
 }) {
   const t = useTranslations("add.ai.review");
   const tType = useTranslations("knowledge.type");
-  const tPhotos = useTranslations("add.ai.photos");
+  const tFiles = useTranslations("add.ai.files");
 
   const selectedCount = rows.filter((r) => r.checked).length;
   const allSelectable = rows.filter((r) => missingRequired(r.type, r.values).length === 0);
@@ -75,7 +75,7 @@ export function ReviewChecklist({
 
       {truncated ? (
         <p className="rounded-lg bg-warning-subtle p-3 text-body-sm text-warning-strong">
-          {tPhotos("truncated")}
+          {tFiles("truncated")}
         </p>
       ) : null}
 
@@ -88,10 +88,7 @@ export function ReviewChecklist({
               ? VOCAB_EXTRAS.filter((k) => (row.values[k] ?? "").trim().length > 0)
               : [];
           return (
-            <li
-              key={row.id}
-              className="flex items-start gap-3 rounded-lg border border-border p-3"
-            >
+            <li key={row.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
               <input
                 type="checkbox"
                 className="mt-1"

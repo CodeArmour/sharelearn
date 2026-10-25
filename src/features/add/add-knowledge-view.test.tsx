@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 vi.mock("@/server/actions/ai", () => ({
   structureKnowledgeAction: vi.fn(),
-  extractFromPhotosAction: vi.fn(),
+  extractFromFilesAction: vi.fn(),
 }));
 vi.mock("@/server/actions/knowledge", () => ({
   createKnowledgeItemAction: vi.fn(),
@@ -15,9 +15,15 @@ vi.mock("@/server/actions/practice", () => ({
   generateReadingQuizAction: vi.fn().mockResolvedValue({ ok: true }),
   generateGrammarQuizAction: vi.fn().mockResolvedValue({ ok: true }),
 }));
-vi.mock("./downscale-image", () => ({
-  downscaleImage: vi.fn().mockResolvedValue(new Blob(["x"], { type: "image/jpeg" })),
-  ImageDecodeError: class ImageDecodeError extends Error {},
+vi.mock("./capture-files", () => ({
+  isSupportedCaptureFile: vi.fn().mockReturnValue(true),
+  MAX_CAPTURE_FILE_BYTES: 5 * 1024 * 1024,
+  MAX_CAPTURE_FILES: 3,
+  prepareCaptureFile: vi.fn().mockResolvedValue({
+    content: new Blob(["x"], { type: "image/jpeg" }),
+    contentType: "image/jpeg",
+    extension: "jpg",
+  }),
 }));
 vi.mock("@/lib/supabase/browser", () => ({
   createBrowserSupabaseClient: () => ({
@@ -38,7 +44,7 @@ vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
 }));
 
-import { extractFromPhotosAction, structureKnowledgeAction } from "@/server/actions/ai";
+import { extractFromFilesAction, structureKnowledgeAction } from "@/server/actions/ai";
 import {
   createKnowledgeItemAction,
   createKnowledgeItemsAction,
@@ -74,28 +80,31 @@ describe("AddKnowledgeView", () => {
     expect(screen.queryByLabelText("add.ai.captureLabel")).not.toBeInTheDocument();
   });
 
-  it("shows the photo mode toggle when aiEnabled and userId are set", () => {
+  it("shows the file mode toggle when aiEnabled and userId are set", () => {
     render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
-    expect(screen.getByRole("button", { name: "add.ai.mode.photos" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "add.ai.mode.files" })).toBeInTheDocument();
   });
 
-  it("renders the review checklist after a successful photo extraction", async () => {
-    vi.mocked(extractFromPhotosAction).mockResolvedValue({
+  it("renders the review checklist after a successful file extraction", async () => {
+    vi.mocked(extractFromFilesAction).mockResolvedValue({
       ok: true,
       data: {
         truncated: false,
         duplicates: [],
         items: [
-          { type: "vocabulary", fields: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" } },
+          {
+            type: "vocabulary",
+            fields: { term: "de fiets", meaning: "the bike", partOfSpeech: "noun" },
+          },
           { type: "note", fields: { title: "", noteBody: "ask about er" } },
         ],
       },
     });
 
     render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
-    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.photos" }));
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.files" }));
     await userEvent.upload(
-      screen.getByLabelText("add.ai.photos.pick"),
+      screen.getByLabelText("add.ai.files.pick"),
       new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));
@@ -106,7 +115,7 @@ describe("AddKnowledgeView", () => {
   });
 
   it("bulk-saves the checked rows and shows the success panel", async () => {
-    vi.mocked(extractFromPhotosAction).mockResolvedValue({
+    vi.mocked(extractFromFilesAction).mockResolvedValue({
       ok: true,
       data: {
         truncated: false,
@@ -117,9 +126,9 @@ describe("AddKnowledgeView", () => {
     vi.mocked(createKnowledgeItemsAction).mockResolvedValue({ ok: true, data: { ids: ["a"] } });
 
     render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
-    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.photos" }));
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.files" }));
     await userEvent.upload(
-      screen.getByLabelText("add.ai.photos.pick"),
+      screen.getByLabelText("add.ai.files.pick"),
       new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));
@@ -182,7 +191,7 @@ describe("AddKnowledgeView", () => {
   });
 
   it("fires reading-quiz generation once per id after a batch save", async () => {
-    vi.mocked(extractFromPhotosAction).mockResolvedValue({
+    vi.mocked(extractFromFilesAction).mockResolvedValue({
       ok: true,
       data: {
         truncated: false,
@@ -193,12 +202,15 @@ describe("AddKnowledgeView", () => {
         ],
       },
     });
-    vi.mocked(createKnowledgeItemsAction).mockResolvedValue({ ok: true, data: { ids: ["a", "b"] } });
+    vi.mocked(createKnowledgeItemsAction).mockResolvedValue({
+      ok: true,
+      data: { ids: ["a", "b"] },
+    });
 
     render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
-    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.photos" }));
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.files" }));
     await userEvent.upload(
-      screen.getByLabelText("add.ai.photos.pick"),
+      screen.getByLabelText("add.ai.files.pick"),
       new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));
@@ -265,7 +277,7 @@ describe("AddKnowledgeView", () => {
   });
 
   it("fires grammar-quiz generation once per id after a batch save", async () => {
-    vi.mocked(extractFromPhotosAction).mockResolvedValue({
+    vi.mocked(extractFromFilesAction).mockResolvedValue({
       ok: true,
       data: {
         truncated: false,
@@ -276,12 +288,15 @@ describe("AddKnowledgeView", () => {
         ],
       },
     });
-    vi.mocked(createKnowledgeItemsAction).mockResolvedValue({ ok: true, data: { ids: ["a", "b"] } });
+    vi.mocked(createKnowledgeItemsAction).mockResolvedValue({
+      ok: true,
+      data: { ids: ["a", "b"] },
+    });
 
     render(<AddKnowledgeView aiEnabled userId="11111111-1111-1111-1111-111111111111" />);
-    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.photos" }));
+    fireEvent.click(screen.getByRole("button", { name: "add.ai.mode.files" }));
     await userEvent.upload(
-      screen.getByLabelText("add.ai.photos.pick"),
+      screen.getByLabelText("add.ai.files.pick"),
       new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "add.ai.submit" }));

@@ -21,7 +21,7 @@ export function AiReviewBanner({
         {t("reviewTitle")}
       </span>
       {truncated ? (
-        <p className="text-body-sm text-warning-strong">{t("photos.truncated")}</p>
+        <p className="text-body-sm text-warning-strong">{t("files.truncated")}</p>
       ) : null}
       {notice ? <p className="text-body-sm text-fg-secondary">{notice}</p> : null}
     </div>

@@ -2,6 +2,7 @@ import "server-only";
 
 import OpenAI from "openai";
 import { makeParseableTextFormat } from "openai/lib/parser";
+import type { ResponseInputContent } from "openai/resources/responses/responses";
 import { z } from "zod";
 
 import { type AiProvider, AiProviderError } from "./types";
@@ -103,28 +104,37 @@ export class OpenAIProvider implements AiProvider {
     user,
     schema,
     images,
+    files,
   }: {
     system: string;
     user: string;
     schema: z.ZodType<T>;
     images?: { url: string }[];
+    files?: { url: string; filename: string }[];
   }): Promise<T> {
     const attempt = async (modelId: string): Promise<T> => {
       let response;
       try {
-        const hasImages = images != null && images.length > 0;
-        const input = hasImages
+        const hasAttachments = (images?.length ?? 0) > 0 || (files?.length ?? 0) > 0;
+        const content: ResponseInputContent[] = [
+          { type: "input_text", text: user },
+          ...(images?.map((image) => ({
+            type: "input_image" as const,
+            image_url: image.url,
+            detail: "auto" as const,
+          })) ?? []),
+          ...(files?.map((file) => ({
+            type: "input_file" as const,
+            file_url: file.url,
+            filename: file.filename,
+            detail: "auto" as const,
+          })) ?? []),
+        ];
+        const input = hasAttachments
           ? [
               {
                 role: "user" as const,
-                content: [
-                  { type: "input_text" as const, text: user },
-                  ...images!.map((img) => ({
-                    type: "input_image" as const,
-                    image_url: img.url,
-                    detail: "auto" as const,
-                  })),
-                ],
+                content,
               },
             ]
           : user;

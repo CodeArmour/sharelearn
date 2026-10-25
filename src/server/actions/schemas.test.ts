@@ -5,6 +5,7 @@ import { defaultAvatarFor } from "@/lib/avatar/generate";
 import { InviteError, ForbiddenError } from "@/server/errors";
 
 import {
+  captureFilePathsSchema,
   createKnowledgeItemSchema,
   emailSchema,
   groupIdSchema,
@@ -104,14 +105,14 @@ describe("createKnowledgeItemSchema", () => {
 
 describe("practiceSetupSchema", () => {
   it("accepts a mixed/all setup", () => {
-    expect(
-      practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: 10 }).success,
-    ).toBe(true);
+    expect(practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: 10 }).success).toBe(
+      true,
+    );
   });
   it("rejects a negative length", () => {
-    expect(
-      practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: -1 }).success,
-    ).toBe(false);
+    expect(practiceSetupSchema.safeParse({ mode: "mixed", scope: "all", length: -1 }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -133,7 +134,9 @@ describe("knowledgeIdsSchema", () => {
 describe("knowledgeItemIdSchema", () => {
   it("requires a uuid", () => {
     expect(knowledgeItemIdSchema.safeParse("not-a-uuid").success).toBe(false);
-    expect(knowledgeItemIdSchema.safeParse("11111111-1111-4111-8111-111111111111").success).toBe(true);
+    expect(knowledgeItemIdSchema.safeParse("11111111-1111-4111-8111-111111111111").success).toBe(
+      true,
+    );
   });
 });
 
@@ -202,6 +205,21 @@ describe("rawKnowledgeTextSchema", () => {
   });
 });
 
+describe("captureFilePathsSchema", () => {
+  const prefix = "11111111-1111-1111-1111-111111111111";
+
+  it.each(["notes.jpg", "chapter.pdf", "worksheet.xls", "worksheet.xlsx"])(
+    "accepts a supported file extension: %s",
+    (filename) => {
+      expect(captureFilePathsSchema.safeParse([`${prefix}/${filename}`]).success).toBe(true);
+    },
+  );
+
+  it("rejects an unsupported file extension", () => {
+    expect(captureFilePathsSchema.safeParse([`${prefix}/notes.png`]).success).toBe(false);
+  });
+});
+
 describe("profileFieldsSchema", () => {
   const avatar = defaultAvatarFor("user-1");
 
@@ -244,7 +262,16 @@ describe("profileFieldsSchema", () => {
     ["an off-palette color id", { ...avatar, shirtColor: "#ff00ff" }],
     ["an unknown accessory", { ...avatar, glasses: "monocle" }],
     ["an unsupported version", { ...avatar, version: 2 }],
-    ["the legacy character shape", { character: "girl-1", skinColor: "tan", hairColor: "black", shirtColor: "teal", backgroundColor: "cream" }],
+    [
+      "the legacy character shape",
+      {
+        character: "girl-1",
+        skinColor: "tan",
+        hairColor: "black",
+        shirtColor: "teal",
+        backgroundColor: "cream",
+      },
+    ],
   ])("rejects %s", (_name, badAvatar) => {
     const result = profileFieldsSchema.safeParse({
       fullName: "Jamie Vos",

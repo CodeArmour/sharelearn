@@ -6,18 +6,12 @@ import { useTranslations } from "next-intl";
 
 import { Button, Field } from "@/components/ui";
 
-const MAX_FILES = 3;
-const MAX_BYTES = 10 * 1024 * 1024;
+import { isSupportedCaptureFile, MAX_CAPTURE_FILE_BYTES, MAX_CAPTURE_FILES } from "./capture-files";
 
-function isImage(file: File): boolean {
-  if (file.type.startsWith("image/")) return true;
-  const ext = file.name.slice(file.name.lastIndexOf(".") + 1).toLowerCase();
-  return ext === "heic" || ext === "heif";
-}
-
-/** Pick 1–3 photos, validate size/type, hand the accepted `File[]` up. The
- *  parent view downscales, uploads to Storage, and calls the extract action. */
-export function PhotoCapturePanel({
+/** Pick up to three study attachments and send only validated files to the
+ * parent. Images are optimized before upload; PDFs and Excel files go through
+ * untouched for the AI provider's native file parsing. */
+export function FileCapturePanel({
   onStructure,
   busy,
 }: {
@@ -34,16 +28,16 @@ export function PhotoCapturePanel({
     setError(null);
     const next = [...files];
     for (const file of Array.from(picked)) {
-      if (next.length >= MAX_FILES) {
-        setError(t("photos.tooMany"));
+      if (next.length >= MAX_CAPTURE_FILES) {
+        setError(t("files.tooMany"));
         break;
       }
-      if (!isImage(file)) {
-        setError(t("photos.rejectedFormat"));
+      if (!isSupportedCaptureFile(file)) {
+        setError(t("files.rejectedFormat"));
         continue;
       }
-      if (file.size > MAX_BYTES) {
-        setError(t("photos.rejectedSize"));
+      if (file.size > MAX_CAPTURE_FILE_BYTES) {
+        setError(t("files.rejectedSize"));
         continue;
       }
       next.push(file);
@@ -52,37 +46,38 @@ export function PhotoCapturePanel({
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const removeAt = (i: number) => setFiles((f) => f.filter((_, idx) => idx !== i));
+  const removeAt = (index: number) => setFiles((current) => current.filter((_, i) => i !== index));
 
   return (
     <div className="flex flex-col gap-3 rounded-card border border-ai-border bg-ai-subtle p-4 sm:p-5">
-      <Field label={t("photos.pick")} htmlFor="photo-capture">
+      <Field label={t("files.pick")} htmlFor="file-capture">
         <input
           ref={inputRef}
-          id="photo-capture"
+          id="file-capture"
           type="file"
-          accept="image/*"
+          accept="image/*,application/pdf,.pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           multiple
           disabled={busy}
-          onChange={(e) => add(e.target.files)}
+          onChange={(event) => add(event.target.files)}
           className="text-body-sm"
         />
       </Field>
-      <p className="text-caption text-fg-muted">{t("photos.hint")}</p>
+      <p className="text-caption text-fg-muted">{t("files.hint")}</p>
 
       {files.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {files.map((file, i) => (
+        <ul className="flex flex-wrap gap-2" aria-label={t("files.selected")}>
+          {files.map((file, index) => (
             <li
-              key={`${file.name}-${i}`}
+              key={`${file.name}-${index}`}
               className="flex items-center gap-1.5 rounded-pill bg-surface px-2.5 py-1 text-caption"
             >
               <span className="max-w-[12rem] truncate">{file.name}</span>
               <button
                 type="button"
-                onClick={() => removeAt(i)}
+                onClick={() => removeAt(index)}
                 aria-label={t("removeAttachment")}
                 disabled={busy}
+                className="-mr-1 inline-flex size-6 items-center justify-center rounded-sm text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-border-focus"
               >
                 <X className="size-3.5" aria-hidden />
               </button>
@@ -91,7 +86,11 @@ export function PhotoCapturePanel({
         </ul>
       ) : null}
 
-      {error ? <p className="text-caption text-error-strong">{error}</p> : null}
+      {error ? (
+        <p className="text-caption text-error-strong" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Button

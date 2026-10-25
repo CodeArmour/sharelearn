@@ -1,5 +1,5 @@
 /** The browser could not decode the picked image (most often HEIC outside
- *  Safari). The caller shows `add.ai.photos.rejectedFormat`. */
+ *  Safari). The caller shows `add.ai.files.rejectedFormat`. */
 export class ImageDecodeError extends Error {
   constructor() {
     super("Could not decode image");

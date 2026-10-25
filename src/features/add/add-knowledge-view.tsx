@@ -10,7 +10,7 @@ import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
 import { CAPTURE_BUCKET } from "@/lib/supabase/constants";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { extractFromPhotosAction, structureKnowledgeAction } from "@/server/actions/ai";
+import { extractFromFilesAction, structureKnowledgeAction } from "@/server/actions/ai";
 import {
   createKnowledgeItemAction,
   createKnowledgeItemsAction,
@@ -23,7 +23,7 @@ import { knowledgeTitle } from "@/types";
 import { AiCaptureBox } from "./ai-capture-box";
 import { AiFailedPanel } from "./ai-failed-panel";
 import { AiReviewBanner } from "./ai-review-banner";
-import { downscaleImage } from "./downscale-image";
+import { prepareCaptureFile } from "./capture-files";
 import { KnowledgeForm } from "./knowledge-form";
 import { ReviewChecklist, type ReviewRow } from "./review-checklist";
 import { SuccessPanel } from "./success-panel";
@@ -72,7 +72,7 @@ export function AddKnowledgeView({
   const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Photo capture: a batch of drafts the reviewer checks off before saving.
+  // File capture: a batch of drafts the reviewer checks off before saving.
   const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
   const [truncated, setTruncated] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
@@ -121,26 +121,28 @@ export function AddKnowledgeView({
     }
   };
 
-  /** Downscale each photo in the browser, stage it in the capture bucket, then
+  /** Prepare each file in the browser, stage it in the capture bucket, then
    *  hand the paths to the extract action. Any failure lands on the same
    *  `AiFailedPanel` the text path uses. */
-  const runPhotoAi = async (files: File[]) => {
+  const runFileAi = async (files: File[]) => {
     if (!userId || files.length === 0) return;
     setMode("processing");
     setDupPrompt(null);
+    const supabase = createBrowserSupabaseClient();
+    const bucket = supabase.storage.from(CAPTURE_BUCKET);
+    const paths: string[] = [];
     try {
-      const supabase = createBrowserSupabaseClient();
-      const bucket = supabase.storage.from(CAPTURE_BUCKET);
-      const paths: string[] = [];
       for (const file of files) {
-        const blob = await downscaleImage(file);
-        const path = `${userId}/${crypto.randomUUID()}.jpg`;
-        const { error } = await bucket.upload(path, blob, { contentType: "image/jpeg" });
+        const prepared = await prepareCaptureFile(file);
+        const path = `${userId}/${crypto.randomUUID()}.${prepared.extension}`;
+        const { error } = await bucket.upload(path, prepared.content, {
+          contentType: prepared.contentType,
+        });
         if (error) throw error;
         paths.push(path);
       }
 
-      const result = await extractFromPhotosAction(paths);
+      const result = await extractFromFilesAction(paths);
       if (!result.ok || result.data.items.length === 0) {
         setMode("failed");
         return;
@@ -167,6 +169,7 @@ export function AddKnowledgeView({
       setBatchError(null);
       setMode("review-list");
     } catch {
+      if (paths.length > 0) await bucket.remove(paths).catch(() => {});
       setMode("failed");
     }
   };
@@ -363,7 +366,7 @@ export function AddKnowledgeView({
 
   // Hoisted out of the render ladder below: inside the final branch TypeScript
   // has already narrowed `mode` to "manual", so the comparison can't live there.
-  const photosBusy = mode === "processing";
+  const filesBusy = mode === "processing";
 
   const duplicateNotice = dupPrompt ? (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-sunken p-3">
@@ -475,9 +478,9 @@ export function AddKnowledgeView({
                   value={rawText}
                   onChange={setRawText}
                   onSubmit={runAi}
-                  photosEnabled={Boolean(userId)}
-                  onStructurePhotos={runPhotoAi}
-                  photosBusy={photosBusy}
+                  filesEnabled={Boolean(userId)}
+                  onStructureFiles={runFileAi}
+                  filesBusy={filesBusy}
                 />
                 <div className="flex items-center gap-3 text-caption text-fg-muted">
                   <span className="h-px flex-1 bg-border" />

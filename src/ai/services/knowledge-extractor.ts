@@ -21,7 +21,10 @@ export type ExtractResult =
   | { status: "unavailable" }
   | { status: "error" };
 
-const MAX_IMAGES = 3;
+export type KnowledgeCaptureAttachment =
+  { kind: "image"; url: string } | { kind: "file"; url: string; filename: string };
+
+const MAX_ATTACHMENTS = 3;
 const MAX_ITEMS = 30;
 const MAX_GRAMMAR_FOLLOWUPS = 3;
 
@@ -31,23 +34,36 @@ const MAX_GRAMMAR_FOLLOWUPS = 3;
  * returned something unusable. The caller always drops the reviewer into the
  * checklist (or, on `error`/empty, the manual form), so a soft failure is fine.
  */
-export async function extractKnowledgeFromImages(
-  images: { url: string }[],
+export async function extractKnowledgeFromFiles(
+  attachments: KnowledgeCaptureAttachment[],
 ): Promise<ExtractResult> {
   try {
     const provider = getAiProvider();
     if (!provider) return { status: "unavailable" };
 
-    const imgs = images.slice(0, MAX_IMAGES);
-    if (imgs.length === 0) return { status: "error" };
+    const selected = attachments.slice(0, MAX_ATTACHMENTS);
+    if (selected.length === 0) return { status: "error" };
 
-    const user = `Extract every distinct study item from the ${imgs.length} attached image(s), with all per-type fields.`;
+    const images = selected
+      .filter(
+        (attachment): attachment is Extract<KnowledgeCaptureAttachment, { kind: "image" }> =>
+          attachment.kind === "image",
+      )
+      .map(({ url }) => ({ url }));
+    const files = selected
+      .filter(
+        (attachment): attachment is Extract<KnowledgeCaptureAttachment, { kind: "file" }> =>
+          attachment.kind === "file",
+      )
+      .map(({ url, filename }) => ({ url, filename }));
+    const user = `Extract every distinct study item from the ${selected.length} attached source file(s), with all per-type fields.`;
 
     const raw = await provider.generateStructured({
       system: KNOWLEDGE_EXTRACTION_PROMPT,
       user,
       schema: knowledgeExtractionSchema,
-      images: imgs,
+      images: images.length > 0 ? images : undefined,
+      files: files.length > 0 ? files : undefined,
     });
 
     const envelope = z.object({ items: z.array(z.unknown()) }).safeParse(raw);

@@ -167,7 +167,27 @@ describe("OpenAIProvider.generateStructured", () => {
     expect(arg.max_output_tokens).toBe(16000);
   });
 
-  it("keeps the plain-string input and 16000 ceiling when no images are given", async () => {
+  it("sends documents as input_file parts", async () => {
+    parse.mockResolvedValueOnce(ok({ type: "note", body: "from spreadsheet" }));
+
+    await provider().generateStructured({
+      system: "S",
+      user: "U",
+      schema,
+      files: [{ url: "https://signed/worksheet", filename: "worksheet.xlsx" }],
+    });
+
+    const arg = parse.mock.calls[0][0];
+    const parts = arg.input[0].content;
+    expect(parts).toContainEqual({
+      type: "input_file",
+      file_url: "https://signed/worksheet",
+      filename: "worksheet.xlsx",
+      detail: "auto",
+    });
+  });
+
+  it("keeps the plain-string input and 16000 ceiling when no attachments are given", async () => {
     parse.mockResolvedValueOnce(ok({ type: "note", body: "hi" }));
     await provider().generateStructured({ system: "S", user: "U", schema });
     const arg = parse.mock.calls[0][0];
@@ -179,8 +199,7 @@ describe("OpenAIProvider.generateStructured", () => {
 describe("buildTextFormat $parseRaw", () => {
   const fmt = buildTextFormat(knowledgeSuggestionSchema, "x");
   // `$parseRaw` is a real own prop (non-enumerable) — see openai/lib/parser.d.ts.
-  const parseRaw = (content: string) =>
-    Reflect.get(fmt, "$parseRaw")(content) as unknown;
+  const parseRaw = (content: string) => Reflect.get(fmt, "$parseRaw")(content) as unknown;
 
   it("unwraps a valid { result } envelope", () => {
     expect(parseRaw(JSON.stringify({ result: { type: "note", body: "hi" } }))).toEqual({
