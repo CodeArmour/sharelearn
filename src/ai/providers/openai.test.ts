@@ -174,14 +174,21 @@ describe("OpenAIProvider.generateStructured", () => {
       system: "S",
       user: "U",
       schema,
-      files: [{ url: "https://signed/worksheet", filename: "worksheet.xlsx" }],
+      files: [
+        {
+          fileData:
+            "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,c2hlZXQ=",
+          filename: "worksheet.xlsx",
+        },
+      ],
     });
 
     const arg = parse.mock.calls[0][0];
     const parts = arg.input[0].content;
     expect(parts).toContainEqual({
       type: "input_file",
-      file_url: "https://signed/worksheet",
+      file_data:
+        "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,c2hlZXQ=",
       filename: "worksheet.xlsx",
       detail: "auto",
     });

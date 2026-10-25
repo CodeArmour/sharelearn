@@ -86,11 +86,12 @@ describe("structureKnowledgeAction", () => {
 
 function fakeStorage() {
   const remove = vi.fn().mockResolvedValue({ data: [], error: null });
+  const download = vi.fn().mockResolvedValue({ data: new Blob(["sheet"]), error: null });
   const createSignedUrl = vi
     .fn()
     .mockResolvedValue({ data: { signedUrl: "https://signed/x" }, error: null });
-  const from = vi.fn(() => ({ createSignedUrl, remove }));
-  return { client: { storage: { from } }, from, createSignedUrl, remove };
+  const from = vi.fn(() => ({ createSignedUrl, download, remove }));
+  return { client: { storage: { from } }, from, createSignedUrl, download, remove };
 }
 
 describe("extractFromFilesAction", () => {
@@ -179,8 +180,14 @@ describe("extractFromFilesAction", () => {
     await extractFromFilesAction(paths);
 
     expect(extractKnowledgeFromFiles).toHaveBeenCalledWith([
-      { kind: "file", url: "https://signed/x", filename: "worksheet.xlsx" },
+      {
+        kind: "file",
+        fileData:
+          "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,c2hlZXQ=",
+        filename: "worksheet.xlsx",
+      },
     ]);
+    expect(s.download).toHaveBeenCalledWith(paths[0]);
     expect(s.remove).toHaveBeenCalledWith(paths);
   });
 

@@ -69,7 +69,7 @@ review material, practise with generated questions, and take timed exams.
 4. The client uploads temporary objects beneath the authenticated user's prefix
    in `knowledge-capture-staging`.
 5. `extractFromFilesAction` confirms the owner prefix, creates short-lived
-   signed URLs, passes image and document attachments to the AI service, and
+   signed URLs for images, embeds PDF/Excel bytes for document input, and
    removes staged objects in `finally`.
 6. The provider uses `input_image` for JPEGs and `input_file` for PDFs and
    Excel workbooks. The prompt treats attachment content as data, not

@@ -41,5 +41,5 @@ action returns `ai-unavailable`, and the Add screen shows the manual form only.
 `AI_MODEL` (default `gpt-5.6-luna`) and `OPENAI_FALLBACK_MODEL` (default
 `gpt-5.6-terra`, retried once on a failed primary call) override the models.
 
-The extractor sends temporary signed URLs for up to three photos, PDFs, or
-Excel workbooks to the provider, then returns reviewable knowledge suggestions.
+The extractor sends temporary signed image URLs and inline PDF/Excel file data
+to the provider, then returns reviewable knowledge suggestions.

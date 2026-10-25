@@ -22,7 +22,7 @@ export type ExtractResult =
   | { status: "error" };
 
 export type KnowledgeCaptureAttachment =
-  { kind: "image"; url: string } | { kind: "file"; url: string; filename: string };
+  { kind: "image"; url: string } | { kind: "file"; fileData: string; filename: string };
 
 const MAX_ATTACHMENTS = 3;
 const MAX_ITEMS = 30;
@@ -55,7 +55,7 @@ export async function extractKnowledgeFromFiles(
         (attachment): attachment is Extract<KnowledgeCaptureAttachment, { kind: "file" }> =>
           attachment.kind === "file",
       )
-      .map(({ url, filename }) => ({ url, filename }));
+      .map(({ fileData, filename }) => ({ fileData, filename }));
     const user = `Extract every distinct study item from the ${selected.length} attached source file(s), with all per-type fields.`;
 
     const raw = await provider.generateStructured({

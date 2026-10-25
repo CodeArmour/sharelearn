@@ -141,12 +141,23 @@ describe("extractKnowledgeFromFiles", () => {
     generateStructured.mockResolvedValue({ items: [{ type: "note", body: "n" }] });
 
     await extractKnowledgeFromFiles([
-      { kind: "file", url: "https://signed/worksheet", filename: "worksheet.xlsx" },
+      {
+        kind: "file",
+        fileData:
+          "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,c2hlZXQ=",
+        filename: "worksheet.xlsx",
+      },
     ]);
 
     expect(generateStructured).toHaveBeenCalledWith(
       expect.objectContaining({
-        files: [{ url: "https://signed/worksheet", filename: "worksheet.xlsx" }],
+        files: [
+          {
+            fileData:
+              "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,c2hlZXQ=",
+            filename: "worksheet.xlsx",
+          },
+        ],
       }),
     );
   });

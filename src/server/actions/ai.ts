@@ -10,6 +10,12 @@ import type { AiSuggestion } from "@/types";
 
 import { type ActionResult, captureFilePathsSchema, rawKnowledgeTextSchema } from "./schemas";
 
+const DOCUMENT_CONTENT_TYPES = {
+  pdf: "application/pdf",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+} as const;
+
 /**
  * Structure pasted study text into a reviewable suggestion. Nothing is
  * persisted until the reviewer confirms it in the Add form. An active group
@@ -71,13 +77,30 @@ export async function extractFromFilesAction(
   try {
     const attachments = await Promise.all(
       parsed.data.map(async (path) => {
-        const { data, error } = await bucket.createSignedUrl(path, 300);
-        if (error || !data) throw new Error(error?.message ?? "could not sign upload");
-
         const filename = path.slice(path.lastIndexOf("/") + 1);
-        return path.endsWith(".jpg")
-          ? ({ kind: "image", url: data.signedUrl } as const)
-          : ({ kind: "file", url: data.signedUrl, filename } as const);
+        if (path.endsWith(".jpg")) {
+          const { data, error } = await bucket.createSignedUrl(path, 300);
+          if (error || !data) throw new Error(error?.message ?? "could not sign upload");
+          return { kind: "image", url: data.signedUrl } as const;
+        }
+
+        const extension = filename.slice(
+          filename.lastIndexOf(".") + 1,
+        ) as keyof typeof DOCUMENT_CONTENT_TYPES;
+        const contentType = DOCUMENT_CONTENT_TYPES[extension];
+        if (!contentType) throw new Error("unsupported capture file");
+
+        const downloaded = await bucket.download(path);
+        if (downloaded.error || !downloaded.data) {
+          throw new Error(downloaded.error?.message ?? "could not read upload");
+        }
+
+        const base64 = Buffer.from(await downloaded.data.arrayBuffer()).toString("base64");
+        return {
+          kind: "file",
+          fileData: `data:${contentType};base64,${base64}`,
+          filename,
+        } as const;
       }),
     );
 

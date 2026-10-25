@@ -110,7 +110,7 @@ export class OpenAIProvider implements AiProvider {
     user: string;
     schema: z.ZodType<T>;
     images?: { url: string }[];
-    files?: { url: string; filename: string }[];
+    files?: { fileData: string; filename: string }[];
   }): Promise<T> {
     const attempt = async (modelId: string): Promise<T> => {
       let response;
@@ -125,7 +125,7 @@ export class OpenAIProvider implements AiProvider {
           })) ?? []),
           ...(files?.map((file) => ({
             type: "input_file" as const,
-            file_url: file.url,
+            file_data: file.fileData,
             filename: file.filename,
             detail: "auto" as const,
           })) ?? []),
