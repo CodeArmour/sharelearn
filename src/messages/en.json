@@ -283,6 +283,11 @@
         "tooMany": "Up to 3 files at a time.",
         "truncated": "Some items may be missing — upload a smaller section for the rest."
       },
+      "spreadsheet": {
+        "progress": "Analysed {processed} of {total} spreadsheet rows.",
+        "next": "Skip to next rows",
+        "cancel": "Cancel spreadsheet import"
+      },
       "review": {
         "title": "Review what the AI found",
         "extraFields": "+{fields}",

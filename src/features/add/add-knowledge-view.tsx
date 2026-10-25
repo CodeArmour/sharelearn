@@ -10,14 +10,19 @@ import { PageContainer, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui";
 import { CAPTURE_BUCKET } from "@/lib/supabase/constants";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { extractFromFilesAction, structureKnowledgeAction } from "@/server/actions/ai";
+import {
+  discardSpreadsheetImportAction,
+  extractFromFilesAction,
+  extractSpreadsheetBatchAction,
+  structureKnowledgeAction,
+} from "@/server/actions/ai";
 import {
   createKnowledgeItemAction,
   createKnowledgeItemsAction,
   updateKnowledgeItemAction,
 } from "@/server/actions/knowledge";
 import { generateGrammarQuizAction, generateReadingQuizAction } from "@/server/actions/practice";
-import type { KnowledgeItem, KnowledgeSource } from "@/types";
+import type { AiSuggestion, KnowledgeItem, KnowledgeSource } from "@/types";
 import { knowledgeTitle } from "@/types";
 
 import { AiCaptureBox } from "./ai-capture-box";
@@ -40,6 +45,13 @@ import {
 } from "./types";
 
 type Mode = "manual" | "processing" | "review" | "failed" | "review-list" | "review-edit";
+
+type SpreadsheetImport = {
+  path: string;
+  totalRows: number;
+  processedRows: number;
+  nextCursor: number | null;
+};
 
 /**
  * Capture knowledge, two ways. The manual path is a plain form. The AI path
@@ -77,6 +89,7 @@ export function AddKnowledgeView({
   const [truncated, setTruncated] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
+  const [spreadsheetImport, setSpreadsheetImport] = useState<SpreadsheetImport | null>(null);
 
   // Set when a submit hit an existing item; the next submit passes
   // `allowDuplicate` so the reviewer can add it anyway. Cleared on any edit.
@@ -121,16 +134,73 @@ export function AddKnowledgeView({
     }
   };
 
-  /** Prepare each file in the browser, stage it in the capture bucket, then
-   *  hand the paths to the extract action. Any failure lands on the same
-   *  `AiFailedPanel` the text path uses. */
+  const rowsFromSuggestions = (items: AiSuggestion[], duplicates: number[]): ReviewRow[] => {
+    const rows: ReviewRow[] = items.map((suggestion) => {
+      const draft = suggestionToDraft(suggestion);
+      return { id: crypto.randomUUID(), checked: true, ...draft };
+    });
+    for (const index of duplicates) {
+      if (rows[index]) {
+        rows[index].duplicate = true;
+        rows[index].checked = false;
+      }
+    }
+    for (const row of rows) {
+      if (missingRequired(row.type, row.values).length > 0) row.checked = false;
+    }
+    return rows;
+  };
+
+  const loadSpreadsheetBatch = async (path: string, cursor: number) => {
+    setMode("processing");
+    setDupPrompt(null);
+    setBatchError(null);
+    try {
+      let nextCursor = cursor;
+      while (true) {
+        const result = await extractSpreadsheetBatchAction({ path, cursor: nextCursor });
+        if (!result.ok) {
+          void discardSpreadsheetImportAction(path);
+          setSpreadsheetImport(null);
+          setMode("failed");
+          return;
+        }
+        if (result.data.items.length > 0) {
+          setReviewRows(rowsFromSuggestions(result.data.items, result.data.duplicates));
+          setTruncated(false);
+          setSpreadsheetImport({
+            path,
+            totalRows: result.data.totalRows,
+            processedRows: result.data.processedRows,
+            nextCursor: result.data.nextCursor,
+          });
+          setMode("review-list");
+          return;
+        }
+        if (result.data.nextCursor === null) {
+          void discardSpreadsheetImportAction(path);
+          setSpreadsheetImport(null);
+          setMode("failed");
+          return;
+        }
+        nextCursor = result.data.nextCursor;
+      }
+    } catch {
+      void discardSpreadsheetImportAction(path);
+      setSpreadsheetImport(null);
+      setMode("failed");
+    }
+  };
+
   const runFileAi = async (files: File[]) => {
     if (!userId || files.length === 0) return;
     setMode("processing");
     setDupPrompt(null);
+    setSpreadsheetImport(null);
     const supabase = createBrowserSupabaseClient();
     const bucket = supabase.storage.from(CAPTURE_BUCKET);
     const paths: string[] = [];
+    const extensions: string[] = [];
     try {
       for (const file of files) {
         const prepared = await prepareCaptureFile(file);
@@ -140,6 +210,13 @@ export function AddKnowledgeView({
         });
         if (error) throw error;
         paths.push(path);
+        extensions.push(prepared.extension);
+      }
+
+      if (paths.length === 1 && ["xls", "xlsx"].includes(extensions[0])) {
+        setSpreadsheetImport({ path: paths[0], totalRows: 0, processedRows: 0, nextCursor: 0 });
+        await loadSpreadsheetBatch(paths[0], 0);
+        return;
       }
 
       const result = await extractFromFilesAction(paths);
@@ -200,9 +277,15 @@ export function AddKnowledgeView({
     setMode("review-list");
   };
 
+  const nextSpreadsheetBatch = () => {
+    if (!spreadsheetImport || spreadsheetImport.nextCursor === null) return;
+    void loadSpreadsheetBatch(spreadsheetImport.path, spreadsheetImport.nextCursor);
+  };
+
   const saveBatch = async () => {
     const selected = reviewRows.filter((r) => r.checked);
     if (selected.length === 0) return;
+    const currentSpreadsheetImport = spreadsheetImport;
     setSaving(true);
     setBatchError(null);
     try {
@@ -214,7 +297,6 @@ export function AddKnowledgeView({
         setBatchError(t("ai.review.failed"));
         return;
       }
-      setSavedTitle(t("ai.review.successCount", { count: result.data.ids.length }));
       for (const id of result.data.ids) {
         // fire-and-forget: the quiz backfills on its own if this never lands
         void generateReadingQuizAction(id).catch((e) =>
@@ -224,6 +306,15 @@ export function AddKnowledgeView({
           console.error("generateGrammarQuizAction rejected", e),
         );
       }
+      if (currentSpreadsheetImport && currentSpreadsheetImport.nextCursor !== null) {
+        await loadSpreadsheetBatch(currentSpreadsheetImport.path, currentSpreadsheetImport.nextCursor);
+        return;
+      }
+      if (currentSpreadsheetImport) {
+        void discardSpreadsheetImportAction(currentSpreadsheetImport.path);
+        setSpreadsheetImport(null);
+      }
+      setSavedTitle(t("ai.review.successCount", { count: result.data.ids.length }));
     } catch {
       setBatchError(t("ai.review.failed"));
     } finally {
@@ -241,8 +332,11 @@ export function AddKnowledgeView({
   };
 
   const backToManual = () => {
+    if (spreadsheetImport) void discardSpreadsheetImportAction(spreadsheetImport.path);
     resetFields();
     setNoticeKey(undefined);
+    setReviewRows([]);
+    setSpreadsheetImport(null);
     setMode("manual");
   };
 
@@ -360,6 +454,7 @@ export function AddKnowledgeView({
     setTruncated(false);
     setEditingRowId(null);
     setBatchError(null);
+    setSpreadsheetImport(null);
     setDupPrompt(null);
     setMode("manual");
   };
@@ -448,6 +543,14 @@ export function AddKnowledgeView({
         ) : mode === "review-list" ? (
           <div className="flex flex-col gap-6">
             <AiReviewBanner truncated={truncated} />
+            {spreadsheetImport ? (
+              <p className="rounded-lg bg-ai-subtle p-3 text-body-sm text-fg-secondary">
+                {t("ai.spreadsheet.progress", {
+                  processed: spreadsheetImport.processedRows,
+                  total: spreadsheetImport.totalRows,
+                })}
+              </p>
+            ) : null}
             {batchError ? <p className="text-body-sm text-error-strong">{batchError}</p> : null}
             <ReviewChecklist
               truncated={truncated}
@@ -458,7 +561,17 @@ export function AddKnowledgeView({
               onRemove={removeRow}
               onSubmit={saveBatch}
               submitting={saving}
+              nextBatch={
+                spreadsheetImport && spreadsheetImport.nextCursor !== null
+                  ? { label: t("ai.spreadsheet.next"), onNext: nextSpreadsheetBatch }
+                  : undefined
+              }
             />
+            {spreadsheetImport ? (
+              <Button type="button" variant="ghost" size="md" onClick={backToManual}>
+                {t("ai.spreadsheet.cancel")}
+              </Button>
+            ) : null}
           </div>
         ) : mode === "review-edit" ? (
           <div className="flex flex-col gap-6">

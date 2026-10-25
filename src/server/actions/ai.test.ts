@@ -4,19 +4,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   structureKnowledge,
   extractKnowledgeFromFiles,
+  extractKnowledgeFromSpreadsheetRows,
+  readSpreadsheetBatch,
   resolveActiveContext,
   createServerSupabaseClient,
   findDuplicateKeys,
 } = vi.hoisted(() => ({
   structureKnowledge: vi.fn(),
   extractKnowledgeFromFiles: vi.fn(),
+  extractKnowledgeFromSpreadsheetRows: vi.fn(),
+  readSpreadsheetBatch: vi.fn(),
   resolveActiveContext: vi.fn(),
   createServerSupabaseClient: vi.fn(),
   findDuplicateKeys: vi.fn(),
 }));
 
 vi.mock("@/ai/services/knowledge-processor", () => ({ structureKnowledge }));
-vi.mock("@/ai/services/knowledge-extractor", () => ({ extractKnowledgeFromFiles }));
+vi.mock("@/ai/services/knowledge-extractor", () => ({
+  extractKnowledgeFromFiles,
+  extractKnowledgeFromSpreadsheetRows,
+}));
+vi.mock("@/ai/services/spreadsheet-import", () => ({ readSpreadsheetBatch }));
 vi.mock("@/server/services/session-service", () => ({ resolveActiveContext }));
 vi.mock("@/server/auth/supabase", () => ({ createServerSupabaseClient }));
 vi.mock("@/server/services/knowledge-service", () => ({
@@ -29,7 +37,12 @@ vi.mock("@/server/services/knowledge-service", () => ({
         : null,
 }));
 
-import { extractFromFilesAction, structureKnowledgeAction } from "./ai";
+import {
+  discardSpreadsheetImportAction,
+  extractFromFilesAction,
+  extractSpreadsheetBatchAction,
+  structureKnowledgeAction,
+} from "./ai";
 
 beforeEach(() => {
   structureKnowledge.mockReset();
@@ -247,5 +260,112 @@ describe("extractFromFilesAction", () => {
       ok: false,
       code: "unauthorized",
     });
+  });
+});
+
+describe("extractSpreadsheetBatchAction", () => {
+  const path = "11111111-1111-1111-1111-111111111111/worksheet.xlsx";
+  const rows = [
+    {
+      sheetName: "Words",
+      rowNumber: 2,
+      values: [
+        { header: "Dutch", value: "fiets" },
+        { header: "English", value: "bike" },
+      ],
+    },
+  ];
+
+  beforeEach(() => {
+    extractKnowledgeFromSpreadsheetRows.mockReset();
+    readSpreadsheetBatch.mockReset();
+    createServerSupabaseClient.mockReset();
+    findDuplicateKeys.mockReset();
+    findDuplicateKeys.mockResolvedValue(new Map());
+    resolveActiveContext.mockResolvedValue({
+      status: "ok",
+      user: {
+        id: "11111111-1111-1111-1111-111111111111",
+        name: "U",
+        avatar: null,
+        avatarUrl: null,
+      },
+      activeGroup: { id: "g1", name: "G", slug: "g" },
+      membership: { groupId: "g1", userId: "11111111-1111-1111-1111-111111111111", role: "member" },
+    });
+  });
+
+  it("extracts one parsed batch without deleting its staged spreadsheet", async () => {
+    const storage = fakeStorage();
+    createServerSupabaseClient.mockResolvedValue(storage.client);
+    readSpreadsheetBatch.mockReturnValue({
+      rows,
+      totalRows: 40,
+      processedRows: 25,
+      nextCursor: 25,
+    });
+    extractKnowledgeFromSpreadsheetRows.mockResolvedValue({
+      status: "ok",
+      items: [{ type: "note", fields: { title: "", noteBody: "fiets" } }],
+      truncated: false,
+    });
+
+    const result = await extractSpreadsheetBatchAction({ path, cursor: 0 });
+
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        items: [{ type: "note", fields: { title: "", noteBody: "fiets" } }],
+        duplicates: [],
+        totalRows: 40,
+        processedRows: 25,
+        nextCursor: 25,
+      },
+    });
+    expect(storage.download).toHaveBeenCalledWith(path);
+    expect(readSpreadsheetBatch).toHaveBeenCalledWith(expect.any(ArrayBuffer), 0);
+    expect(extractKnowledgeFromSpreadsheetRows).toHaveBeenCalledWith(rows);
+    expect(storage.remove).not.toHaveBeenCalled();
+  });
+
+  it("rejects paths outside the active user's storage prefix", async () => {
+    const result = await extractSpreadsheetBatchAction({
+      path: "22222222-2222-2222-2222-222222222222/worksheet.xlsx",
+      cursor: 0,
+    });
+
+    expect(result).toMatchObject({ ok: false, code: "validation" });
+    expect(extractKnowledgeFromSpreadsheetRows).not.toHaveBeenCalled();
+  });
+
+  it("returns an empty batch so the client can continue to later spreadsheet rows", async () => {
+    const storage = fakeStorage();
+    createServerSupabaseClient.mockResolvedValue(storage.client);
+    readSpreadsheetBatch.mockReturnValue({
+      rows,
+      totalRows: 40,
+      processedRows: 25,
+      nextCursor: 25,
+    });
+    extractKnowledgeFromSpreadsheetRows.mockResolvedValue({ status: "empty" });
+
+    await expect(extractSpreadsheetBatchAction({ path, cursor: 0 })).resolves.toEqual({
+      ok: true,
+      data: {
+        items: [],
+        duplicates: [],
+        totalRows: 40,
+        processedRows: 25,
+        nextCursor: 25,
+      },
+    });
+  });
+
+  it("deletes only the active user's staged spreadsheet on cancellation", async () => {
+    const storage = fakeStorage();
+    createServerSupabaseClient.mockResolvedValue(storage.client);
+
+    await expect(discardSpreadsheetImportAction(path)).resolves.toEqual({ ok: true, data: undefined });
+    expect(storage.remove).toHaveBeenCalledWith([path]);
   });
 });

@@ -41,6 +41,7 @@ export function ReviewChecklist({
   onRemove,
   onSubmit,
   submitting,
+  nextBatch,
 }: {
   truncated: boolean;
   rows: ReviewRow[];
@@ -50,6 +51,7 @@ export function ReviewChecklist({
   onRemove: (id: string) => void;
   onSubmit: () => void;
   submitting: boolean;
+  nextBatch?: { label: string; onNext: () => void };
 }) {
   const t = useTranslations("add.ai.review");
   const tType = useTranslations("knowledge.type");
@@ -136,14 +138,27 @@ export function ReviewChecklist({
         })}
       </ul>
 
-      <Button
-        type="button"
-        size="md"
-        onClick={onSubmit}
-        disabled={selectedCount === 0 || submitting}
-      >
-        {t("submit", { count: selectedCount })}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="md"
+          onClick={onSubmit}
+          disabled={selectedCount === 0 || submitting}
+        >
+          {t("submit", { count: selectedCount })}
+        </Button>
+        {nextBatch ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            onClick={nextBatch.onNext}
+            disabled={submitting}
+          >
+            {nextBatch.label}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }

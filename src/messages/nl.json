@@ -283,6 +283,11 @@
         "tooMany": "Maximaal 3 bestanden tegelijk.",
         "truncated": "Sommige items ontbreken mogelijk — upload een kleiner deel voor de rest."
       },
+      "spreadsheet": {
+        "progress": "{processed} van {total} spreadsheet-rijen geanalyseerd.",
+        "next": "Deze rijen overslaan",
+        "cancel": "Spreadsheetimport annuleren"
+      },
       "review": {
         "title": "Controleer wat de AI heeft gevonden",
         "extraFields": "+{fields}",

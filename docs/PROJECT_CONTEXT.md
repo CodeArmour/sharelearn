@@ -68,14 +68,19 @@ review material, practise with generated questions, and take timed exams.
    their canonical MIME type.
 4. The client uploads temporary objects beneath the authenticated user's prefix
    in `knowledge-capture-staging`.
-5. `extractFromFilesAction` confirms the owner prefix, creates short-lived
-   signed URLs for images, embeds PDF/Excel bytes for document input, and
-   removes staged objects in `finally`.
-6. The provider uses `input_image` for JPEGs and `input_file` for PDFs and
-   Excel workbooks. The prompt treats attachment content as data, not
-   instructions.
-7. The user edits/selects extracted items in the review checklist. Only the
-   confirmed knowledge entries persist; original source attachments do not.
+5. Standard file capture uses `extractFromFilesAction`, which confirms the
+   owner prefix, creates short-lived signed URLs for images, embeds PDF bytes
+   for document input, and removes staged objects in `finally`.
+6. A single `.xls` or `.xlsx` upload uses the spreadsheet import path instead:
+   `readSpreadsheetBatch` extracts labelled cell text on the server and sends
+   25 data rows at a time to AI. It caps a workbook at 5,000 non-empty data
+   rows, 24 columns, and 300 characters per cell.
+7. `extractSpreadsheetBatchAction` preserves the staged workbook until the
+   user saves the final batch or cancels. `discardSpreadsheetImportAction` and
+   the daily storage sweep are cleanup backstops.
+8. The user edits/selects each AI batch in the review checklist. Saving a
+   batch automatically opens the next one; only confirmed knowledge entries
+   persist and source attachments never enter the knowledge database.
 
 Key files:
 
@@ -84,6 +89,7 @@ Key files:
 - `src/features/add/add-knowledge-view.tsx`: browser upload and review flow.
 - `src/server/actions/ai.ts`: ownership, signing, extraction, and cleanup.
 - `src/ai/services/knowledge-extractor.ts`: attachment-to-suggestion service.
+- `src/ai/services/spreadsheet-import.ts`: bounded XLS/XLSX row parsing.
 - `src/ai/providers/openai.ts`: Responses API attachment mapping.
 
 ## Development Rules

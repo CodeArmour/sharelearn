@@ -1,20 +1,46 @@
 "use server";
 
-import { extractKnowledgeFromFiles } from "@/ai/services/knowledge-extractor";
+import {
+  extractKnowledgeFromFiles,
+  extractKnowledgeFromSpreadsheetRows,
+} from "@/ai/services/knowledge-extractor";
 import { structureKnowledge } from "@/ai/services/knowledge-processor";
+import { readSpreadsheetBatch } from "@/ai/services/spreadsheet-import";
 import { CAPTURE_BUCKET } from "@/lib/supabase/constants";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
 import { duplicateKeyFromSuggestion, findDuplicateKeys } from "@/server/services/knowledge-service";
 import { resolveActiveContext } from "@/server/services/session-service";
 import type { AiSuggestion } from "@/types";
 
-import { type ActionResult, captureFilePathsSchema, rawKnowledgeTextSchema } from "./schemas";
+import {
+  type ActionResult,
+  captureFilePathsSchema,
+  rawKnowledgeTextSchema,
+  spreadsheetBatchSchema,
+  spreadsheetCapturePathSchema,
+} from "./schemas";
 
 const DOCUMENT_CONTENT_TYPES = {
   pdf: "application/pdf",
   xls: "application/vnd.ms-excel",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 } as const;
+
+type SpreadsheetBatchData = {
+  items: AiSuggestion[];
+  duplicates: number[];
+  totalRows: number;
+  processedRows: number;
+  nextCursor: number | null;
+};
+
+async function duplicateIndexes(items: AiSuggestion[], groupId: string): Promise<number[]> {
+  const duplicateMap = await findDuplicateKeys(
+    items.map(duplicateKeyFromSuggestion),
+    groupId,
+  );
+  return [...duplicateMap.keys()];
+}
 
 /**
  * Structure pasted study text into a reviewable suggestion. Nothing is
@@ -107,16 +133,12 @@ export async function extractFromFilesAction(
     const result = await extractKnowledgeFromFiles(attachments);
     switch (result.status) {
       case "ok": {
-        const duplicateMap = await findDuplicateKeys(
-          result.items.map(duplicateKeyFromSuggestion),
-          ctx.activeGroup.id,
-        );
         return {
           ok: true,
           data: {
             items: result.items,
             truncated: result.truncated,
-            duplicates: [...duplicateMap.keys()],
+            duplicates: await duplicateIndexes(result.items, ctx.activeGroup.id),
           },
         };
       }
@@ -138,5 +160,98 @@ export async function extractFromFilesAction(
     };
   } finally {
     await bucket.remove(parsed.data).catch(() => {});
+  }
+}
+
+export async function extractSpreadsheetBatchAction(
+  input: unknown,
+): Promise<ActionResult<SpreadsheetBatchData>> {
+  const parsed = spreadsheetBatchSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, code: "validation", message: "Invalid spreadsheet upload" };
+  }
+
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") {
+    return { ok: false, code: "unauthorized", message: "Sign in to use AI capture" };
+  }
+  if (!parsed.data.path.startsWith(ctx.user.id + "/")) {
+    return { ok: false, code: "validation", message: "Invalid spreadsheet upload" };
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const bucket = supabase.storage.from(CAPTURE_BUCKET);
+    const downloaded = await bucket.download(parsed.data.path);
+    if (downloaded.error || !downloaded.data) {
+      throw new Error(downloaded.error?.message ?? "could not read upload");
+    }
+
+    const batch = readSpreadsheetBatch(await downloaded.data.arrayBuffer(), parsed.data.cursor);
+    const result = await extractKnowledgeFromSpreadsheetRows(batch.rows);
+    switch (result.status) {
+      case "ok":
+        return {
+          ok: true,
+          data: {
+            items: result.items,
+            duplicates: await duplicateIndexes(result.items, ctx.activeGroup.id),
+            totalRows: batch.totalRows,
+            processedRows: batch.processedRows,
+            nextCursor: batch.nextCursor,
+          },
+        };
+      case "empty":
+        return {
+          ok: true,
+          data: {
+            items: [],
+            duplicates: [],
+            totalRows: batch.totalRows,
+            processedRows: batch.processedRows,
+            nextCursor: batch.nextCursor,
+          },
+        };
+      case "unavailable":
+        return { ok: false, code: "ai-unavailable", message: "AI capture is not available" };
+      case "error":
+        return {
+          ok: false,
+          code: "ai-error",
+          message: "Could not read this spreadsheet batch. Try again or add items manually.",
+        };
+    }
+  } catch (error) {
+    console.error("[action:extractSpreadsheetBatch] failed", error);
+    return {
+      ok: false,
+      code: "ai-error",
+      message: "Could not read this spreadsheet batch. Try again or add items manually.",
+    };
+  }
+}
+
+export async function discardSpreadsheetImportAction(path: unknown): Promise<ActionResult> {
+  const parsed = spreadsheetCapturePathSchema.safeParse(path);
+  if (!parsed.success) {
+    return { ok: false, code: "validation", message: "Invalid spreadsheet upload" };
+  }
+
+  const ctx = await resolveActiveContext();
+  if (ctx.status !== "ok") {
+    return { ok: false, code: "unauthorized", message: "Sign in to manage AI uploads" };
+  }
+  if (!parsed.data.startsWith(ctx.user.id + "/")) {
+    return { ok: false, code: "validation", message: "Invalid spreadsheet upload" };
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase.storage.from(CAPTURE_BUCKET).remove([parsed.data]);
+    if (error) throw new Error(error.message);
+    return { ok: true, data: undefined };
+  } catch (error) {
+    console.error("[action:discardSpreadsheetImport] failed", error);
+    return { ok: false, code: "storage-error", message: "Could not remove spreadsheet upload" };
   }
 }

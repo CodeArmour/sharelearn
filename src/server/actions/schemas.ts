@@ -47,6 +47,15 @@ export const captureFilePathsSchema = z
   .min(1)
   .max(3);
 
+export const spreadsheetBatchSchema = z.object({
+  path: z.string().regex(/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+\.(xls|xlsx)$/),
+  cursor: z.number().int().min(0).max(5_000),
+});
+
+export const spreadsheetCapturePathSchema = z
+  .string()
+  .regex(/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+\.(xls|xlsx)$/);
+
 export function toActionError(e: unknown): { code: string; message: string } {
   if (e instanceof InviteError) return { code: `invite:${e.inviteCode}`, message: e.message };
   if (isAppError(e)) return { code: e.code, message: e.message };
