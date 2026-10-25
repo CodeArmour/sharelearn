@@ -76,12 +76,11 @@ export async function inviteMember(input: {
     }),
   );
 
-  // Supabase sends the branded "Invite user" email via admin.inviteUserByEmail.
-  // The redirect carries our app invite token so the callback lands the invitee
-  // on the invite-accept screen.
-  const redirectTo = `${serverEnv.siteUrl}/auth/callback?token=${token}`;
+  const loginRedirectTo = `${serverEnv.siteUrl}/auth/callback?token=${token}`;
   const admin = createAdminSupabaseClient();
-  let { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+  let { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { invite_token: token },
+  });
 
   if (error && isAlreadyRegistered(error)) {
     // The invitee already has an auth account (signed up alone, or was invited
@@ -90,7 +89,7 @@ export async function inviteMember(input: {
     const supabase = await createServerSupabaseClient();
     ({ error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo, shouldCreateUser: true },
+      options: { emailRedirectTo: loginRedirectTo, shouldCreateUser: true },
     }));
   }
 

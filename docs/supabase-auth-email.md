@@ -138,7 +138,7 @@ CLI):
 > invitee already has an auth account — so a re-invited existing user gets the
 > Magic Link copy, not the Invite copy. Keep both templates coherent.
 
-### The invite button must use `token_hash`, not `{{ .ConfirmationURL }}`
+### The invite button must carry the application invite token
 
 `{{ .ConfirmationURL }}` on an `admin.inviteUserByEmail` link uses Supabase's
 **implicit flow** — the session comes back as a `#access_token=…` URL fragment,
@@ -148,11 +148,11 @@ against a stale/absent session and fails with `email-mismatch`.
 So `invite.html`'s button links to:
 
 ```
-{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite
+{{ .SiteURL }}/auth/callback?token={{ .Data.invite_token }}&token_hash={{ .TokenHash }}&type=invite
 ```
 
-`{{ .RedirectTo }}` is `${SITE_URL}/auth/callback?token=<app invite token>` (set
-by `inviteMember`). `/auth/callback` then calls `verifyOtp({ type: 'invite',
+`inviteMember` stores the application invite token in the auth user's metadata.
+`/auth/callback` then calls `verifyOtp({ type: 'invite',
 token_hash })` server-side — real cookies, no fragment — and bounces to
 `/invite/<token>`. Magic-link sign-in still uses `{{ .ConfirmationURL }}` (PKCE
 `?code=`); only the invite template is different.
@@ -172,10 +172,10 @@ Supabase renders Go `text/template` — only these are in scope:
 | --- | --- |
 | `{{ .ConfirmationURL }}` | magic-link button (PKCE `?code=` flow) |
 | `{{ .TokenHash }}` | invite button — verified server-side via `verifyOtp` |
-| `{{ .RedirectTo }}` | the `redirectTo` passed to `inviteUserByEmail` (carries the app token) |
+| `{{ .Data.invite_token }}` | the application invite token passed as user metadata |
 | `{{ .Token }}` | 6-digit OTP shown as the "or enter this code" fallback |
 | `{{ .SiteURL }}` | the dashboard's **Site URL** — must be `https://dutch.omarcode.dev` |
-| `{{ .Email }}`, `{{ .Data }}` | available, not currently used |
+| `{{ .Email }}` | available, not currently used |
 
 The invite email **cannot** name the group or the person who invited — that data
 isn't exposed to Supabase templates. Doing so would mean the app sending its own

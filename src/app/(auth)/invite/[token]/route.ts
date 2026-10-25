@@ -19,7 +19,9 @@ export async function GET(
   const url = new URL(request.url);
 
   if (!(await getSession())) {
-    return NextResponse.redirect(new URL("/login", url.origin));
+    const dest = new URL("/login", url.origin);
+    dest.searchParams.set("invite", token);
+    return NextResponse.redirect(dest);
   }
 
   try {

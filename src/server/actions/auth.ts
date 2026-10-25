@@ -6,7 +6,7 @@ import { clearActiveGroupId } from "@/server/active-group";
 import { createServerSupabaseClient } from "@/server/auth/supabase";
 import { serverEnv } from "@/server/env";
 
-import { emailSchema, otpCodeSchema, toActionError, type ActionResult } from "./schemas";
+import { emailSchema, otpCodeSchema, toActionError, tokenSchema, type ActionResult } from "./schemas";
 
 export async function sendMagicLink(
   _prev: unknown,
@@ -20,12 +20,15 @@ export async function sendMagicLink(
       message: "Enter a valid email address",
     };
   }
+  const inviteToken = tokenSchema.safeParse(formData.get("invite"));
   try {
     const supabase = await createServerSupabaseClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: parsed.data,
       options: {
-        emailRedirectTo: `${serverEnv.siteUrl}/auth/callback`,
+        emailRedirectTo: `${serverEnv.siteUrl}/auth/callback${
+          inviteToken.success ? `?token=${encodeURIComponent(inviteToken.data)}` : ""
+        }`,
         shouldCreateUser: true,
       },
     });
@@ -51,6 +54,7 @@ export async function verifyMagicLinkCode(
 ): Promise<ActionResult> {
   const email = emailSchema.safeParse(formData.get("email"));
   const code = otpCodeSchema.safeParse(formData.get("code"));
+  const inviteToken = tokenSchema.safeParse(formData.get("invite"));
   if (!email.success || !code.success) {
     return {
       ok: false,
@@ -73,7 +77,7 @@ export async function verifyMagicLinkCode(
   }
 
   if (message) return { ok: false, code: "supabase", message };
-  redirect("/"); // success — throws NEXT_REDIRECT, never returns
+  redirect(inviteToken.success ? `/invite/${encodeURIComponent(inviteToken.data)}` : "/");
 }
 
 export async function signOut(): Promise<void> {

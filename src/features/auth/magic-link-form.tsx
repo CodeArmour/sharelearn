@@ -11,7 +11,7 @@ type State =
   | { phase: "sent"; email: string }
   | { phase: "error" };
 
-export function MagicLinkForm() {
+export function MagicLinkForm({ inviteToken }: { inviteToken?: string }) {
   const t = useTranslations("login");
   const [state, formAction, pending] = useActionState<State, FormData>(
     async (_prev, formData) => {
@@ -29,8 +29,11 @@ export function MagicLinkForm() {
           <h1 className="font-display text-h2 text-fg">{t("sentTitle")}</h1>
           <p className="text-body-sm text-fg-muted">{t("sentBody", { email: state.email })}</p>
         </div>
-        <CodeForm email={state.email} />
-        <a href="/login" className="inline-block text-body-sm font-medium text-link hover:underline">
+        <CodeForm email={state.email} inviteToken={inviteToken} />
+        <a
+          href={inviteToken ? `/login?invite=${encodeURIComponent(inviteToken)}` : "/login"}
+          className="inline-block text-body-sm font-medium text-link hover:underline"
+        >
           {t("sentResend")}
         </a>
       </div>
@@ -39,6 +42,7 @@ export function MagicLinkForm() {
 
   return (
     <form action={formAction} className="space-y-4">
+      {inviteToken ? <input type="hidden" name="invite" value={inviteToken} /> : null}
       <div className="space-y-1">
         <h1 className="font-display text-h2 text-fg">{t("welcome")}</h1>
         <p className="text-body-sm text-fg-muted">{t("subtitle")}</p>
@@ -75,7 +79,7 @@ type CodeState = { phase: "idle" } | { phase: "error" };
  * same email. On success `verifyMagicLinkCode` sets the session cookie and
  * redirects into the app, so the action only returns here on failure.
  */
-function CodeForm({ email }: { email: string }) {
+function CodeForm({ email, inviteToken }: { email: string; inviteToken?: string }) {
   const t = useTranslations("login");
   const [state, formAction, pending] = useActionState<CodeState, FormData>(
     async (_prev, formData) => {
@@ -88,6 +92,7 @@ function CodeForm({ email }: { email: string }) {
   return (
     <form action={formAction} className="space-y-3 border-t border-border pt-5">
       <input type="hidden" name="email" value={email} />
+      {inviteToken ? <input type="hidden" name="invite" value={inviteToken} /> : null}
       <div className="space-y-1.5">
         <label htmlFor="code" className="text-body-sm font-medium text-fg-secondary">
           {t("codeLabel")}

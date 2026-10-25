@@ -42,6 +42,14 @@ review material, practise with generated questions, and take timed exams.
 
 - Supabase Auth manages sessions. The server resolves the active context before
   any protected action runs.
+- Invites are two-stage: the Supabase Invite user email carries an application
+  token in `user_metadata.invite_token`; `/auth/callback` establishes the auth
+  session, then `/invite/<token>` creates the group membership. If a session is
+  still required, the token is preserved through `/login?invite=...`, including
+  magic-link and code verification.
+- `docs/email-templates/invite.html` must stay synchronized with Supabase
+  Authentication > Emails > Invite user. Its button uses `.SiteURL`,
+  `.Data.invite_token`, and `.TokenHash` rather than `.RedirectTo`.
 - RLS protects group records. Service-role access is limited to server-only cron
   tasks and operational tooling.
 - Storage bucket `knowledge-capture-staging` is private. Its RLS policies only

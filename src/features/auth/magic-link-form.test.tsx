@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendMagicLink = vi.fn();
 const verifyMagicLinkCode = vi.fn();
@@ -13,10 +13,15 @@ vi.mock("@/server/actions/auth", () => ({
 import messages from "@/messages/en.json";
 import { MagicLinkForm } from "./magic-link-form";
 
-function setup() {
+beforeEach(() => {
+  sendMagicLink.mockReset();
+  verifyMagicLinkCode.mockReset();
+});
+
+function setup(inviteToken?: string) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <MagicLinkForm />
+      <MagicLinkForm inviteToken={inviteToken} />
     </NextIntlClientProvider>,
   );
 }
@@ -47,6 +52,16 @@ describe("MagicLinkForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Send sign-in link" }));
     expect(await screen.findByText("Couldn't send the link. Try again.")).toBeInTheDocument();
   });
+
+  it("keeps an invite token with the requested login link", async () => {
+    sendMagicLink.mockResolvedValue({ ok: true, data: undefined });
+    setup("invite-token-123456");
+    await userEvent.type(screen.getByLabelText("Email address"), "me@example.com");
+    await userEvent.click(screen.getByRole("button", { name: "Send sign-in link" }));
+
+    const formData = sendMagicLink.mock.calls[0][1] as FormData;
+    expect(formData.get("invite")).toBe("invite-token-123456");
+  });
 });
 
 describe("MagicLinkForm — code entry", () => {
@@ -69,6 +84,19 @@ describe("MagicLinkForm — code entry", () => {
     expect(formData.get("email")).toBe("me@example.com");
     expect(formData.get("code")).toBe("12345678");
     expect(screen.queryByText("That code is wrong or expired.")).not.toBeInTheDocument();
+  });
+
+  it("keeps an invite token when verifying a code", async () => {
+    verifyMagicLinkCode.mockResolvedValue({ ok: true, data: undefined });
+    sendMagicLink.mockResolvedValue({ ok: true, data: undefined });
+    setup("invite-token-123456");
+    await userEvent.type(screen.getByLabelText("Email address"), "me@example.com");
+    await userEvent.click(screen.getByRole("button", { name: "Send sign-in link" }));
+    await userEvent.type(screen.getByLabelText("Or enter the code from the email"), "12345678");
+    await userEvent.click(screen.getByRole("button", { name: "Verify code" }));
+
+    const formData = verifyMagicLinkCode.mock.calls[0][1] as FormData;
+    expect(formData.get("invite")).toBe("invite-token-123456");
   });
 
   it("shows an inline error on a bad or expired code", async () => {

@@ -128,7 +128,8 @@ describe("inviteMember", () => {
     expect(createInvitation).toHaveBeenCalled();
     const [emailArg, optsArg] = inviteUserByEmail.mock.calls[0];
     expect(emailArg).toBe("a@b.com");
-    expect(optsArg.redirectTo).toMatch(/\/auth\/callback\?token=/);
+    expect(optsArg.data).toMatchObject({ invite_token: expect.any(String) });
+    expect(optsArg.redirectTo).toBeUndefined();
     expect(signInWithOtp).not.toHaveBeenCalled();
   });
 
