@@ -47,9 +47,8 @@ const sampleQuiz: ReadingQuiz = {
   ],
 };
 
-// A 10-question quiz. With two of these the OLD per-question sort key
-// (`hashString(q.id)`) genuinely interleaves the two passages; the committed
-// passage-keyed `sortKey` keeps each block contiguous.
+// A 10-question quiz used to verify randomization still keeps each passage
+// in one contiguous block.
 const tenQuestionQuiz = (): ReadingQuiz => ({
   promptVersion: "v1",
   generatedAt: "2026-09-09T00:00:00.000Z",
@@ -170,6 +169,31 @@ describe("generatePracticeQuestions", () => {
     expect(listKnowledgeItems).toHaveBeenCalledTimes(1);
   });
 
+  it("samples vocabulary distractors instead of always taking alphabetical terms", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.999999);
+    try {
+      vi.mocked(listKnowledgeItems).mockResolvedValue([
+        vocab("v1", "s morgens", "in the morning", "g1"),
+        vocab("v2", "zebra", "zebra", "g1"),
+        vocab("v3", "ypsilon", "ypsilon", "g1"),
+        vocab("v4", "xylophone", "xylophone", "g1"),
+        vocab("v5", "alpha", "alpha", "g1"),
+      ] as never);
+
+      const questions = await generatePracticeQuestions({
+        mode: "vocabulary",
+        scope: "all",
+        length: 0,
+      });
+      const morning = questions.find((question) => question.knowledgeId === "v1")!;
+
+      expect(morning.options).toEqual(expect.arrayContaining(["zebra", "ypsilon", "xylophone"]));
+      expect(morning.options).not.toContain("alpha");
+    } finally {
+      random.mockRestore();
+    }
+  });
+
   it("throws when there is no active group", async () => {
     vi.mocked(resolveActiveContext).mockResolvedValue({ status: "no-access" });
     await expect(
@@ -220,9 +244,8 @@ describe("generatePracticeQuestions — reading", () => {
     expect(qs.some((q) => q.knowledgeType === "grammar")).toBe(true);
   });
 
-  it("keeps a passage's questions contiguous after the sort", async () => {
-    // Two 10-question passages: the old `hashString(q.id)` key interleaves these
-    // ids; the committed passage-keyed `sortKey` keeps each block whole.
+  it("keeps a passage's questions contiguous after randomization", async () => {
+    // Two passages must remain as whole blocks after randomization.
     vi.mocked(listKnowledgeItems).mockResolvedValue([
       reading("r1", "Eerste", "g1", tenQuestionQuiz()),
       reading("r2", "Tweede", "g1", tenQuestionQuiz()),

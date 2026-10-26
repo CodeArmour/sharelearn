@@ -19,21 +19,21 @@ async function requireActiveGroupId(): Promise<string> {
   return ctx.activeGroup.id;
 }
 
-function hashString(value: string): number {
-  let h = 0;
-  for (let i = 0; i < value.length; i += 1) h = (h * 31 + value.charCodeAt(i)) | 0;
-  return Math.abs(h);
+function sampleRandom<T>(items: T[], count: number): T[] {
+  const sampled = [...items];
+  for (let index = sampled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [sampled[index], sampled[swapIndex]] = [sampled[swapIndex], sampled[index]];
+  }
+  return sampled.slice(0, count);
 }
 
-function buildOptions(correct: string, pool: string[], seed: string) {
-  const distractors = [...new Set(pool)]
-    .filter((v) => v && v !== correct)
-    .sort((a, b) => a.localeCompare(b, "nl"))
-    .slice(0, 3);
-  const all = [correct, ...distractors];
-  const rot = hashString(seed) % all.length;
-  const options = [...all.slice(rot), ...all.slice(0, rot)];
-  return { options, correctIndex: options.indexOf(correct) };
+function buildOptions(correct: string, pool: string[]) {
+  const distractors = sampleRandom(
+    [...new Set(pool)].filter((value) => value && value !== correct),
+    3,
+  );
+  return { options: [correct, ...distractors], correctIndex: 0 };
 }
 
 function isSameCalendarDay(iso: string, reference: Date): boolean {
@@ -64,7 +64,7 @@ function vocabularyFallbackSentence(item: VocabularyItem): string {
 /** Build sentence-completion questions for vocabulary practice and exams. */
 function buildVocabularyClozeQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
   return items.flatMap((item) => {
-    const { options, correctIndex } = buildOptions(item.term, allTerms, `fill:${item.id}`);
+    const { options, correctIndex } = buildOptions(item.term, allTerms);
     if (options.length < 2) return [];
 
     return [{
