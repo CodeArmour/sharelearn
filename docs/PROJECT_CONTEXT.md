@@ -37,9 +37,9 @@ review material, practise with generated questions, and take timed exams.
 - Knowledge is shared within the active group. Review state and practice history
   remain private to the member.
 - Practice sessions and exams randomly sample questions, distractors, and answer choices. Their
-  vocabulary sections use Dutch sentence-completion questions rather than meaning prompts.
-  If blanking a full phrase would leave no Dutch context, they instead show
-  the English meaning and ask the learner to choose the Dutch phrase.
+  vocabulary sections use a Dutch sentence-completion question only when a
+  saved example provides context; otherwise they show English and ask the
+  learner to choose Dutch. Distractors prioritize the same part of speech and level.
 - AI output is always reviewable before it becomes a normal knowledge item.
 
 ## Authentication and Supabase

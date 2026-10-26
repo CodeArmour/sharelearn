@@ -141,9 +141,13 @@ beforeEach(() => {
 });
 
 describe("generatePracticeQuestions", () => {
-  it("generates randomized vocabulary sentence-completion questions from the active group only", async () => {
+  it("uses contextual cloze prompts and logical translation fallbacks", async () => {
+    const withContext = {
+      ...vocab("v1", "afspreken", "to arrange", "g1"),
+      example: "Wij willen afspreken na het werk.",
+    };
     vi.mocked(listKnowledgeItems).mockResolvedValue([
-      vocab("v1", "afspreken", "to arrange", "g1"),
+      withContext,
       vocab("v2", "gezellig", "cozy", "g1"),
       vocab("v3", "de vergadering", "the meeting", "g1"),
       vocab("v4", "af en toe", "from time to time", "g1"),
@@ -151,11 +155,17 @@ describe("generatePracticeQuestions", () => {
 
     const questions = await generatePracticeQuestions({ mode: "vocabulary", scope: "all", length: 0 });
     expect(questions).toHaveLength(4);
+    expect(questions.find((question) => question.knowledgeId === "v1")).toEqual(
+      expect.objectContaining({ instructionKey: "fillBlank", prompt: "Wij willen ___ na het werk." }),
+    );
     for (const question of questions) {
-      expect(question.instructionKey).toBe("fillBlank");
-      expect(question.prompt).toContain("___");
+      expect(question.prompt.trim()).not.toBe("");
+      expect(new Set(question.options).size).toBe(question.options.length);
       expect(question.options.length).toBeGreaterThanOrEqual(2);
     }
+    expect(questions.find((question) => question.knowledgeId === "v2")).toEqual(
+      expect.objectContaining({ instructionKey: "sayInDutch", prompt: "cozy" }),
+    );
   });
 
   it("never leaks another group's vocabulary into distractors", async () => {
@@ -214,6 +224,26 @@ describe("generatePracticeQuestions", () => {
     } finally {
       random.mockRestore();
     }
+  });
+
+  it("prioritizes distractors with the same part of speech and level", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      { ...vocab("v1", "s morgens", "in the morning", "g1", "A2"), partOfSpeech: "bijwoord" },
+      { ...vocab("v2", "s avonds", "in the evening", "g1", "A2"), partOfSpeech: "bijwoord" },
+      { ...vocab("v3", "af en toe", "occasionally", "g1", "B1"), partOfSpeech: "bijwoord" },
+      { ...vocab("v4", "werken", "to work", "g1", "A2"), partOfSpeech: "werkwoord" },
+      { ...vocab("v5", "de tafel", "the table", "g1", "B1"), partOfSpeech: "zelfstandig naamwoord" },
+    ] as never);
+
+    const questions = await generatePracticeQuestions({
+      mode: "vocabulary",
+      scope: "all",
+      length: 0,
+    });
+    const morning = questions.find((question) => question.knowledgeId === "v1")!;
+
+    expect(morning.options).toEqual(expect.arrayContaining(["s avonds", "af en toe", "werken"]));
+    expect(morning.options).not.toContain("de tafel");
   });
 
   it("throws when there is no active group", async () => {
@@ -379,7 +409,7 @@ describe("generatePracticeQuestions — custom scope search", () => {
 });
 
 describe("generateExamQuestions — real exam", () => {
-  it("uses sentence-completion questions for vocabulary rather than meaning prompts", async () => {
+  it("uses contextual cloze questions and English-to-Dutch fallbacks for vocabulary", async () => {
     const withExample = {
       ...vocab("v1", "af en toe", "from time to time", "g1", "B1"),
       example: "Ik ga af en toe naar Antwerpen.",
@@ -403,12 +433,12 @@ describe("generateExamQuestions — real exam", () => {
         instructionKey: "fillBlank",
         prompt: "Ik ga ___ naar Antwerpen.",
       }),
+      expect.objectContaining({
+        knowledgeId: "v2",
+        instructionKey: "sayInDutch",
+        prompt: "cozy",
+      }),
     ]));
-    for (const question of qs) {
-      expect(question.instructionKey).toBe("fillBlank");
-      expect(question.prompt).not.toBe("from time to time");
-      expect(question.prompt).not.toBe("cozy");
-    }
   });
 
   it("only draws items at the chosen level", async () => {

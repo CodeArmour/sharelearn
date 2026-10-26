@@ -28,12 +28,41 @@ function sampleRandom<T>(items: T[], count: number): T[] {
   return sampled.slice(0, count);
 }
 
-function buildOptions(correct: string, pool: string[]) {
-  const distractors = sampleRandom(
-    [...new Set(pool)].filter((value) => value && value !== correct),
-    3,
-  );
-  return { options: [correct, ...distractors], correctIndex: 0 };
+function normalizedValue(value: string): string {
+  return value.trim().toLocaleLowerCase("nl-NL");
+}
+
+function buildOptions(item: VocabularyItem, pool: VocabularyItem[]) {
+  const chosenTerms = new Set([normalizedValue(item.term)]);
+  const candidateTerms = new Set<string>();
+  const candidates = pool.filter((candidate) => {
+    const term = normalizedValue(candidate.term);
+    if (candidate.id === item.id || chosenTerms.has(term) || candidateTerms.has(term)) return false;
+    candidateTerms.add(term);
+    return true;
+  });
+  const distractors: string[] = [];
+  const samePartOfSpeech = (candidate: VocabularyItem) =>
+    normalizedValue(candidate.partOfSpeech) === normalizedValue(item.partOfSpeech);
+  const sameLevel = (candidate: VocabularyItem) =>
+    item.level !== null && candidate.level === item.level;
+
+  const addFrom = (matches: (candidate: VocabularyItem) => boolean) => {
+    const available = candidates.filter(
+      (candidate) => !chosenTerms.has(normalizedValue(candidate.term)) && matches(candidate),
+    );
+    for (const candidate of sampleRandom(available, 3 - distractors.length)) {
+      chosenTerms.add(normalizedValue(candidate.term));
+      distractors.push(candidate.term);
+    }
+  };
+
+  addFrom((candidate) => samePartOfSpeech(candidate) && sameLevel(candidate));
+  addFrom(samePartOfSpeech);
+  addFrom(sameLevel);
+  addFrom(() => true);
+
+  return { options: [item.term, ...distractors], correctIndex: 0 };
 }
 
 function isSameCalendarDay(iso: string, reference: Date): boolean {
@@ -53,14 +82,6 @@ function blankTermInExample(example: string | null, term: string): string | null
   return example.replace(matcher, "$1___");
 }
 
-function vocabularyFallbackSentence(item: VocabularyItem): string {
-  const partOfSpeech = item.partOfSpeech.toLowerCase();
-  if (partOfSpeech.includes("verb") || partOfSpeech.includes("werkwoord")) return "Wij willen ___.";
-  if (partOfSpeech.includes("noun") || partOfSpeech.includes("zelfstandig naamwoord")) return "Ik zie ___.";
-  if (partOfSpeech.includes("adjective") || partOfSpeech.includes("bijvoeglijk")) return "Dat is ___.";
-  return "Ik gebruik ___ vaak.";
-}
-
 function hasClozeContext(prompt: string): boolean {
   return prompt.replace("___", "").replace(/[^\p{L}\p{N}]/gu, "").length > 0;
 }
@@ -70,14 +91,16 @@ function vocabularyQuestionPrompt(
 ): Pick<PracticeQuestion, "instructionKey" | "prompt"> {
   const cloze = blankTermInExample(item.example, item.term);
   if (cloze && hasClozeContext(cloze)) return { instructionKey: "fillBlank", prompt: cloze };
-  if (cloze) return { instructionKey: "sayInDutch", prompt: item.meaning };
-  return { instructionKey: "fillBlank", prompt: vocabularyFallbackSentence(item) };
+  return { instructionKey: "sayInDutch", prompt: item.meaning };
 }
 
 /** Build contextual vocabulary questions for practice and exams. */
-function buildVocabularyQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
+function buildVocabularyQuestions(
+  items: VocabularyItem[],
+  vocabularyPool: VocabularyItem[],
+): PracticeQuestion[] {
   return items.flatMap((item) => {
-    const { options, correctIndex } = buildOptions(item.term, allTerms);
+    const { options, correctIndex } = buildOptions(item, vocabularyPool);
     if (options.length < 2) return [];
 
     const questionPrompt = vocabularyQuestionPrompt(item);
@@ -166,7 +189,6 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   });
 
   const vocabPool = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
-  const allTerms = vocabPool.map((v) => v.term);
 
   const wantVocab = setup.mode === "vocabulary" || setup.mode === "mixed";
   const wantGrammar = setup.mode === "grammar" || setup.mode === "mixed";
@@ -177,7 +199,7 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   const inScopeReading = inScope.filter((i): i is ReadingItem => i.type === "reading");
 
   const questions: PracticeQuestion[] = [
-    ...(wantVocab ? buildVocabularyQuestions(inScopeVocab, allTerms) : []),
+    ...(wantVocab ? buildVocabularyQuestions(inScopeVocab, vocabPool) : []),
     ...(wantGrammar ? buildGrammarQuestions(inScopeGrammar) : []),
     ...(wantReading ? buildReadingQuestions(inScopeReading) : []),
   ];
@@ -193,7 +215,6 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
 
   const levelItems = groupItems.filter((i) => i.level === setup.level);
   const vocabAll = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
-  const allTerms = vocabAll.map((v) => v.term);
 
   const pools: ExamPools = {
     reading: buildReadingQuestions(
@@ -204,7 +225,7 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
     ),
     vocabulary: buildVocabularyQuestions(
       levelItems.filter((i): i is VocabularyItem => i.type === "vocabulary"),
-      allTerms,
+      vocabAll,
     ),
   };
 
