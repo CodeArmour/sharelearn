@@ -332,6 +332,38 @@ describe("generatePracticeQuestions — custom scope search", () => {
 });
 
 describe("generateExamQuestions — real exam", () => {
+  it("uses sentence-completion questions for vocabulary rather than meaning prompts", async () => {
+    const withExample = {
+      ...vocab("v1", "af en toe", "from time to time", "g1", "B1"),
+      example: "Ik ga af en toe naar Antwerpen.",
+    };
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      withExample,
+      vocab("v2", "gezellig", "cozy", "g1", "B1"),
+    ] as never);
+
+    const qs = await generateExamQuestions({
+      mode: "mixed",
+      scope: "level",
+      level: "B1",
+      length: 10,
+    });
+
+    expect(qs).toHaveLength(2);
+    expect(qs).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        knowledgeId: "v1",
+        instructionKey: "fillBlank",
+        prompt: "Ik ga ___ naar Antwerpen.",
+      }),
+    ]));
+    for (const question of qs) {
+      expect(question.instructionKey).toBe("fillBlank");
+      expect(question.prompt).not.toBe("from time to time");
+      expect(question.prompt).not.toBe("cozy");
+    }
+  });
+
   it("only draws items at the chosen level", async () => {
     vi.mocked(listKnowledgeItems).mockResolvedValue([
       vocab("v1", "aap", "monkey", "g1", "B1"),

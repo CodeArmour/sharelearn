@@ -83,6 +83,40 @@ function buildVocabQuestions(
   return out;
 }
 
+function blankTermInExample(example: string | null, term: string): string | null {
+  if (!example) return null;
+  const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matcher = new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedTerm})(?=$|[^\\p{L}\\p{N}])`, "iu");
+  if (!matcher.test(example)) return null;
+  return example.replace(matcher, "$1___");
+}
+
+function vocabularyFallbackSentence(item: VocabularyItem): string {
+  const partOfSpeech = item.partOfSpeech.toLowerCase();
+  if (partOfSpeech.includes("verb") || partOfSpeech.includes("werkwoord")) return "Wij willen ___.";
+  if (partOfSpeech.includes("noun") || partOfSpeech.includes("zelfstandig naamwoord")) return "Ik zie ___.";
+  if (partOfSpeech.includes("adjective") || partOfSpeech.includes("bijvoeglijk")) return "Dat is ___.";
+  return "Ik gebruik ___ vaak.";
+}
+
+/** Build sentence-completion questions for the vocabulary section of an exam. */
+function buildExamVocabularyQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
+  return items.flatMap((item) => {
+    const { options, correctIndex } = buildOptions(item.term, allTerms, `fill:${item.id}`);
+    if (options.length < 2) return [];
+
+    return [{
+      id: `q_${item.id}_fill`,
+      knowledgeId: item.id,
+      knowledgeType: "vocabulary" as const,
+      instructionKey: "fillBlank" as const,
+      prompt: blankTermInExample(item.example, item.term) ?? vocabularyFallbackSentence(item),
+      options,
+      correctIndex,
+    }];
+  });
+}
+
 function buildGrammarQuestions(items: GrammarItem[]): PracticeQuestion[] {
   const out: PracticeQuestion[] = [];
   items.forEach((g) => {
@@ -188,27 +222,19 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
   const levelItems = groupItems.filter((i) => i.level === setup.level);
   const vocabAll = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
   const allTerms = vocabAll.map((v) => v.term);
-  const allMeanings = vocabAll.map((v) => v.meaning);
-
-  const sortKey = (q: PracticeQuestion) =>
-    q.passage ? hashString(q.passage.id) : hashString(q.id);
-  const ordered = (list: PracticeQuestion[]) => [...list].sort((a, b) => sortKey(a) - sortKey(b));
 
   const pools: ExamPools = {
-    reading: ordered(
-      buildReadingQuestions(levelItems.filter((i): i is ReadingItem => i.type === "reading")),
+    reading: buildReadingQuestions(
+      levelItems.filter((i): i is ReadingItem => i.type === "reading"),
     ),
-    grammar: ordered(
-      buildGrammarQuestions(levelItems.filter((i): i is GrammarItem => i.type === "grammar")),
+    grammar: buildGrammarQuestions(
+      levelItems.filter((i): i is GrammarItem => i.type === "grammar"),
     ),
-    vocabulary: ordered(
-      buildVocabQuestions(
-        levelItems.filter((i): i is VocabularyItem => i.type === "vocabulary"),
-        allTerms,
-        allMeanings,
-      ),
+    vocabulary: buildExamVocabularyQuestions(
+      levelItems.filter((i): i is VocabularyItem => i.type === "vocabulary"),
+      allTerms,
     ),
   };
 
-  return composeExam(pools, setup.length).sort((a, b) => sortKey(a) - sortKey(b));
+  return composeExam(pools, setup.length);
 }

@@ -44,16 +44,15 @@ describe("composeExam", () => {
     expect(byType(composeExam(pools, 20))).toEqual({ reading: 7, grammar: 7, vocabulary: 6 });
   });
 
-  it("takes the first N of each pool (pools are pre-ordered)", () => {
+  it("uses the random source to choose and arrange questions", () => {
     const pools: ExamPools = {
       reading: pool("reading", 20),
       grammar: pool("grammar", 20),
       vocabulary: pool("vocabulary", 20),
     };
-    const out = composeExam(pools, 10);
-    expect(out.filter((q) => q.knowledgeType === "reading").map((q) => q.id)).toEqual([
-      "reading_0", "reading_1", "reading_2", "reading_3",
-    ]);
+    const first = composeExam(pools, 10, () => 0.999999);
+    const second = composeExam(pools, 10, () => 0);
+    expect(second.map((question) => question.id)).not.toEqual(first.map((question) => question.id));
   });
 
   it("redistributes an empty pool's share to the others, keeping the total", () => {
