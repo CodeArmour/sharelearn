@@ -26,6 +26,18 @@ function selectRandom<T>(items: T[], count: number, random: Random): T[] {
   return shuffle(items, random).slice(0, count);
 }
 
+function randomizeOptions(question: PracticeQuestion, random: Random): PracticeQuestion {
+  const options = shuffle(
+    question.options.map((option, index) => ({ option, index })),
+    random,
+  );
+  return {
+    ...question,
+    options: options.map(({ option }) => option),
+    correctIndex: options.findIndex(({ index }) => index === question.correctIndex),
+  };
+}
+
 /** Keep questions from one reading passage together while randomizing a session. */
 export function randomizeQuestionBlocks(
   questions: PracticeQuestion[],
@@ -44,7 +56,9 @@ export function randomizeQuestionBlocks(
     passageQuestions.set(question.passage.id, block);
   }
 
-  return shuffle([...individualQuestions, ...passageQuestions.values()], random).flat();
+  return shuffle([...individualQuestions, ...passageQuestions.values()], random)
+    .flat()
+    .map((question) => randomizeOptions(question, random));
 }
 
 /**

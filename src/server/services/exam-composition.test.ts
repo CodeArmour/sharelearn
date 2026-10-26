@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PracticeQuestion } from "@/types";
 
-import { composeExam, type ExamPools } from "./exam-composition";
+import { composeExam, randomizeQuestionBlocks, type ExamPools } from "./exam-composition";
 
 function pool(type: PracticeQuestion["knowledgeType"], n: number): PracticeQuestion[] {
   return Array.from({ length: n }, (_, i) => ({
@@ -55,7 +55,24 @@ describe("composeExam", () => {
     expect(second.map((question) => question.id)).not.toEqual(first.map((question) => question.id));
   });
 
-  it("redistributes an empty pool's share to the others, keeping the total", () => {
+  it("randomizes every question's choices while preserving its correct answer", () => {
+    const [question] = randomizeQuestionBlocks([
+      {
+        id: "q1",
+        knowledgeId: "k1",
+        knowledgeType: "vocabulary",
+        instructionKey: "fillBlank",
+        prompt: "Ik ___ vandaag.",
+        options: ["werk", "werkt", "werken", "gewerkt"],
+        correctIndex: 0,
+      },
+    ], () => 0);
+
+    expect(question.options).toEqual(["werkt", "werken", "gewerkt", "werk"]);
+    expect(question.correctIndex).toBe(3);
+  });
+
+ it("redistributes an empty pool's share to the others, keeping the total", () => {
     const pools: ExamPools = {
       reading: pool("reading", 10),
       grammar: [],
