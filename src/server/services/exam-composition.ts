@@ -26,8 +26,11 @@ function selectRandom<T>(items: T[], count: number, random: Random): T[] {
   return shuffle(items, random).slice(0, count);
 }
 
-/** Keep questions from one reading passage together while randomizing the paper. */
-function arrangeExam(questions: PracticeQuestion[], random: Random): PracticeQuestion[] {
+/** Keep questions from one reading passage together while randomizing a session. */
+export function randomizeQuestionBlocks(
+  questions: PracticeQuestion[],
+  random: Random = Math.random,
+): PracticeQuestion[] {
   const individualQuestions: PracticeQuestion[][] = [];
   const passageQuestions = new Map<string, PracticeQuestion[]>();
 
@@ -62,7 +65,7 @@ export function composeExam(
 
   if (length === 0) {
     const n = Math.min(avail.reading, avail.grammar, avail.vocabulary);
-    return arrangeExam([
+    return randomizeQuestionBlocks([
       ...selectRandom(pools.reading, n, random),
       ...selectRandom(pools.grammar, n, random),
       ...selectRandom(pools.vocabulary, n, random),
@@ -101,7 +104,7 @@ export function composeExam(
     deficit -= 1;
   }
 
-  return arrangeExam([
+  return randomizeQuestionBlocks([
     ...selectRandom(pools.reading, target.reading, random),
     ...selectRandom(pools.grammar, target.grammar, random),
     ...selectRandom(pools.vocabulary, target.vocabulary, random),

@@ -142,7 +142,7 @@ beforeEach(() => {
 });
 
 describe("generatePracticeQuestions", () => {
-  it("generates deterministic multiple-choice questions from the active group only", async () => {
+  it("generates randomized vocabulary sentence-completion questions from the active group only", async () => {
     vi.mocked(listKnowledgeItems).mockResolvedValue([
       vocab("v1", "afspreken", "to arrange", "g1"),
       vocab("v2", "gezellig", "cozy", "g1"),
@@ -150,11 +150,13 @@ describe("generatePracticeQuestions", () => {
       vocab("v4", "af en toe", "from time to time", "g1"),
     ] as never);
 
-    const first = await generatePracticeQuestions({ mode: "vocabulary", scope: "all", length: 0 });
-    const second = await generatePracticeQuestions({ mode: "vocabulary", scope: "all", length: 0 });
-    expect(first).toEqual(second);
-    expect(first.length).toBeGreaterThan(0);
-    for (const q of first) expect(q.options.length).toBeGreaterThanOrEqual(2);
+    const questions = await generatePracticeQuestions({ mode: "vocabulary", scope: "all", length: 0 });
+    expect(questions).toHaveLength(4);
+    for (const question of questions) {
+      expect(question.instructionKey).toBe("fillBlank");
+      expect(question.prompt).toContain("___");
+      expect(question.options.length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it("never leaks another group's vocabulary into distractors", async () => {
@@ -291,7 +293,7 @@ describe("generatePracticeQuestions — grammar", () => {
     const qs = await generatePracticeQuestions({ mode: "grammar", scope: "all", length: 0 });
 
     expect(qs).toHaveLength(3);
-    expect(qs.map((q) => q.id)).toEqual(["q_g1_q1", "q_g1_q2", "q_g1_q3"]);
+    expect(qs.map((q) => q.id)).toEqual(expect.arrayContaining(["q_g1_q1", "q_g1_q2", "q_g1_q3"]));
     for (const q of qs) {
       expect(q.knowledgeType).toBe("grammar");
       expect(q.knowledgeId).toBe("g1");

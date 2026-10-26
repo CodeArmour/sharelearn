@@ -3,7 +3,7 @@ import "server-only";
 import { listKnowledgeItems } from "@/server/repositories/knowledge";
 import { NotFoundError } from "@/server/errors";
 import { resolveActiveContext } from "@/server/services/session-service";
-import { composeExam, type ExamPools } from "./exam-composition";
+import { composeExam, randomizeQuestionBlocks, type ExamPools } from "./exam-composition";
 import type {
   GrammarItem,
   KnowledgeItem,
@@ -45,44 +45,6 @@ function isSameCalendarDay(iso: string, reference: Date): boolean {
   );
 }
 
-function buildVocabQuestions(
-  items: VocabularyItem[],
-  allTerms: string[],
-  allMeanings: string[],
-): PracticeQuestion[] {
-  const out: PracticeQuestion[] = [];
-  items.forEach((v, idx) => {
-    if (idx % 2 === 1) {
-      const { options, correctIndex } = buildOptions(v.term, allTerms, `t:${v.id}`);
-      if (options.length >= 2) {
-        out.push({
-          id: `q_${v.id}_t`,
-          knowledgeId: v.id,
-          knowledgeType: "vocabulary",
-          instructionKey: "sayInDutch",
-          prompt: v.meaning,
-          options,
-          correctIndex,
-        });
-      }
-    } else {
-      const { options, correctIndex } = buildOptions(v.meaning, allMeanings, `m:${v.id}`);
-      if (options.length >= 2) {
-        out.push({
-          id: `q_${v.id}_m`,
-          knowledgeId: v.id,
-          knowledgeType: "vocabulary",
-          instructionKey: "meaningOf",
-          prompt: v.term,
-          options,
-          correctIndex,
-        });
-      }
-    }
-  });
-  return out;
-}
-
 function blankTermInExample(example: string | null, term: string): string | null {
   if (!example) return null;
   const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -99,8 +61,8 @@ function vocabularyFallbackSentence(item: VocabularyItem): string {
   return "Ik gebruik ___ vaak.";
 }
 
-/** Build sentence-completion questions for the vocabulary section of an exam. */
-function buildExamVocabularyQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
+/** Build sentence-completion questions for vocabulary practice and exams. */
+function buildVocabularyClozeQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
   return items.flatMap((item) => {
     const { options, correctIndex } = buildOptions(item.term, allTerms, `fill:${item.id}`);
     if (options.length < 2) return [];
@@ -191,7 +153,6 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   });
 
   const vocabPool = groupItems.filter((i): i is VocabularyItem => i.type === "vocabulary");
-  const allMeanings = vocabPool.map((v) => v.meaning);
   const allTerms = vocabPool.map((v) => v.term);
 
   const wantVocab = setup.mode === "vocabulary" || setup.mode === "mixed";
@@ -203,15 +164,13 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   const inScopeReading = inScope.filter((i): i is ReadingItem => i.type === "reading");
 
   const questions: PracticeQuestion[] = [
-    ...(wantVocab ? buildVocabQuestions(inScopeVocab, allTerms, allMeanings) : []),
+    ...(wantVocab ? buildVocabularyClozeQuestions(inScopeVocab, allTerms) : []),
     ...(wantGrammar ? buildGrammarQuestions(inScopeGrammar) : []),
     ...(wantReading ? buildReadingQuestions(inScopeReading) : []),
   ];
 
-  const sortKey = (q: PracticeQuestion) =>
-    q.passage ? hashString(q.passage.id) : hashString(q.id);
-  questions.sort((a, b) => sortKey(a) - sortKey(b));
-  return setup.length > 0 ? questions.slice(0, setup.length) : questions;
+  const randomized = randomizeQuestionBlocks(questions);
+  return setup.length > 0 ? randomized.slice(0, setup.length) : randomized;
 }
 
 export async function generateExamQuestions(setup: PracticeSetup): Promise<PracticeQuestion[]> {
@@ -230,7 +189,7 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
     grammar: buildGrammarQuestions(
       levelItems.filter((i): i is GrammarItem => i.type === "grammar"),
     ),
-    vocabulary: buildExamVocabularyQuestions(
+    vocabulary: buildVocabularyClozeQuestions(
       levelItems.filter((i): i is VocabularyItem => i.type === "vocabulary"),
       allTerms,
     ),

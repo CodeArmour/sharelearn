@@ -36,8 +36,8 @@ review material, practise with generated questions, and take timed exams.
 - Knowledge items are one of `vocabulary`, `grammar`, `reading`, or `note`.
 - Knowledge is shared within the active group. Review state and practice history
   remain private to the member.
-- Exams randomly sample and arrange balanced question sets. Their vocabulary
-  section uses Dutch sentence-completion questions rather than meaning prompts.
+- Practice sessions and exams randomly sample and arrange questions. Their
+  vocabulary sections use Dutch sentence-completion questions rather than meaning prompts.
 - AI output is always reviewable before it becomes a normal knowledge item.
 
 ## Authentication and Supabase
