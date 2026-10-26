@@ -61,18 +61,31 @@ function vocabularyFallbackSentence(item: VocabularyItem): string {
   return "Ik gebruik ___ vaak.";
 }
 
-/** Build sentence-completion questions for vocabulary practice and exams. */
-function buildVocabularyClozeQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
+function hasClozeContext(prompt: string): boolean {
+  return prompt.replace("___", "").replace(/[^\p{L}\p{N}]/gu, "").length > 0;
+}
+
+function vocabularyQuestionPrompt(
+  item: VocabularyItem,
+): Pick<PracticeQuestion, "instructionKey" | "prompt"> {
+  const cloze = blankTermInExample(item.example, item.term);
+  if (cloze && hasClozeContext(cloze)) return { instructionKey: "fillBlank", prompt: cloze };
+  if (cloze) return { instructionKey: "sayInDutch", prompt: item.meaning };
+  return { instructionKey: "fillBlank", prompt: vocabularyFallbackSentence(item) };
+}
+
+/** Build contextual vocabulary questions for practice and exams. */
+function buildVocabularyQuestions(items: VocabularyItem[], allTerms: string[]): PracticeQuestion[] {
   return items.flatMap((item) => {
     const { options, correctIndex } = buildOptions(item.term, allTerms);
     if (options.length < 2) return [];
 
+    const questionPrompt = vocabularyQuestionPrompt(item);
     return [{
       id: `q_${item.id}_fill`,
       knowledgeId: item.id,
       knowledgeType: "vocabulary" as const,
-      instructionKey: "fillBlank" as const,
-      prompt: blankTermInExample(item.example, item.term) ?? vocabularyFallbackSentence(item),
+      ...questionPrompt,
       options,
       correctIndex,
     }];
@@ -164,7 +177,7 @@ export async function generatePracticeQuestions(setup: PracticeSetup): Promise<P
   const inScopeReading = inScope.filter((i): i is ReadingItem => i.type === "reading");
 
   const questions: PracticeQuestion[] = [
-    ...(wantVocab ? buildVocabularyClozeQuestions(inScopeVocab, allTerms) : []),
+    ...(wantVocab ? buildVocabularyQuestions(inScopeVocab, allTerms) : []),
     ...(wantGrammar ? buildGrammarQuestions(inScopeGrammar) : []),
     ...(wantReading ? buildReadingQuestions(inScopeReading) : []),
   ];
@@ -189,7 +202,7 @@ export async function generateExamQuestions(setup: PracticeSetup): Promise<Pract
     grammar: buildGrammarQuestions(
       levelItems.filter((i): i is GrammarItem => i.type === "grammar"),
     ),
-    vocabulary: buildVocabularyClozeQuestions(
+    vocabulary: buildVocabularyQuestions(
       levelItems.filter((i): i is VocabularyItem => i.type === "vocabulary"),
       allTerms,
     ),

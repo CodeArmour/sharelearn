@@ -169,6 +169,28 @@ describe("generatePracticeQuestions", () => {
     expect(listKnowledgeItems).toHaveBeenCalledTimes(1);
   });
 
+  it("uses English-to-Dutch choices when blanking would remove the entire phrase", async () => {
+    vi.mocked(listKnowledgeItems).mockResolvedValue([
+      {
+        ...vocab("v1", "Was het lekker?", "Was it tasty?", "g1"),
+        example: "Was het lekker?",
+      },
+      vocab("v2", "Ja, het was heerlijk.", "Yes, it was delicious.", "g1"),
+    ] as never);
+
+    const questions = await generatePracticeQuestions({
+      mode: "vocabulary",
+      scope: "all",
+      length: 0,
+    });
+    const question = questions.find((item) => item.knowledgeId === "v1")!;
+
+    expect(question.instructionKey).toBe("sayInDutch");
+    expect(question.prompt).toBe("Was it tasty?");
+    expect(question.prompt).not.toContain("___");
+    expect(question.options).toContain("Was het lekker?");
+  });
+
   it("samples vocabulary distractors instead of always taking alphabetical terms", async () => {
     const random = vi.spyOn(Math, "random").mockReturnValue(0.999999);
     try {
